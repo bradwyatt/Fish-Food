@@ -1,11 +1,5 @@
 """
-custom icon, author name, more info on the COMPILED file
-taskbar icon
-difficulty levels (hard, sharks faster)
-red fish respawn by big red fish eggs?
-fix game over screen to not cut through shit
-fish collision
-levels instead of score
+Created by Brad Wyatt
 """
 import pygame, random, sys
 from pygame.locals import *
