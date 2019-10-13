@@ -1,6 +1,11 @@
 """
 Created by Brad Wyatt
 Created with Python version 3.7.3
+
+Future improvements:
+1) Better handling of sound (two sounds can't play at once)
+2) Better menu to click rather than press enter?
+3) Rainbow fish size sometimes shrinks over time which is a bit odd
 """
 import sys
 import random
@@ -8,6 +13,12 @@ import warnings
 import pygame
 import os
 from genmenu import *
+
+# GLOBAL CONSTANT VARIABLES
+(SCREEN_WIDTH, SCREEN_HEIGHT) = 928, 544
+PLAY_SCREEN, START_SCREEN, GAMEOVER_SCREEN, PAUSE_SCREEN, INFO_SCREEN = 0, 1, 2, 3, 4
+IMAGES = {}
+SOUNDS = {}
 
 def adjust_to_correct_appdir():
     try:
@@ -29,11 +40,11 @@ def adjust_to_correct_appdir():
         time.sleep(10)
         sys.exit(1)
 
-def load_sound(file, name, sounds):
+def load_sound(file, name):
     sound = pygame.mixer.Sound(file)
-    sounds[name] = sound
+    SOUNDS[name] = sound
     
-def load_image(file, name, transparent, alpha, images):
+def load_image(file, name, transparent, alpha):
     new_image = pygame.image.load(file)
     if alpha:
         new_image = new_image.convert_alpha()
@@ -42,7 +53,7 @@ def load_image(file, name, transparent, alpha, images):
     if transparent:
         colorkey = new_image.get_at((0, 0))
         new_image.set_colorkey(colorkey, RLEACCEL)
-    images[name] = new_image
+    IMAGES[name] = new_image
     
 def display_caption():
     pygame.display.set_caption("Fish Food")
@@ -54,11 +65,11 @@ def quit_game():
     sys.exit()
 
 def startplaceholder():
-    global menu_selection, PLAY_SCREEN
+    global menu_selection
     menu_selection = PLAY_SCREEN
 
 def infoplaceholder():
-    global menu_selection, INFO_SCREEN
+    global menu_selection
     menu_selection = INFO_SCREEN
 
 class Menu():
@@ -83,7 +94,7 @@ class Menu():
         self.main_loop(ocean_font_main)
 
     def main_loop(self, ocean_font_main):
-        global menu_selection, START_SCREEN
+        global menu_selection
         while menu_selection == START_SCREEN:
             self.clock.tick(60)
             events = pygame.event.get()
@@ -112,7 +123,7 @@ class InfoScreen():
         self.main_loop()
 
     def main_loop(self):
-        global menu_selection, INFO_SCREEN
+        global menu_selection
         while menu_selection == INFO_SCREEN:
             self.clock.tick(60)
             self.screen.blit(self.title, (0, 0))
@@ -138,7 +149,7 @@ class GameOver():
         self.main_loop(font_arial, font_ocean_gameover, score)
 
     def main_loop(self, font_arial, font_ocean_gameover, score):
-        global menu_selection, GAMEOVER_SCREEN, START_SCREEN
+        global menu_selection
         while menu_selection == GAMEOVER_SCREEN:
             self.clock.tick(60)
             events = pygame.event.get()
@@ -164,11 +175,11 @@ class GameOver():
                         menu_selection = START_SCREEN
 
 def resumeplaceholder():
-    global menu_selection, PLAY_SCREEN
+    global menu_selection
     menu_selection = PLAY_SCREEN
 
 def mainmenuplaceholder():
-    global menu_selection, START_SCREEN
+    global menu_selection
     menu_selection = START_SCREEN
 
 class PauseScreen():
@@ -191,7 +202,7 @@ class PauseScreen():
         self.main_loop()
 
     def main_loop(self):
-        global menu_selection, PAUSE_SCREEN
+        global menu_selection
         while menu_selection == PAUSE_SCREEN:
             self.clock.tick(60)
             events = pygame.event.get()
@@ -205,28 +216,31 @@ class PauseScreen():
                     sys.exit()
 
 class Wall(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_wall"]
+        self.image = IMAGES["spr_wall"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
     def remove_sprite(self):
         self.kill()
 
 class Seaweed(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites, x_pos, y_pos):
+    taco = []
+    def __init__(self, allsprites, x_pos, y_pos):
         """
         Animated seaweed
         """
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_seaweed"]
+        self.image = IMAGES["spr_seaweed"]
         self.rect = self.image.get_rect()
         self.rect.topleft = x_pos, y_pos
         allsprites.add(self)
         self.seaweed_animate_timer = random.randint(0, 30)
-    def update(self, images):
+        Seaweed.taco.append(str("Seaweed"))
+    def update(self):
+        print(len(Seaweed.taco))
         self.seaweed_animate_timer += 1
-        seaweed_images = [images["spr_seaweed"], images["spr_seaweed_left"], images["spr_seaweed_right"]]
+        seaweed_images = [IMAGES["spr_seaweed"], IMAGES["spr_seaweed_left"], IMAGES["spr_seaweed_right"]]
         if self.seaweed_animate_timer > 15 and self.seaweed_animate_timer < 30:
             self.image = seaweed_images[1]
         if self.seaweed_animate_timer >= 30:
@@ -238,14 +252,13 @@ class Seaweed(pygame.sprite.Sprite):
         self.kill()
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Main fish that player controls in the game
         Ability to grow to eat smaller fish (prey)
         """
-        global SCREEN_HEIGHT, SCREEN_WIDTH
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["player_left"]
+        self.image = IMAGES["player_left"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.player_width, self.player_height = (41, 19)
@@ -256,7 +269,7 @@ class Player(pygame.sprite.Sprite):
         self.starpower, self.playeranimatetimer = 0, 0
         self.pos = [SCREEN_WIDTH/2, SCREEN_HEIGHT/2+100]
         self.rect.topleft = (self.pos[0], self.pos[1])
-    def update(self, images):
+    def update(self):
         self.rect = self.image.get_rect()
         newpos = (self.pos[0], self.pos[1])
         self.rect.topleft = newpos
@@ -290,84 +303,84 @@ class Player(pygame.sprite.Sprite):
         if self.speed_time_left < 0:
             self.speedpower = 0
             self.speed_time_left = 500
-    def move_up(self, images):
+    def move_up(self):
         self.player_width, self.player_height = (21, 42)
-        self.image = pygame.transform.flip(images["player_down"], 1, 1)
+        self.image = pygame.transform.flip(IMAGES["player_down"], 1, 1)
         if self.pos[1] > 50: # Boundary, 32 is block, added a few extra pixels to make it look nicer
             self.pos[1] -= self.speed_y
         if self.starpower == 1:
             if self.playeranimatetimer > 2:
-                self.image = pygame.transform.flip(images["player_down_gold"], 1, 1)
+                self.image = pygame.transform.flip(IMAGES["player_down_gold"], 1, 1)
             if self.playeranimatetimer > 4:
-                self.image = pygame.transform.flip(images["player_down"], 1, 1)
-    def move_down(self, images):
+                self.image = pygame.transform.flip(IMAGES["player_down"], 1, 1)
+    def move_down(self):
         self.player_width, self.player_height = (21, 42)
-        self.image = images["player_down"]
+        self.image = IMAGES["player_down"]
         if self.pos[1] < SCREEN_HEIGHT-75:
             self.pos[1] += self.speed_y
         if self.starpower == 1:
             if self.playeranimatetimer > 2:
-                self.image = images["player_down_gold"]
+                self.image = IMAGES["player_down_gold"]
             if self.playeranimatetimer > 4:
-                self.image = images["player_down"]
-    def move_left(self, images):
+                self.image = IMAGES["player_down"]
+    def move_left(self):
         self.player_width, self.player_height = (41, 19)
-        self.image = images["player_left"]
+        self.image = IMAGES["player_left"]
         if self.pos[0] > 32:
             self.pos[0] -= self.speed_x
         if self.starpower == 1:
             if self.playeranimatetimer > 2:
-                self.image = images["player_left_gold"]
+                self.image = IMAGES["player_left_gold"]
             if self.playeranimatetimer > 4:
-                self.image = images["player_left"]
-    def move_right(self, images):
+                self.image = IMAGES["player_left"]
+    def move_right(self):
         self.player_width, self.player_height = (41, 19)
-        self.image = pygame.transform.rotate(images["player_left"], 180)
+        self.image = pygame.transform.rotate(IMAGES["player_left"], 180)
         self.image = pygame.transform.flip(self.image, 0, 1)
         if self.pos[0] < SCREEN_WIDTH-75:
             self.pos[0] += self.speed_x
         if self.starpower == 1:
             if self.playeranimatetimer > 2:
-                self.image = pygame.transform.rotate(images["player_left_gold"], 180)
+                self.image = pygame.transform.rotate(IMAGES["player_left_gold"], 180)
                 self.image = pygame.transform.flip(self.image, 0, 1)
             if self.playeranimatetimer > 4:
-                self.image = pygame.transform.rotate(images["player_left"], 180)
+                self.image = pygame.transform.rotate(IMAGES["player_left"], 180)
                 self.image = pygame.transform.flip(self.image, 0, 1)
-    def move_upleft(self, images):
+    def move_upleft(self):
         self.player_width, self.player_height = (34, 34)
-        self.image = pygame.transform.flip(images["player_downright"], 0, 1)
+        self.image = pygame.transform.flip(IMAGES["player_downright"], 0, 1)
         self.image = pygame.transform.rotate(self.image, 90)
         if self.starpower == 1:
             if self.playeranimatetimer > 2:
-                self.image = pygame.transform.flip(images["player_downright"], 0, 1)
+                self.image = pygame.transform.flip(IMAGES["player_downright"], 0, 1)
                 self.image = pygame.transform.rotate(self.image, 90)
             if self.playeranimatetimer > 4:
-                self.image = pygame.transform.flip(images["player_downright_gold"], 0, 1)
+                self.image = pygame.transform.flip(IMAGES["player_downright_gold"], 0, 1)
                 self.image = pygame.transform.rotate(self.image, 90)
-    def move_upright(self, images):
+    def move_upright(self):
         self.player_width, self.player_height = (34, 34)
-        self.image = pygame.transform.rotate(images["player_downright"], 90)
+        self.image = pygame.transform.rotate(IMAGES["player_downright"], 90)
         if self.starpower == 1:
             if self.playeranimatetimer > 2:
-                self.image = pygame.transform.rotate(images["player_downright"], 90)
+                self.image = pygame.transform.rotate(IMAGES["player_downright"], 90)
             if self.playeranimatetimer > 4:
-                self.image = pygame.transform.rotate(images["player_downright_gold"], 90)
-    def move_downleft(self, images):
+                self.image = pygame.transform.rotate(IMAGES["player_downright_gold"], 90)
+    def move_downleft(self):
         self.player_width, self.player_height = (34, 34)
-        self.image = pygame.transform.flip(images["player_downright"], 1, 0)
+        self.image = pygame.transform.flip(IMAGES["player_downright"], 1, 0)
         if self.starpower == 1:
             if self.playeranimatetimer > 2:
-                self.image = pygame.transform.flip(images["player_downright_gold"], 1, 0)
+                self.image = pygame.transform.flip(IMAGES["player_downright_gold"], 1, 0)
             if self.playeranimatetimer > 4:
-                self.image = pygame.transform.flip(images["player_downright"], 1, 0)
-    def move_downright(self, images):
+                self.image = pygame.transform.flip(IMAGES["player_downright"], 1, 0)
+    def move_downright(self):
         self.player_width, self.player_height = (34, 34)
-        self.image = images["player_downright"]
+        self.image = IMAGES["player_downright"]
         if self.starpower == 1:
             if self.playeranimatetimer > 2:
-                self.image = images["player_downright_gold"]
+                self.image = IMAGES["player_downright_gold"]
             if self.playeranimatetimer > 4:
-                self.image = images["player_downright"]
+                self.image = IMAGES["player_downright"]
     def collide_with_redfish(self, score, score_blit):
         score_blit = 1
         score += 1
@@ -408,7 +421,7 @@ class Player(pygame.sprite.Sprite):
     def collide_with_star(self):
         self.starpower = random.choice([0, 1])+1
     def game_over(self):
-        global menu_selection, GAMEOVER_SCREEN
+        global menu_selection
         menu_selection = GAMEOVER_SCREEN
     def get_powerup_timer_text(self, ocean_font):
         if self.starpower != 0:
@@ -425,26 +438,26 @@ class Player(pygame.sprite.Sprite):
         self.kill()
 
 class RedFish(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Weakest prey in the game
         """
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_redfish"]
+        self.image = IMAGES["spr_redfish"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.direction = (random.choice([-2, 2]), random.choice([-2, 0, 2]))
         self.change_dir_timer = 0
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), random.randrange(100, SCREEN_HEIGHT-100))
-    def update(self, images):
+    def update(self):
         newpos = (self.rect.topleft[0] + self.direction[0],
                   self.rect.topleft[1] + self.direction[1])
         self.rect.topleft = newpos
         self.change_dir_timer += 1
         if self.direction[0] == -2:
-            self.image = pygame.transform.flip(images["spr_redfish"], 1, 0)
+            self.image = pygame.transform.flip(IMAGES["spr_redfish"], 1, 0)
         elif self.direction[0] == 2:
-            self.image = images["spr_redfish"]
+            self.image = IMAGES["spr_redfish"]
         if self.change_dir_timer > random.randrange(100, 600):
             self.direction = random.choice([(self.direction[0]*-1, self.direction[1]),
                                             (self.direction[0], self.direction[1]*-1),
@@ -471,29 +484,29 @@ class RedFish(pygame.sprite.Sprite):
         self.kill()
 
 class GreenFish(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Prey until it eats several red fish, and becomes a big green fish that
         can eat the player (unless the player is bigger)
         """
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_greenfish"]
+        self.image = IMAGES["spr_greenfish"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.direction = (random.choice([-4, 4]), random.choice([-4, 0, 4]))
         self.change_dir_timer = 0
         self.big_green_fish_score = 0
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), random.randrange(100, SCREEN_HEIGHT-100))
-    def update(self, images):
+    def update(self):
         newpos = (self.rect.topleft[0] + self.direction[0],
                   self.rect.topleft[1] + self.direction[1])
         self.rect.topleft = newpos
         self.change_dir_timer += 1
         if self.big_green_fish_score < 70:
             if self.direction[0] == -4:
-                self.image = images["spr_greenfish_left"]
+                self.image = IMAGES["spr_greenfish_left"]
             elif self.direction[0] == 4:
-                self.image = images["spr_greenfish"]
+                self.image = IMAGES["spr_greenfish"]
         if self.change_dir_timer > random.randrange(50, 300):
             self.direction = random.choice([(self.direction[0]*-1, self.direction[1]),
                                             (self.direction[0], self.direction[1]*-1),
@@ -510,29 +523,29 @@ class GreenFish(pygame.sprite.Sprite):
                 self.direction = (-4, random.choice([-4, 4]))
             elif self.rect.top < 32: # Top walls
                 self.direction = (random.choice([-4, 4]), 4)
-    def collision_with_redfish(self, images):
+    def collision_with_redfish(self):
         self.big_green_fish_score += 10
         if self.big_green_fish_score == 70:
-            self.image = pygame.transform.smoothscale(images["spr_biggreenfish"], (103, 58))
-    def small_collision_with_player(self, images):
-        self.image = images["spr_greenfish"]
+            self.image = pygame.transform.smoothscale(IMAGES["spr_biggreenfish"], (103, 58))
+    def small_collision_with_player(self):
+        self.image = IMAGES["spr_greenfish"]
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), random.randrange(100, SCREEN_HEIGHT-100))
     def remove_sprite(self):
         self.kill()
 
 class SilverFish(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Whem eaten, higher amount of points, but shows up infrequently
         """
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_silverfish"]
+        self.image = IMAGES["spr_silverfish"]
         self.rect = self.image.get_rect()
         self.rect.topleft = (random.choice([-50, SCREEN_WIDTH]), random.randrange(50, 150))
         self.restarttimer = 0
         self.direction = random.choice([0, 1]) #right or left
         allsprites.add(self)
-    def update(self, images):
+    def update(self):
         self.restarttimer += 1
         if self.restarttimer > 250:
             if self.rect.topleft[0] == -50:
@@ -541,10 +554,10 @@ class SilverFish(pygame.sprite.Sprite):
                 self.direction = 0 # left
             if self.direction == 1: # right movements
                 self.rect.topleft = self.rect.topleft[0]+3, self.rect.topleft[1]
-                self.image = images["spr_silverfish"]
+                self.image = IMAGES["spr_silverfish"]
             elif self.direction == 0: # left movements
                 self.rect.topleft = self.rect.topleft[0]-3, self.rect.topleft[1]
-                self.image = pygame.transform.flip(images["spr_silverfish"], 1, 0)
+                self.image = pygame.transform.flip(IMAGES["spr_silverfish"], 1, 0)
             if(self.rect.topleft[0] < -40 and self.direction == 0): #restarts position
                 self.rect.topleft = (random.choice([-50, SCREEN_WIDTH]), random.randrange(50, 150))
                 self.rect.topleft = self.rect.topleft[0], self.rect.topleft[1]
@@ -563,7 +576,7 @@ class SilverFish(pygame.sprite.Sprite):
         self.kill()
 
 class Shark(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Most frequently-seen predator in the game.
         Starts coming from above and then bounces around the room
@@ -571,9 +584,8 @@ class Shark(pygame.sprite.Sprite):
         When player has a star powerup, shark respawns
         When player has mini shark powerup, they can eat sharks
         """
-        global SCREEN_HEIGHT, SCREEN_WIDTH
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_shark"]
+        self.image = IMAGES["spr_shark"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.direction = (random.choice([-3, 3]), random.choice([-3, 3]))
@@ -581,7 +593,7 @@ class Shark(pygame.sprite.Sprite):
         self.activate = 0
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -400)
         self.arrow_warning = 0
-    def update(self, images):
+    def update(self):
         if self.rect.topleft[1] < 0:
             if self.activate == 1:
                 self.rect.topleft = (self.rect.topleft[0], self.rect.topleft[1]+3)
@@ -594,7 +606,7 @@ class Shark(pygame.sprite.Sprite):
         if self.mini_shark == 1:
             self.image = pygame.transform.smoothscale(self.image, (60, 30))
         else:
-            self.image = images["spr_shark"]
+            self.image = IMAGES["spr_shark"]
     def collision_with_wall(self, rect):
         if self.rect.colliderect(rect):
             if self.rect.left < 32: #left walls
@@ -613,14 +625,13 @@ class Shark(pygame.sprite.Sprite):
         self.kill()
 
 class BrightBlueFish(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Biggest predator in the game, eats everything that comes in contact
         Player can avoid if they have a star powerup
         """
-        global SCREEN_HEIGHT, SCREEN_WIDTH
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_brightbluefish"]
+        self.image = IMAGES["spr_brightbluefish"]
         self.direction = random.choice([0, 1]) #move left: 0, move right: 1
         self.rect = self.image.get_rect()
         allsprites.add(self)
@@ -628,14 +639,13 @@ class BrightBlueFish(pygame.sprite.Sprite):
         self.rect.topleft = (random.choice([-1000, SCREEN_WIDTH+1000]),
                              random.randrange(50, SCREEN_HEIGHT-200))
         self.arrow_warning = 0
-    def update(self, images):
-        global SCREEN_WIDTH
+    def update(self):
         if self.activate == 1:
             self.arrow_warning = 1
             if self.direction == 1:
-                self.image = images["bigBrightBlueFish"]
+                self.image = IMAGES["bigBrightBlueFish"]
             elif self.direction == 0:
-                self.image = images["bigBrightBlueFishLeft"]
+                self.image = IMAGES["bigBrightBlueFishLeft"]
             if self.direction == 1 and self.activate == 1: #right movements
                 self.rect.topleft = self.rect.topleft[0]+4, self.rect.topleft[1]
                 if self.rect.right > -200: # Remove arrow
@@ -650,19 +660,18 @@ class BrightBlueFish(pygame.sprite.Sprite):
                     self.activate = 0
 
         else:
-            self.image = images["spr_brightbluefish"]
+            self.image = IMAGES["spr_brightbluefish"]
     def remove_sprite(self):
         self.kill()
 
 class RainbowFish(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Starts from above, then begins to chase player if player is smaller
         Will run away if player is bigger
         """
-        global SCREEN_HEIGHT, SCREEN_WIDTH
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_rainbowfish"]
+        self.image = IMAGES["spr_rainbowfish"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.score_exit = 0
@@ -673,7 +682,7 @@ class RainbowFish(pygame.sprite.Sprite):
         self.arrow_warning = 0
         self.activate = 0
         self.chase = 0
-    def update(self, images):
+    def update(self):
         self.rect.topleft = (self.pos[0], self.pos[1])
         self.rainbowtimer += 1
         if self.activate == 1:
@@ -691,7 +700,7 @@ class RainbowFish(pygame.sprite.Sprite):
                     if self.size[0]-20 <= 55: #one check on [0], so 85 width is max size
                         self.size[0] += 10
                         self.size[1] += 10
-                    self.image = images["spr_rainbowfish"]
+                    self.image = IMAGES["spr_rainbowfish"]
             # Move down at start
             elif self.rainbowtimer >= 300 and self.pos[1] < 200 and self.chase == 0 and self.score_exit == 0: 
                 self.arrow_warning = 1
@@ -705,7 +714,7 @@ class RainbowFish(pygame.sprite.Sprite):
             if self.pos[1] >= 200 and self.score_exit == 0:
                 self.chase = 1
                 
-    def chase_player(self, images, player_sizescore, player_starpower, player_pos):
+    def chase_player(self, player_sizescore, player_starpower, player_pos):
         if self.score_exit == 0 and self.chase == 1:
             if(self.size[0]-45 <= player_sizescore or player_starpower == 1):
                 #Avoid Player
@@ -748,13 +757,12 @@ class RainbowFish(pygame.sprite.Sprite):
         self.kill()
 
 class Snake(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Snake bite causes player to downsize to the original size
         """
-        global SCREEN_HEIGHT, SCREEN_WIDTH
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_snake"]
+        self.image = IMAGES["spr_snake"]
         self.restarttimer = 0
         self.direction = random.choice([0, 1]) #move left: 0, move right: 1
         self.rect = self.image.get_rect()
@@ -762,27 +770,27 @@ class Snake(pygame.sprite.Sprite):
         self.randomspawn = random.randrange(200, 400)
         allsprites.add(self)
         self.rect.topleft = (random.choice([-70, SCREEN_WIDTH]), random.randrange(SCREEN_HEIGHT-110, SCREEN_HEIGHT-50))
-    def update(self, images):
+    def update(self):
         self.snakeplayeranimatetimer += 1
         if self.direction == 0: #go left
             if self.snakeplayeranimatetimer > 5:
-                self.image = images["spr_snake2"]
+                self.image = IMAGES["spr_snake2"]
             if self.snakeplayeranimatetimer > 10:
-                self.image = images["spr_snake3"]
+                self.image = IMAGES["spr_snake3"]
             if self.snakeplayeranimatetimer > 15:
-                self.image = images["spr_snake4"]
+                self.image = IMAGES["spr_snake4"]
             if self.snakeplayeranimatetimer > 20:
-                self.image = images["spr_snake"]
+                self.image = IMAGES["spr_snake"]
                 self.snakeplayeranimatetimer = 0
         elif self.direction == 1: #go right
             if self.snakeplayeranimatetimer > 5:
-                self.image = pygame.transform.flip(images["spr_snake2"], 1, 0)
+                self.image = pygame.transform.flip(IMAGES["spr_snake2"], 1, 0)
             if self.snakeplayeranimatetimer > 10:
-                self.image = pygame.transform.flip(images["spr_snake3"], 1, 0)
+                self.image = pygame.transform.flip(IMAGES["spr_snake3"], 1, 0)
             if self.snakeplayeranimatetimer > 15:
-                self.image = pygame.transform.flip(images["spr_snake4"], 1, 0)
+                self.image = pygame.transform.flip(IMAGES["spr_snake4"], 1, 0)
             if self.snakeplayeranimatetimer > 20:
-                self.image = pygame.transform.flip(images["spr_snake"], 1, 0)
+                self.image = pygame.transform.flip(IMAGES["spr_snake"], 1, 0)
                 self.snakeplayeranimatetimer = 0
         self.restarttimer += 1
         if self.restarttimer > self.randomspawn:
@@ -815,25 +823,24 @@ class Snake(pygame.sprite.Sprite):
         self.kill()
 
 class SeaHorse(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Speed powerup for player
         """
-        global SCREEN_HEIGHT, SCREEN_WIDTH
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_seahorse"]
+        self.image = IMAGES["spr_seahorse"]
         self.restarttimer = 0
         self.direction = random.choice([0, 1]) #move left: 0, move right: 1
         self.randomspawn = random.randrange(200, 500) #timer
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.rect.topleft = (random.choice([-70, SCREEN_WIDTH]), random.randrange(50, SCREEN_HEIGHT-200))
-    def update(self, images):
+    def update(self):
         self.restarttimer += 1
         if self.direction == 1:
-            self.image = pygame.transform.flip(images["spr_seahorse"], 1, 0)
+            self.image = pygame.transform.flip(IMAGES["spr_seahorse"], 1, 0)
         else:
-            self.image = images["spr_seahorse"]
+            self.image = IMAGES["spr_seahorse"]
         if self.restarttimer > self.randomspawn:
             if self.rect.topleft[0] == -70:
                 self.direction = 1 #right
@@ -862,13 +869,12 @@ class SeaHorse(pygame.sprite.Sprite):
         self.kill()
 
 class JellyFish(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Slows down player temporarily for 5 seconds
         """
-        global SCREEN_HEIGHT, SCREEN_WIDTH
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_jellyfish"]
+        self.image = IMAGES["spr_jellyfish"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.returnback = 0
@@ -879,10 +885,11 @@ class JellyFish(pygame.sprite.Sprite):
         self.jfstring = []
         self.activate = 0
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -50)
-    def update(self, images):
+    def update(self):
         self.jellyfishanimatetimer += 1
-        self.jfstring = [images["spr_jellyfish"], images["spr_jellyfish2"], images["spr_jellyfish3"], images["spr_jellyfish4"],
-                         images["spr_jellyfish5"], images["spr_jellyfish6"], images["spr_jellyfish7"]]
+        self.jfstring = [IMAGES["spr_jellyfish"], IMAGES["spr_jellyfish2"], IMAGES["spr_jellyfish3"],
+                         IMAGES["spr_jellyfish4"], IMAGES["spr_jellyfish5"], IMAGES["spr_jellyfish6"],
+                         IMAGES["spr_jellyfish7"]]
         for i in range(2, 16, 2): #cycle through first 13 sprite animations
             if self.jellyfishanimatetimer >= i:
                 self.image = self.jfstring[(i//2)-1]
@@ -918,19 +925,19 @@ class JellyFish(pygame.sprite.Sprite):
         self.kill()
 
 class StarPowerup(pygame.sprite.Sprite):
-    def __init__(self, images, allsprites):
+    def __init__(self, allsprites):
         """
         Player becomes invincible for period of time
         """
         pygame.sprite.Sprite.__init__(self)
-        self.image = images["spr_star"]
+        self.image = IMAGES["spr_star"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.staranimator = 0
         self.spawntimer = 0
         self.pos = (SCREEN_WIDTH, SCREEN_HEIGHT-80) # Out of screen
         self.rect.topleft = self.pos
-    def update(self, images):
+    def update(self):
         self.spawntimer += 1
         self.staranimator += 1
         self.rect.topleft = (self.pos[0], self.pos[1])
@@ -940,13 +947,13 @@ class StarPowerup(pygame.sprite.Sprite):
         elif self.spawntimer > 1500: # Respawn
             self.pos = (self.pos[0]-5, SCREEN_HEIGHT-80)
             if self.staranimator > 0:
-                self.image = images["spr_star"]
+                self.image = IMAGES["spr_star"]
             if self.staranimator > 10:
-                self.image = images["spr_star2"]
+                self.image = IMAGES["spr_star2"]
             if self.staranimator > 20:
-                self.image = images["spr_star3"]
+                self.image = IMAGES["spr_star3"]
             if self.staranimator > 30:
-                self.image = images["spr_star2"]
+                self.image = IMAGES["spr_star2"]
             if self.staranimator > 40:
                 self.staranimator = 0
     def collide_with_player(self):
@@ -993,20 +1000,14 @@ def save_high_score(new_high_score):
     return high_score
 
 def main():
-    global menu_selection, PLAY_SCREEN, START_SCREEN, GAMEOVER_SCREEN, PAUSE_SCREEN, INFO_SCREEN
-    global SCREEN_WIDTH, SCREEN_HEIGHT
-
-    (SCREEN_WIDTH, SCREEN_HEIGHT) = 928, 544
+    global menu_selection
     KEYS = [False, False, False, False] #up, left, down, right
-    PLAY_SCREEN, START_SCREEN, GAMEOVER_SCREEN, PAUSE_SCREEN, INFO_SCREEN = 0, 1, 2, 3, 4
     menu_selection = START_SCREEN # Initialize on START_SCREEN
     RUNNING, RESTART, DEBUG = 0, 1, 2
     state = RESTART
     debug_message = 0
     SCORE, SCORE_BLIT, ONEPOWERUPSOUND, SCORE_DISAPPEAR_TIMER = 0, 0, 0, 0
     screen = None
-    images = {}
-    sounds = {}
     last_pressed = 0
     (x_first, y_first) = (0, 0)
     (x_second, y_second) = (0, -SCREEN_HEIGHT)
@@ -1017,44 +1018,44 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Fish Food")
 
-    load_image("sprites/wall.bmp", "spr_wall", True, False, images)
-    load_image("sprites/Player_left.png", "player_left", True, True, images)
-    load_image("sprites/Player_downright.png", "player_downright", True, True, images)
-    load_image("sprites/Player_down.png", "player_down", True, True, images)
-    load_image("sprites/Player_left_gold.png", "player_left_gold", True, True, images)
-    load_image("sprites/Player_downright_gold.png", "player_downright_gold", True, True, images)
-    load_image("sprites/Player_down_gold.png", "player_down_gold", True, True, images)
-    load_image("sprites/redfish.png", "spr_redfish", True, True, images)
-    load_image("sprites/greenfish.png", "spr_greenfish", True, True, images)
-    images["spr_greenfish_left"] = pygame.transform.flip(images["spr_greenfish"], 1, 0)
-    load_image("sprites/biggreenfish.png", "spr_biggreenfish", True, True, images)
-    load_image("sprites/silverfish.png", "spr_silverfish", True, True, images)
-    load_image("sprites/snake1.png", "spr_snake", True, True, images)
-    load_image("sprites/snake2.png", "spr_snake2", True, True, images)
-    load_image("sprites/snake3.png", "spr_snake3", True, True, images)
-    load_image("sprites/snake4.png", "spr_snake4", True, True, images)
-    load_image("sprites/seahorse.png", "spr_seahorse", True, True, images)
-    load_image("sprites/jellyfish1.png", "spr_jellyfish", True, True, images)
-    load_image("sprites/jellyfish2.png", "spr_jellyfish2", True, True, images)
-    load_image("sprites/jellyfish3.png", "spr_jellyfish3", True, True, images)
-    load_image("sprites/jellyfish4.png", "spr_jellyfish4", True, True, images)
-    load_image("sprites/jellyfish5.png", "spr_jellyfish5", True, True, images)
-    load_image("sprites/jellyfish6.png", "spr_jellyfish6", True, True, images)
-    load_image("sprites/jellyfish7.png", "spr_jellyfish7", True, True, images)
-    load_image("sprites/shark.png", "spr_shark", True, True, images)
-    load_image("sprites/brightbluefish.png", "spr_brightbluefish", True, True, images)
-    images["bigBrightBlueFish"] = pygame.transform.smoothscale(images["spr_brightbluefish"], (300, 200))
-    images["bigBrightBlueFishLeft"] = pygame.transform.flip(images["bigBrightBlueFish"], 1, 0)
-    load_image("sprites/starfish1.png", "spr_star", True, True, images)
-    load_image("sprites/starfish2.png", "spr_star2", True, True, images)
-    load_image("sprites/starfish3.png", "spr_star3", True, True, images)
-    load_image("sprites/arrowwarningred.png", "arrow_warning_red", True, True, images)
-    load_image("sprites/arrowwarningsilver.png", "arrow_warning_silver", True, True, images)
-    load_image("sprites/arrowwarningblue.png", "arrow_warning_blue", True, True, images)
-    load_image("sprites/SeaweedMiddle.png", "spr_seaweed", True, True, images)
-    load_image("sprites/SeaweedLeft.png", "spr_seaweed_left", True, True, images)
-    load_image("sprites/SeaweedRight.png", "spr_seaweed_right", True, True, images)
-    load_image("sprites/rainbowfish.png", "spr_rainbowfish", True, True, images)
+    load_image("sprites/wall.bmp", "spr_wall", True, False)
+    load_image("sprites/Player_left.png", "player_left", True, True)
+    load_image("sprites/Player_downright.png", "player_downright", True, True)
+    load_image("sprites/Player_down.png", "player_down", True, True)
+    load_image("sprites/Player_left_gold.png", "player_left_gold", True, True)
+    load_image("sprites/Player_downright_gold.png", "player_downright_gold", True, True)
+    load_image("sprites/Player_down_gold.png", "player_down_gold", True, True)
+    load_image("sprites/redfish.png", "spr_redfish", True, True)
+    load_image("sprites/greenfish.png", "spr_greenfish", True, True)
+    IMAGES["spr_greenfish_left"] = pygame.transform.flip(IMAGES["spr_greenfish"], 1, 0)
+    load_image("sprites/biggreenfish.png", "spr_biggreenfish", True, True)
+    load_image("sprites/silverfish.png", "spr_silverfish", True, True)
+    load_image("sprites/snake1.png", "spr_snake", True, True)
+    load_image("sprites/snake2.png", "spr_snake2", True, True)
+    load_image("sprites/snake3.png", "spr_snake3", True, True)
+    load_image("sprites/snake4.png", "spr_snake4", True, True)
+    load_image("sprites/seahorse.png", "spr_seahorse", True, True)
+    load_image("sprites/jellyfish1.png", "spr_jellyfish", True, True)
+    load_image("sprites/jellyfish2.png", "spr_jellyfish2", True, True)
+    load_image("sprites/jellyfish3.png", "spr_jellyfish3", True, True)
+    load_image("sprites/jellyfish4.png", "spr_jellyfish4", True, True)
+    load_image("sprites/jellyfish5.png", "spr_jellyfish5", True, True)
+    load_image("sprites/jellyfish6.png", "spr_jellyfish6", True, True)
+    load_image("sprites/jellyfish7.png", "spr_jellyfish7", True, True)
+    load_image("sprites/shark.png", "spr_shark", True, True)
+    load_image("sprites/brightbluefish.png", "spr_brightbluefish", True, True)
+    IMAGES["bigBrightBlueFish"] = pygame.transform.smoothscale(IMAGES["spr_brightbluefish"], (300, 200))
+    IMAGES["bigBrightBlueFishLeft"] = pygame.transform.flip(IMAGES["bigBrightBlueFish"], 1, 0)
+    load_image("sprites/starfish1.png", "spr_star", True, True)
+    load_image("sprites/starfish2.png", "spr_star2", True, True)
+    load_image("sprites/starfish3.png", "spr_star3", True, True)
+    load_image("sprites/arrowwarningred.png", "arrow_warning_red", True, True)
+    load_image("sprites/arrowwarningsilver.png", "arrow_warning_silver", True, True)
+    load_image("sprites/arrowwarningblue.png", "arrow_warning_blue", True, True)
+    load_image("sprites/SeaweedMiddle.png", "spr_seaweed", True, True)
+    load_image("sprites/SeaweedLeft.png", "spr_seaweed_left", True, True)
+    load_image("sprites/SeaweedRight.png", "spr_seaweed_right", True, True)
+    load_image("sprites/rainbowfish.png", "spr_rainbowfish", True, True)
     #font and texts
     ocean_font = pygame.font.Font("fonts/oceanfont.ttf", 16)
     ocean_font_main = pygame.font.Font("fonts/oceanfont.ttf", 48)
@@ -1077,19 +1078,19 @@ def main():
     pygame.display.set_icon(gameicon)
     pygame.display.set_caption('Fish Food')
     pygame.mouse.set_visible(0)
-    load_sound("sounds/snd_eat.wav", "snd_eat", sounds)
-    sounds["snd_eat"].set_volume(.2)
-    load_sound("sounds/eatshark.wav", "snd_eatshark", sounds)
-    sounds["snd_eatshark"].set_volume(.2)
-    load_sound("sounds/sizedown.wav", "snd_sizedown", sounds)
-    load_sound("sounds/playerdie.wav", "snd_playerdie", sounds)
-    sounds["snd_playerdie"].set_volume(.3)
-    load_sound("sounds/poweruptimer.wav", "snd_poweruptimer", sounds)
-    sounds["snd_poweruptimer"].set_volume(.3)
-    load_sound("sounds/siren.wav", "snd_siren", sounds)
-    sounds["snd_siren"].set_volume(.05)
-    load_sound("sounds/sharkincoming.wav", "snd_sharkincoming", sounds)
-    sounds["snd_sharkincoming"].set_volume(.03)
+    load_sound("sounds/snd_eat.wav", "snd_eat")
+    SOUNDS["snd_eat"].set_volume(.2)
+    load_sound("sounds/eatshark.wav", "snd_eatshark")
+    SOUNDS["snd_eatshark"].set_volume(.2)
+    load_sound("sounds/sizedown.wav", "snd_sizedown")
+    load_sound("sounds/playerdie.wav", "snd_playerdie")
+    SOUNDS["snd_playerdie"].set_volume(.3)
+    load_sound("sounds/poweruptimer.wav", "snd_poweruptimer")
+    SOUNDS["snd_poweruptimer"].set_volume(.3)
+    load_sound("sounds/siren.wav", "snd_siren")
+    SOUNDS["snd_siren"].set_volume(.05)
+    load_sound("sounds/sharkincoming.wav", "snd_sharkincoming")
+    SOUNDS["snd_sharkincoming"].set_volume(.03)
     # Music loop
     pygame.mixer.music.load("sounds/gamemusic.mp3")
     pygame.mixer.music.set_volume(.1)
@@ -1109,35 +1110,35 @@ def main():
             walls = []
             seaweeds = []
             for x_top in range(29):
-                wall = Wall(images, allsprites)
+                wall = Wall(allsprites)
                 wall.rect.topleft = (x_top*32, 0) #top walls
                 walls.append(wall)
             for x_bottom in range(29):
-                wall = Wall(images, allsprites)
+                wall = Wall(allsprites)
                 wall.rect.topleft = (x_bottom*32, SCREEN_HEIGHT-32) #bottom walls
                 walls.append(wall)
             for y_left in range(17):
-                wall = Wall(images, allsprites)
+                wall = Wall(allsprites)
                 wall.rect.topleft = (0, (y_left*32)+32) #left walls
                 walls.append(wall)
             for y_right in range(17):
-                wall = Wall(images, allsprites)
+                wall = Wall(allsprites)
                 wall.rect.topleft = (SCREEN_WIDTH-32, (y_right*32)+32) #right walls
                 walls.append(wall)
             for x_pos in range(5, SCREEN_WIDTH-15, 60):
-                seaweed = Seaweed(images, allsprites, x_pos, SCREEN_HEIGHT-120)
+                seaweed = Seaweed(allsprites, x_pos, SCREEN_HEIGHT-120)
                 seaweeds.append(seaweed)
-            player = Player(images, allsprites)
-            red_fishes = [RedFish(images, allsprites) for i in range(6)]
-            green_fishes = [GreenFish(images, allsprites) for i in range(3)]
-            silverfish = SilverFish(images, allsprites)
-            snake = Snake(images, allsprites)
-            seahorse = SeaHorse(images, allsprites)
-            jellyfishes = [JellyFish(images, allsprites) for i in range(3)]
-            sharks = [Shark(images, allsprites) for i in range(4)]
-            brightbluefish = BrightBlueFish(images, allsprites)
-            star = StarPowerup(images, allsprites)
-            rainbow_fish = RainbowFish(images, allsprites)
+            player = Player(allsprites)
+            red_fishes = [RedFish(allsprites) for i in range(6)]
+            green_fishes = [GreenFish(allsprites) for i in range(3)]
+            silverfish = SilverFish(allsprites)
+            snake = Snake(allsprites)
+            seahorse = SeaHorse(allsprites)
+            jellyfishes = [JellyFish(allsprites) for i in range(3)]
+            sharks = [Shark(allsprites) for i in range(4)]
+            brightbluefish = BrightBlueFish(allsprites)
+            star = StarPowerup(allsprites)
+            rainbow_fish = RainbowFish(allsprites)
 
             SCORE = 0
             SCORE_BLIT = 0
@@ -1154,8 +1155,8 @@ def main():
             high_score = get_high_score()
             if SCORE > high_score:
                 save_high_score(SCORE)
-            sounds["snd_playerdie"].play()
-            sounds["snd_poweruptimer"].stop()
+            SOUNDS["snd_playerdie"].play()
+            SOUNDS["snd_poweruptimer"].stop()
             GameOver(screen, game_over, font_arial, font_ocean_gameover, SCORE)
             state = RESTART
             for spr in allsprites:
@@ -1175,9 +1176,9 @@ def main():
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        for i in range(0, len(sounds)):
-                            soundslist = list(sounds.keys()) # Returns list of keys in sounds
-                            sounds[soundslist[i]].stop() # Stops all sounds when go to menu
+                        for i in range(0, len(SOUNDS)):
+                            soundslist = list(SOUNDS.keys()) # Returns list of keys in sounds
+                            SOUNDS[soundslist[i]].stop() # Stops all sounds when go to menu
                         menu_selection = PAUSE_SCREEN
                     elif event.key == pygame.K_UP:
                         KEYS[0] = True
@@ -1202,47 +1203,47 @@ def main():
                         debug_message = 1
                         state = DEBUG
             if KEYS[0]:
-                player.move_up(images)
+                player.move_up()
             if KEYS[2]:
-                player.move_down(images)
+                player.move_down()
             if KEYS[1]:
-                player.move_left(images)
+                player.move_left()
             if KEYS[3]:
-                player.move_right(images)
+                player.move_right()
             if KEYS[0] and KEYS[1]:
-                player.move_upleft(images)
+                player.move_upleft()
             if KEYS[0] and KEYS[3]:
-                player.move_upright(images)
+                player.move_upright()
             if KEYS[2] and KEYS[1]:
-                player.move_downleft(images)
+                player.move_downleft()
             if KEYS[2] and KEYS[3]:
-                player.move_downright(images)
+                player.move_downright()
             if KEYS == [False, False, False, False]:
                 player.player_width, player.player_height = (41, 19)
                 if last_pressed == 0:
                     if player.starpower == 1:
                         if player.playeranimatetimer > 2:
-                            player.image = images["player_left_gold"]
+                            player.image = IMAGES["player_left_gold"]
                         if player.playeranimatetimer > 4:
-                            player.image = images["player_left"]
+                            player.image = IMAGES["player_left"]
                     else:
-                        player.image = images["player_left"]
+                        player.image = IMAGES["player_left"]
                 else:
                     if player.starpower == 1:
                         if player.playeranimatetimer > 2:
-                            player.image = pygame.transform.rotate(images["player_left_gold"], 180)
+                            player.image = pygame.transform.rotate(IMAGES["player_left_gold"], 180)
                             player.image = pygame.transform.flip(player.image, 0, 1)
                         if player.playeranimatetimer > 4:
-                            player.image = pygame.transform.rotate(images["player_left"], 180)
+                            player.image = pygame.transform.rotate(IMAGES["player_left"], 180)
                             player.image = pygame.transform.flip(player.image, 0, 1)
                     else:
-                        player.image = pygame.transform.rotate(images["player_left"], 180)
+                        player.image = pygame.transform.rotate(IMAGES["player_left"], 180)
                         player.image = pygame.transform.flip(player.image, 0, 1)
 
             ##################
             # Call update function for each object
             ##################
-            allsprites.update(images)
+            allsprites.update()
 
             ##################
             # Draw menus for in-game
@@ -1263,21 +1264,21 @@ def main():
             screen.blit(blackbg, (0, 0))
             menu_text = ocean_font.render("Menu:", 1, (255, 255, 255))
             screen.blit(menu_text, (10, 5))
-            screen.blit(images["spr_redfish"], (65, 11))
-            screen.blit(images["spr_greenfish"], (90, 11))
-            screen.blit(images["spr_silverfish"], (120, 9))
+            screen.blit(IMAGES["spr_redfish"], (65, 11))
+            screen.blit(IMAGES["spr_greenfish"], (90, 11))
+            screen.blit(IMAGES["spr_silverfish"], (120, 9))
             if rainbow_fish.size[0]-45 <= player.sizescore: #55 is orig size
-                blitted_rainbow_fish = pygame.transform.smoothscale(images["spr_rainbowfish"], (24, 17))
+                blitted_rainbow_fish = pygame.transform.smoothscale(IMAGES["spr_rainbowfish"], (24, 17))
                 screen.blit(blitted_rainbow_fish, (158, 6))
             else:
                 screen.blit(ocean_font.render("", 1, (0, 0, 0)), (158, 6))
             if player.sizescore >= 40:
-                blitted_Big_Green_Fish = pygame.transform.smoothscale(images["spr_biggreenfish"], (24, 15))
+                blitted_Big_Green_Fish = pygame.transform.smoothscale(IMAGES["spr_biggreenfish"], (24, 15))
                 screen.blit(blitted_Big_Green_Fish, (189, 7))
             else:
                 screen.blit(ocean_font.render("", 1, (0, 0, 0)), (189, 7))
             if player.starpower == 2:
-                blittedshark = pygame.transform.smoothscale(images["spr_shark"], (24, 15))
+                blittedshark = pygame.transform.smoothscale(IMAGES["spr_shark"], (24, 15))
                 screen.blit(blittedshark, (220, 7))
             else:
                 screen.blit(ocean_font.render("", 1, (0, 0, 0)), (220, 7))
@@ -1306,30 +1307,30 @@ def main():
                 rainbow_fish.activate = 1
             if rainbow_fish.activate == 1 and rainbow_fish.score_exit == 0:
                 if rainbow_fish.arrow_warning == 1 and rainbow_fish.rect.top < 0:
-                    screen.blit(images["arrow_warning_red"], (rainbow_fish.rect.topleft[0], 40))
-                    sounds["snd_sharkincoming"].play()
-                rainbow_fish.chase_player(images, player.sizescore, player.starpower, player.pos)
+                    screen.blit(IMAGES["arrow_warning_red"], (rainbow_fish.rect.topleft[0], 40))
+                    SOUNDS["snd_sharkincoming"].play()
+                rainbow_fish.chase_player(player.sizescore, player.starpower, player.pos)
             # Sharks
             if SCORE >= 5:
                 sharks[0].activate = 1
                 if sharks[0].arrow_warning == 1:
-                    screen.blit(images["arrow_warning_silver"], (sharks[0].rect.topleft[0], 40))
-                    sounds["snd_sharkincoming"].play()
+                    screen.blit(IMAGES["arrow_warning_silver"], (sharks[0].rect.topleft[0], 40))
+                    SOUNDS["snd_sharkincoming"].play()
             if SCORE >= 20:
                 sharks[1].activate = 1
                 if sharks[1].arrow_warning == 1:
-                    screen.blit(images["arrow_warning_silver"], (sharks[1].rect.topleft[0], 40))
-                    sounds["snd_sharkincoming"].play()
+                    screen.blit(IMAGES["arrow_warning_silver"], (sharks[1].rect.topleft[0], 40))
+                    SOUNDS["snd_sharkincoming"].play()
             if SCORE >= 45:
                 sharks[2].activate = 1
                 if sharks[2].arrow_warning == 1:
-                    screen.blit(images["arrow_warning_silver"], (sharks[2].rect.topleft[0], 40))
-                    sounds["snd_sharkincoming"].play()
+                    screen.blit(IMAGES["arrow_warning_silver"], (sharks[2].rect.topleft[0], 40))
+                    SOUNDS["snd_sharkincoming"].play()
             if SCORE >= 75:
                 sharks[3].activate = 1
                 if sharks[3].arrow_warning == 1:
-                    screen.blit(images["arrow_warning_silver"], (sharks[3].rect.topleft[0], 40))
-                    sounds["snd_sharkincoming"].play()
+                    screen.blit(IMAGES["arrow_warning_silver"], (sharks[3].rect.topleft[0], 40))
+                    SOUNDS["snd_sharkincoming"].play()
             # Bright Blue Fish
             # Starts moving when you have a certain score
             if(brightbluefish.activate == 0 and (SCORE % 50 >= 0 and SCORE % 50 <= 2) and SCORE >= 50):
@@ -1342,13 +1343,13 @@ def main():
             # Arrow Warning for Bright Blue Fish
             if brightbluefish.arrow_warning == 1:
                 if brightbluefish.direction == 1 and brightbluefish.rect.topleft[0] < 0: # MOVING RIGHT
-                    screen.blit(images["arrow_warning_blue"], (20, brightbluefish.rect.midright[1]+40))
-                    sounds["snd_siren"].play()
+                    screen.blit(IMAGES["arrow_warning_blue"], (20, brightbluefish.rect.midright[1]+40))
+                    SOUNDS["snd_siren"].play()
                 elif brightbluefish.direction == 0 and brightbluefish.rect.topleft[0] > SCREEN_WIDTH: # MOVING LEFT
-                    screen.blit(pygame.transform.flip(images["arrow_warning_blue"], 1, 0),
+                    screen.blit(pygame.transform.flip(IMAGES["arrow_warning_blue"], 1, 0),
                                 (SCREEN_WIDTH-70, brightbluefish.rect.midright[1]+40))
-                    sounds["snd_sharkincoming"].stop()
-                    sounds["snd_siren"].play()
+                    SOUNDS["snd_sharkincoming"].stop()
+                    SOUNDS["snd_siren"].play()
 
             # Jellyfish
             if SCORE >= 0:
@@ -1365,11 +1366,11 @@ def main():
                 if pygame.sprite.collide_mask(red_fish, player):
                     red_fish.collide_with_player()
                     SCORE, SCORE_BLIT = player.collide_with_redfish(SCORE, SCORE_BLIT)
-                    sounds["snd_eat"].play()
+                    SOUNDS["snd_eat"].play()
                 for greenfish in green_fishes:
                     if red_fish.rect.colliderect(greenfish):
-                        greenfish.collision_with_redfish(images)
-                        if greenfish.image != images["spr_biggreenfish"]:
+                        greenfish.collision_with_redfish()
+                        if greenfish.image != IMAGES["spr_biggreenfish"]:
                             red_fish.collide_with_greenfish()
                 if pygame.sprite.collide_mask(red_fish, brightbluefish):
                     red_fish.collide_with_brightbluefish()
@@ -1378,36 +1379,39 @@ def main():
                         red_fish.collision_with_wall(wall.rect)
             for greenfish in green_fishes:
                 if pygame.sprite.collide_mask(greenfish, player):
-                    if greenfish.image == images["spr_greenfish"] or greenfish.image == images["spr_greenfish_left"] or player.sizescore >= 40 or player.starpower == 1:
-                        sounds["snd_eat"].play()
+                    if(greenfish.image == IMAGES["spr_greenfish"] or 
+                       greenfish.image == IMAGES["spr_greenfish_left"] or 
+                       player.sizescore >= 40 or 
+                       player.starpower == 1):
+                        SOUNDS["snd_eat"].play()
                         SCORE, SCORE_BLIT = player.collide_with_greenfish(SCORE, SCORE_BLIT)
-                        greenfish.small_collision_with_player(images)
+                        greenfish.small_collision_with_player()
                         greenfish.big_green_fish_score = 0
                     else: # When it transforms to big green fish, player dies
                         menu_selection = GAMEOVER_SCREEN
                 if pygame.sprite.collide_mask(greenfish, brightbluefish):
                     greenfish.big_green_fish_score = 0
-                    greenfish.image = images["spr_greenfish"]
+                    greenfish.image = IMAGES["spr_greenfish"]
                     greenfish.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), random.randrange(100, SCREEN_HEIGHT-100))
                 for wall in walls:
                     if greenfish.rect.colliderect(wall.rect):
                         greenfish.collision_with_wall(wall.rect)
             if pygame.sprite.collide_mask(silverfish, player):
-                sounds["snd_eat"].play()
+                SOUNDS["snd_eat"].play()
                 SCORE, SCORE_BLIT = player.collide_with_silverfish(SCORE, SCORE_BLIT)
                 silverfish.collide_with_player()
             if pygame.sprite.collide_mask(silverfish, brightbluefish):
-                sounds["snd_eat"].play()
+                SOUNDS["snd_eat"].play()
                 silverfish.collide_with_brightbluefish()
             for shark in sharks:
                 if pygame.sprite.collide_mask(shark, player):
                     SCORE, SCORE_BLIT = player.collide_with_shark(SCORE, SCORE_BLIT)
                     shark.collide_with_player()
                     if player.starpower != 0:
-                        sounds["snd_eatshark"].play()
+                        SOUNDS["snd_eatshark"].play()
                 if pygame.sprite.collide_mask(shark, brightbluefish):
                     shark.collide_with_brightbluefish()
-                    sounds["snd_eat"].play()
+                    SOUNDS["snd_eat"].play()
                 for wall in walls:
                     if shark.rect.colliderect(wall.rect):
                         shark.collision_with_wall(wall.rect)
@@ -1418,7 +1422,7 @@ def main():
             if pygame.sprite.collide_mask(rainbow_fish, player):
                 # Player eats rainbow_fish only when appears bigger (arbitrary)
                 if (rainbow_fish.size[0]-45 <= player.sizescore) or (player.starpower == 1):
-                    sounds["snd_eat"].play()
+                    SOUNDS["snd_eat"].play()
                     SCORE_BLIT = 2
                     SCORE += 2
                     player.sizescore += 2
@@ -1427,57 +1431,57 @@ def main():
                     if player.starpower != 1:
                         menu_selection = GAMEOVER_SCREEN
             if pygame.sprite.collide_mask(rainbow_fish, brightbluefish):
-                sounds["snd_eat"].play()
+                SOUNDS["snd_eat"].play()
                 rainbow_fish.collide_with_brightbluefish()
             if pygame.sprite.collide_mask(snake, player):
                 snake.collide_with_player()
                 if player.starpower != 1:
                     player.collide_with_snake()
-                    sounds["snd_sizedown"].play()
+                    SOUNDS["snd_sizedown"].play()
                 else:
-                    sounds["snd_eat"].play()
+                    SOUNDS["snd_eat"].play()
             if pygame.sprite.collide_mask(snake, brightbluefish):
                 snake.collide_with_brightbluefish()
             if pygame.sprite.collide_mask(seahorse, player):
                 player.collide_with_seahorse()
                 seahorse.collide_with_player()
-                sounds["snd_eat"].play()
+                SOUNDS["snd_eat"].play()
                 ONEPOWERUPSOUND += 1
                 if ONEPOWERUPSOUND > 1:
-                    sounds["snd_poweruptimer"].stop()
-                for i in range(0, len(sounds)):
-                    soundslist = list(sounds.keys()) #returns list of keys in sounds
-                    sounds[soundslist[i]].stop() #stops all sounds
-                sounds["snd_poweruptimer"].play()
+                    SOUNDS["snd_poweruptimer"].stop()
+                for i in range(0, len(SOUNDS)):
+                    soundslist = list(SOUNDS.keys()) #returns list of keys in sounds
+                    SOUNDS[soundslist[i]].stop() #stops all sounds
+                SOUNDS["snd_poweruptimer"].play()
             for jellyfish in jellyfishes:
                 if pygame.sprite.collide_mask(jellyfish, player):
                     jellyfish.collide_with_player()
                     if player.starpower == 1:
-                        sounds["snd_eat"].play()
+                        SOUNDS["snd_eat"].play()
                     else:
                         player.collide_with_jellyfish()
-                        sounds["snd_sizedown"].play()
+                        SOUNDS["snd_sizedown"].play()
                         ONEPOWERUPSOUND += 1
                         if ONEPOWERUPSOUND > 1:
-                            sounds["snd_poweruptimer"].stop()
-                        for i in range(0, len(sounds)):
-                            soundslist = list(sounds.keys()) # Returns list of keys in sounds
-                            sounds[soundslist[i]].stop() # Stops all sounds
-                        sounds["snd_poweruptimer"].play()
+                            SOUNDS["snd_poweruptimer"].stop()
+                        for i in range(0, len(SOUNDS)):
+                            soundslist = list(SOUNDS.keys()) # Returns list of keys in sounds
+                            SOUNDS[soundslist[i]].stop() # Stops all sounds
+                        SOUNDS["snd_poweruptimer"].play()
                 if pygame.sprite.collide_mask(jellyfish, brightbluefish):
                     jellyfish.collide_with_brightbluefish()
-                    sounds["snd_eat"].play()
+                    SOUNDS["snd_eat"].play()
             if player.rect.colliderect(star):
                 player.collide_with_star()
                 star.collide_with_player()
-                sounds["snd_eat"].play()
+                SOUNDS["snd_eat"].play()
                 ONEPOWERUPSOUND += 1
                 if ONEPOWERUPSOUND > 1:
-                    sounds["snd_poweruptimer"].stop()
-                for i in range(0, len(sounds)):
-                    soundslist = list(sounds.keys()) # Returns list of keys in sounds
-                    sounds[soundslist[i]].stop() # Stops all sounds
-                sounds["snd_poweruptimer"].play()
+                    SOUNDS["snd_poweruptimer"].stop()
+                for i in range(0, len(SOUNDS)):
+                    soundslist = list(SOUNDS.keys()) # Returns list of keys in sounds
+                    SOUNDS[soundslist[i]].stop() # Stops all sounds
+                SOUNDS["snd_poweruptimer"].play()
             if pygame.sprite.collide_mask(brightbluefish, player):
                 if player.starpower != 1:
                     menu_selection = GAMEOVER_SCREEN
@@ -1488,10 +1492,10 @@ def main():
             ##################
             if player.starpower == 0: # Powerup is over on the player
                 ONEPOWERUPSOUND -= 1
-                sounds["snd_poweruptimer"].stop()
+                SOUNDS["snd_poweruptimer"].stop()
             if player.speed_time_left < 0:
                 ONEPOWERUPSOUND -= 1
-                sounds["snd_poweruptimer"].stop()
+                SOUNDS["snd_poweruptimer"].stop()
 
             ##################
             # Update screen display
