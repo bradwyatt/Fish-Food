@@ -225,7 +225,6 @@ class Wall(pygame.sprite.Sprite):
         self.kill()
 
 class Seaweed(pygame.sprite.Sprite):
-    taco = []
     def __init__(self, allsprites, x_pos, y_pos):
         """
         Animated seaweed
@@ -236,9 +235,7 @@ class Seaweed(pygame.sprite.Sprite):
         self.rect.topleft = x_pos, y_pos
         allsprites.add(self)
         self.seaweed_animate_timer = random.randint(0, 30)
-        Seaweed.taco.append(str("Seaweed"))
     def update(self):
-        print(len(Seaweed.taco))
         self.seaweed_animate_timer += 1
         seaweed_images = [IMAGES["spr_seaweed"], IMAGES["spr_seaweed_left"], IMAGES["spr_seaweed_right"]]
         if self.seaweed_animate_timer > 15 and self.seaweed_animate_timer < 30:
