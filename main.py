@@ -646,27 +646,37 @@ class Player(pygame.sprite.Sprite):
             self.speed_power = 0
             self.speed_time_left = 500
     def stop_movement(self):
-        self.speed_x, self.speed_y = 0, 0
+        if self.speed_power == 1:  # Seahorse speed powerup
+            self.speed_x, self.speed_y = 9, 9
+        elif self.speed_power == 2:  # Jellyfish speed defect
+            self.speed_x, self.speed_y = 2, 2
+        else:
+            self.speed_x, self.speed_y = 6, 6  # Default speed
+    
+        # Adjust player size back to normal if needed
         self.player_width, self.player_height = (41, 19)
-        if self.last_pressed == 0:
+    
+        # Set appropriate image based on direction and starpower status
+        if self.last_pressed == 0:  # Last pressed was left or initial state
             if self.star_power == 1:
-                if self.playeranimatetimer > 2:
+                if self.player_animate_timer > 2:
                     self.image = IMAGES["player_left_gold"]
-                if self.playeranimatetimer > 4:
+                else:
                     self.image = IMAGES["player_left"]
             else:
                 self.image = IMAGES["player_left"]
-        else:
+        else:  # Last pressed was right
             if self.star_power == 1:
-                if self.playeranimatetimer > 2:
+                if self.player_animate_timer > 2:
                     self.image = pygame.transform.rotate(IMAGES["player_left_gold"], 180)
                     self.image = pygame.transform.flip(self.image, 0, 1)
-                if self.playeranimatetimer > 4:
+                else:
                     self.image = pygame.transform.rotate(IMAGES["player_left"], 180)
                     self.image = pygame.transform.flip(self.image, 0, 1)
             else:
                 self.image = pygame.transform.rotate(IMAGES["player_left"], 180)
                 self.image = pygame.transform.flip(self.image, 0, 1)
+
     def move_up(self):
         self.player_width, self.player_height = (21, 42)
         self.image = pygame.transform.flip(IMAGES["player_down"], 1, 1)
@@ -687,12 +697,6 @@ class Player(pygame.sprite.Sprite):
                 self.image = IMAGES["player_down_gold"]
             if self.playeranimatetimer > 4:
                 self.image = IMAGES["player_down"]
-                
-        # Get the current date and time
-        now = datetime.datetime.now()
-        
-        # Print the timestamp
-        print("Current timestamp:", now)
     def move_left(self):
         self.player_width, self.player_height = (41, 19)
         self.image = IMAGES["player_left"]
