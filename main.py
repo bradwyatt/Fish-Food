@@ -852,7 +852,7 @@ class GameState:
             pygame.K_DOWN: False,
             pygame.K_RIGHT: False
         }
-        self.current_state = GameState.PLAY_SCREEN
+        self.current_state = GameState.START_SCREEN
         self.one_power_up_sound = 0
         self.score_disappear_timer = 0
         self.initialize_entities()
@@ -1098,14 +1098,28 @@ class GameState:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and self.current_state != GameState.PLAY_SCREEN:
-                    self.reset_game()
                 if event.key in self.key_states:
                     self.key_states[event.key] = True
             if event.type == pygame.KEYUP:
                 if event.key in self.key_states:
                     self.key_states[event.key] = False
-        
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.current_state != GameState.PLAY_SCREEN:
+                    self.reset_game()
+                    
+    def show_start_screen(self, screen):
+        screen.fill((0, 0, 0))
+        font = pygame.font.SysFont(None, 36)
+        text = font.render("Click to Start", True, (255, 255, 255))
+        text_rect = text.get_rect(center=(400, 300))
+        screen.blit(text, text_rect)
+
+    def show_game_over_screen(self, screen):
+        screen.fill((0, 0, 0))
+        font = pygame.font.SysFont(None, 36)
+        text = font.render("Game Over. Click to restart", True, (255, 255, 255))
+        text_rect = text.get_rect(center=(400, 300))
+        screen.blit(text, text_rect)
 
     def update(self):
         self.handle_collisions()
@@ -1215,16 +1229,20 @@ def main():
     load_sound("sounds/shark_incoming.wav", "snd_shark_incoming")
     SOUNDS["snd_shark_incoming"].set_volume(.03)
     # Music loop
-    pygame.mixer.music.load("sounds/game_music.mp3")
-    pygame.mixer.music.set_volume(.1)
-    pygame.mixer.music.play(-1)
+    #pygame.mixer.music.load("sounds/game_music.mp3")
+    #pygame.mixer.music.set_volume(.1)
+    #pygame.mixer.music.play(-1)
 
     running = True
     game_state_manager = GameState()
     while running:
         clock.tick(FPS)
         game_state_manager.handle_input()
-        if game_state_manager.current_state == GameState.PLAY_SCREEN:
+        if game_state_manager.current_state == GameState.START_SCREEN:
+            game_state_manager.show_start_screen(screen)
+        elif game_state_manager.current_state == GameState.GAME_OVER_SCREEN:
+            game_state_manager.show_game_over_screen(screen)
+        elif game_state_manager.current_state == GameState.PLAY_SCREEN:
             # Update
             
             game_state_manager.allsprites.update()
@@ -1305,16 +1323,6 @@ def main():
             if game_state_manager.player.speed_time_left < 0:
                 game_state_manager.one_power_up_sound -= 1
                 SOUNDS["snd_power_up_timer"].stop()
-
-        elif game_state_manager.current_state == GameState.START_SCREEN:
-            screen.fill((0, 0, 0))
-            start_text = font.render("Press SPACE to start", True, (255, 255, 255))
-            screen.blit(start_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2))
-
-        elif game_state_manager.current_state == GameState.GAME_OVER_SCREEN:
-            screen.fill((0, 0, 0))
-            game_over_text = font.render("Game Over. Press SPACE to restart", True, (255, 255, 255))
-            screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2))
 
         # Update the display
         pygame.display.flip()
