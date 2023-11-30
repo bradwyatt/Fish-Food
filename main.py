@@ -19,6 +19,13 @@ pygame.display.set_caption("More Complex Game")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 
+def draw_text_button(screen, text, font, color, rect):
+    text_surf = font.render(text, True, color)
+    text_rect = text_surf.get_rect(center=rect.center)
+    pygame.draw.rect(screen, (0, 0, 0), rect)  # Draw button rectangle
+    screen.blit(text_surf, text_rect)
+    return rect.collidepoint(pygame.mouse.get_pos())
+
 def load_image(file, name, transparent, alpha):
     new_image = pygame.image.load(file)
     if alpha:
@@ -841,8 +848,9 @@ class GameState:
     START_SCREEN = 0
     PLAY_SCREEN = 1
     GAME_OVER_SCREEN = 2
+    INFO_SCREEN = 3
 
-    def __init__(self, start_screen_bg=None):
+    def __init__(self, start_screen_bg=None, info_screen_bg=None):
         self.allsprites = pygame.sprite.Group()
         self.score = 0
         self.score_blit = 0
@@ -857,6 +865,7 @@ class GameState:
         self.score_disappear_timer = 0
         self.initialize_entities()
         self.start_screen_bg = start_screen_bg
+        self.info_screen_bg = info_screen_bg
 
     def initialize_entities(self):
         # Initialize all your entities here
@@ -1098,15 +1107,33 @@ class GameState:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+    
+            # Handle keyboard events
             if event.type == pygame.KEYDOWN:
                 if event.key in self.key_states:
                     self.key_states[event.key] = True
+    
             if event.type == pygame.KEYUP:
                 if event.key in self.key_states:
                     self.key_states[event.key] = False
+    
+            # Handle mouse button down events
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.current_state != GameState.PLAY_SCREEN:
+                if self.current_state == GameState.GAME_OVER_SCREEN:
                     self.reset_game()
+                elif self.current_state == GameState.START_SCREEN:
+                    # Check if the Info button is clicked
+                    info_button_rect = pygame.Rect(300, 450, 200, 50)  # Adjust as needed
+                    if info_button_rect.collidepoint(pygame.mouse.get_pos()):
+                        self.change_state(GameState.INFO_SCREEN)
+                    # Check if the Start button is clicked
+                    start_button_rect = pygame.Rect(300, 250, 200, 50)  # Adjust position and size as needed
+                    if start_button_rect.collidepoint(pygame.mouse.get_pos()):
+                        self.change_state(GameState.PLAY_SCREEN)
+                elif self.current_state == GameState.INFO_SCREEN:
+                    # Any click on the Info Screen returns to the Start Screen
+                    self.change_state(GameState.START_SCREEN)
+
                     
     def show_start_screen(self, screen):
         if self.start_screen_bg:
@@ -1116,11 +1143,22 @@ class GameState:
             # Fallback to a black screen if no image is provided
             screen.fill((0, 0, 0))
 
-        # Draw the text
-        font = pygame.font.SysFont(None, 36)
-        text = font.render("Click to Start", True, (255, 255, 255))
-        text_rect = text.get_rect(center=(400, 300))
-        screen.blit(text, text_rect)
+        # Draw the "Click to Start" button
+        start_button_rect = pygame.Rect(300, 250, 200, 50)  # Adjust position and size as needed
+        if draw_text_button(screen, "Click to Start", pygame.font.SysFont(None, 36), (255, 255, 255), start_button_rect):
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if start_button_rect.collidepoint(event.pos):
+                        self.change_state(GameState.PLAY_SCREEN)
+                elif event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+    def show_info_screen(self, screen):
+        if self.info_screen_bg:
+            screen.blit(self.info_screen_bg, (0, 0))
+        else:
+            screen.fill((0, 0, 0))
 
     def show_game_over_screen(self, screen):
         screen.fill((0, 0, 0))
@@ -1220,10 +1258,11 @@ def main():
     blackbg = pygame.image.load("sprites/black_bg.jpg").convert()
     blackbg = pygame.transform.scale(blackbg, (SCREEN_WIDTH, 30))
     start_menu_bg = pygame.image.load("sprites/start_menu.png").convert()
+    info_screen_bg = pygame.image.load("sprites/info_screen.bmp").convert()
     gameicon = pygame.image.load("sprites/red_fish_ico.png")
     pygame.display.set_icon(gameicon)
     pygame.display.set_caption('Fish Food')
-    pygame.mouse.set_visible(0)
+    pygame.mouse.set_visible(True)
     load_sound("sounds/snd_eat.wav", "snd_eat")
     SOUNDS["snd_eat"].set_volume(.2)
     load_sound("sounds/eat_shark.wav", "snd_eat_shark")
@@ -1243,12 +1282,24 @@ def main():
     #pygame.mixer.music.play(-1)
 
     running = True
-    game_state_manager = GameState(start_menu_bg)
+    game_state_manager = GameState(start_menu_bg, info_screen_bg)
     while running:
         clock.tick(FPS)
         game_state_manager.handle_input()
-        if game_state_manager.current_state == GameState.START_SCREEN:
+        if game_state_manager.current_state == GameState.INFO_SCREEN:
+            game_state_manager.show_info_screen(screen)
+        elif game_state_manager.current_state == GameState.START_SCREEN:
             game_state_manager.show_start_screen(screen)
+            # Draw the info button and check for hover
+            info_button_rect = pygame.Rect(300, 450, 200, 50)  # Adjust as needed
+            if draw_text_button(screen, "Info", pygame.font.SysFont(None, 36), (255, 255, 255), info_button_rect):
+                for event in pygame.event.get():
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if info_button_rect.collidepoint(event.pos):
+                            game_state_manager.change_state(GameState.INFO_SCREEN)
+                    elif event.type == pygame.QUIT:
+                        pygame.quit()
+                        exit()
         elif game_state_manager.current_state == GameState.GAME_OVER_SCREEN:
             game_state_manager.show_game_over_screen(screen)
         elif game_state_manager.current_state == GameState.PLAY_SCREEN:
