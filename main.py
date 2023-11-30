@@ -842,7 +842,7 @@ class GameState:
     PLAY_SCREEN = 1
     GAME_OVER_SCREEN = 2
 
-    def __init__(self):
+    def __init__(self, start_screen_bg=None):
         self.allsprites = pygame.sprite.Group()
         self.score = 0
         self.score_blit = 0
@@ -856,6 +856,7 @@ class GameState:
         self.one_power_up_sound = 0
         self.score_disappear_timer = 0
         self.initialize_entities()
+        self.start_screen_bg = start_screen_bg
 
     def initialize_entities(self):
         # Initialize all your entities here
@@ -1108,7 +1109,14 @@ class GameState:
                     self.reset_game()
                     
     def show_start_screen(self, screen):
-        screen.fill((0, 0, 0))
+        if self.start_screen_bg:
+            # Draw the background image
+            screen.blit(self.start_screen_bg, (0, 0))
+        else:
+            # Fallback to a black screen if no image is provided
+            screen.fill((0, 0, 0))
+
+        # Draw the text
         font = pygame.font.SysFont(None, 36)
         text = font.render("Click to Start", True, (255, 255, 255))
         text_rect = text.get_rect(center=(400, 300))
@@ -1211,6 +1219,7 @@ def main():
     bgwater = pygame.transform.scale(bgwater, (SCREEN_WIDTH, SCREEN_HEIGHT))
     blackbg = pygame.image.load("sprites/black_bg.jpg").convert()
     blackbg = pygame.transform.scale(blackbg, (SCREEN_WIDTH, 30))
+    start_menu_bg = pygame.image.load("sprites/start_menu.png").convert()
     gameicon = pygame.image.load("sprites/red_fish_ico.png")
     pygame.display.set_icon(gameicon)
     pygame.display.set_caption('Fish Food')
@@ -1234,7 +1243,7 @@ def main():
     #pygame.mixer.music.play(-1)
 
     running = True
-    game_state_manager = GameState()
+    game_state_manager = GameState(start_menu_bg)
     while running:
         clock.tick(FPS)
         game_state_manager.handle_input()
