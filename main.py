@@ -68,22 +68,22 @@ def load_all_assets():
     load_image("sprites/seaweed_right.png", "spr_seaweed_right", True, True)
     load_image("sprites/rainbow_fish.png", "spr_rainbow_fish", True, True)
     # arrow keys
-    load_image("sprites/pressed_arrow_up.png", "spr_pressed_arrow_up", True, True)
-    load_image("sprites/pressed_arrow_up_right.png", "spr_pressed_arrow_up_right", True, True)
-    load_image("sprites/pressed_arrow_right.png", "spr_pressed_arrow_right", True, True)
-    load_image("sprites/pressed_arrow_down_right.png", "spr_pressed_arrow_down_right", True, True)
-    load_image("sprites/pressed_arrow_down.png", "spr_pressed_arrow_down", True, True)
-    load_image("sprites/pressed_arrow_down_left.png", "spr_pressed_arrow_down_left", True, True)
-    load_image("sprites/pressed_arrow_left.png", "spr_pressed_arrow_left", True, True)
-    load_image("sprites/pressed_arrow_up_left.png", "spr_pressed_arrow_up_left", True, True)
-    load_image("sprites/unpressed_arrow_up.png", "spr_unpressed_arrow_up", True, True)
-    load_image("sprites/unpressed_arrow_up_right.png", "spr_unpressed_arrow_up_right", True, True)
-    load_image("sprites/unpressed_arrow_right.png", "spr_unpressed_arrow_right", True, True)
-    load_image("sprites/unpressed_arrow_down_right.png", "spr_unpressed_arrow_down_right", True, True)
-    load_image("sprites/unpressed_arrow_down.png", "spr_unpressed_arrow_down", True, True)
-    load_image("sprites/unpressed_arrow_down_left.png", "spr_unpressed_arrow_down_left", True, True)
-    load_image("sprites/unpressed_arrow_left.png", "spr_unpressed_arrow_left", True, True)
-    load_image("sprites/unpressed_arrow_up_left.png", "spr_unpressed_arrow_up_left", True, True)
+    load_image("sprites/pressed_arrow_up.png", "spr_pressed_arrow_up", True, True, 128)
+    load_image("sprites/pressed_arrow_up_right.png", "spr_pressed_arrow_up_right", True, True, 128)
+    load_image("sprites/pressed_arrow_right.png", "spr_pressed_arrow_right", True, True, 128)
+    load_image("sprites/pressed_arrow_down_right.png", "spr_pressed_arrow_down_right", True, True, 128)
+    load_image("sprites/pressed_arrow_down.png", "spr_pressed_arrow_down", True, True, 128)
+    load_image("sprites/pressed_arrow_down_left.png", "spr_pressed_arrow_down_left", True, True, 128)
+    load_image("sprites/pressed_arrow_left.png", "spr_pressed_arrow_left", True, True, 128)
+    load_image("sprites/pressed_arrow_up_left.png", "spr_pressed_arrow_up_left", True, True, 128)
+    load_image("sprites/unpressed_arrow_up.png", "spr_unpressed_arrow_up", True, True, 64)
+    load_image("sprites/unpressed_arrow_up_right.png", "spr_unpressed_arrow_up_right", True, True, 64)
+    load_image("sprites/unpressed_arrow_right.png", "spr_unpressed_arrow_right", True, True, 64)
+    load_image("sprites/unpressed_arrow_down_right.png", "spr_unpressed_arrow_down_right", True, True, 64)
+    load_image("sprites/unpressed_arrow_down.png", "spr_unpressed_arrow_down", True, True, 64)
+    load_image("sprites/unpressed_arrow_down_left.png", "spr_unpressed_arrow_down_left", True, True, 64)
+    load_image("sprites/unpressed_arrow_left.png", "spr_unpressed_arrow_left", True, True, 64)
+    load_image("sprites/unpressed_arrow_up_left.png", "spr_unpressed_arrow_up_left", True, True, 64)
     
     
     #font and texts
@@ -547,31 +547,57 @@ class Joystick:
         self.pressed_direction = None  # To track the currently pressed direction
         # Define the positions and sizes of the arrows
         self.arrows = {
+            "up_left": self.images["spr_unpressed_arrow_up_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 200)),
+            "up_right": self.images["spr_unpressed_arrow_up_right"].get_rect(topleft=(150, SCREEN_HEIGHT - 200)),
+            "down_left": self.images["spr_unpressed_arrow_down_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 100)),
+            "down_right": self.images["spr_unpressed_arrow_down_right"].get_rect(topleft=(150, SCREEN_HEIGHT - 100)),
             "up": self.images["spr_unpressed_arrow_up"].get_rect(topleft=(50, SCREEN_HEIGHT - 200)),
             "down": self.images["spr_unpressed_arrow_down"].get_rect(topleft=(50, SCREEN_HEIGHT - 100)),
             "left": self.images["spr_unpressed_arrow_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 150)),
-            "right": self.images["spr_unpressed_arrow_right"].get_rect(topleft=(100, SCREEN_HEIGHT - 150)),
-            "up_left": self.images["spr_unpressed_arrow_up_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 200)),
-            "up_right": self.images["spr_unpressed_arrow_up_right"].get_rect(topleft=(100, SCREEN_HEIGHT - 200)),
-            "down_left": self.images["spr_unpressed_arrow_down_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 100)),
-            "up_left": self.images["spr_unpressed_arrow_up_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 200)),
-            "down_right": self.images["spr_unpressed_arrow_down_right"].get_rect(topleft=(100, SCREEN_HEIGHT - 100))
+            "right": self.images["spr_unpressed_arrow_right"].get_rect(topleft=(100, SCREEN_HEIGHT - 150))
         }
+        
+        # Mapping of keyboard keys to joystick directions
+        self.key_to_direction = {
+             (pygame.K_UP,): "up",
+             (pygame.K_DOWN,): "down",
+             (pygame.K_LEFT,): "left",
+             (pygame.K_RIGHT,): "right",
+             (pygame.K_UP, pygame.K_RIGHT): "up_right",
+             (pygame.K_UP, pygame.K_LEFT): "up_left",
+             (pygame.K_DOWN, pygame.K_RIGHT): "down_right",
+             (pygame.K_DOWN, pygame.K_LEFT): "down_left",
+         }
+    
+    def draw(self, key_states):
+        diagonals_active = set()
 
-    def draw(self):
-        for direction, rect in self.arrows.items():
-            if direction == self.pressed_direction:
-                image_key = "spr_pressed_arrow_" + direction
-            else:
-                image_key = "spr_unpressed_arrow_" + direction
-            self.screen.blit(self.images[image_key], rect.topleft)
+        # Check and draw diagonals first
+        for keys, direction in self.key_to_direction.items():
+            if len(keys) > 1:  # Diagonal direction
+                is_pressed = all(key_states.get(key, False) for key in keys)
+                if is_pressed:
+                    diagonals_active.add(direction)
+                self.blit_arrow(direction, is_pressed)
+
+        # Draw individual directions
+        for keys, direction in self.key_to_direction.items():
+            if len(keys) == 1:  # Individual direction
+                # Check if diagonal is active
+                diagonal_active = any(direction in diag for diag in diagonals_active)
+                is_pressed = key_states.get(keys[0], False) and not diagonal_active
+                self.blit_arrow(direction, is_pressed)
+
+    def blit_arrow(self, direction, is_pressed):
+        image_key = "spr_pressed_arrow_" if is_pressed else "spr_unpressed_arrow_"
+        image_key += direction
+        rect = self.arrows[direction]
+        self.screen.blit(self.images[image_key], rect.topleft)
 
     def handle_click(self, mouse_pos):
         for direction, rect in self.arrows.items():
             if rect.collidepoint(mouse_pos):
-                self.pressed_direction = direction  # Set the pressed direction
-                return direction
-        self.pressed_direction = None  # Reset if no arrow is pressed
+                return direction  # Diagonals are checked first
         return None
 
 
@@ -644,7 +670,7 @@ def main():
                 
             # Draw sprites and game elements regardless of pause state
             game_state_manager.allsprites.draw(screen)
-            joystick.draw()
+            joystick.draw(game_state_manager.key_states)
             
 
                 

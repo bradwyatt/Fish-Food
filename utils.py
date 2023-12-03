@@ -9,7 +9,7 @@ IMAGES = {}
 SOUNDS = {}
 FONTS = {}
 
-def load_image(file, name, alpha=False, colorkey=None):
+def load_image(file, name, alpha=False, colorkey=None, global_alpha=None):
     """
     Loads an image, prepares it for play, and stores it in the IMAGES dictionary.
     :param file: Path to the image file.
@@ -17,6 +17,8 @@ def load_image(file, name, alpha=False, colorkey=None):
     :param alpha: Boolean to indicate if alpha transparency should be used.
     :param colorkey: Color key for transparency. If None, no colorkey is applied. 
                      If -1, the color of the top-left pixel is used.
+    :param global_alpha: Global alpha value to set for the image. 
+                         Should be a number between 0 (transparent) and 255 (opaque).
     """
     try:
         image = pygame.image.load(file)
@@ -28,6 +30,8 @@ def load_image(file, name, alpha=False, colorkey=None):
             if colorkey == -1:
                 colorkey = image.get_at((0, 0))
             image.set_colorkey(colorkey, pygame.RLEACCEL)
+        if global_alpha is not None:
+            image.set_alpha(global_alpha)
         
         # Store the image in the global IMAGES dictionary
         IMAGES[name] = image
