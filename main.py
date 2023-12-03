@@ -31,11 +31,21 @@ font = pygame.font.SysFont(None, 36)
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True, True)
     load_image("sprites/player_left.png", "player_left", True, True)
-    load_image("sprites/player_down_right.png", "player_down_right", True, True)
+    load_image("sprites/player_down_left.png", "player_down_left", True, True)
     load_image("sprites/player_down.png", "player_down", True, True)
+    load_image("sprites/player_down_right.png", "player_down_right", True, True)
+    load_image("sprites/player_right.png", "player_right", True, True)
+    load_image("sprites/player_up_right.png", "player_up_right", True, True)
+    load_image("sprites/player_up.png", "player_up", True, True)
+    load_image("sprites/player_up_left.png", "player_up_left", True, True)
     load_image("sprites/player_left_gold.png", "player_left_gold", True, True)
-    load_image("sprites/player_down_right_gold.png", "player_down_right_gold", True, True)
+    load_image("sprites/player_down_left_gold.png", "player_down_left_gold", True, True)
     load_image("sprites/player_down_gold.png", "player_down_gold", True, True)
+    load_image("sprites/player_down_right_gold.png", "player_down_right_gold", True, True)
+    load_image("sprites/player_right_gold.png", "player_right_gold", True, True)
+    load_image("sprites/player_up_right_gold.png", "player_up_right_gold", True, True)
+    load_image("sprites/player_up_gold.png", "player_up_gold", True, True)
+    load_image("sprites/player_up_left_gold.png", "player_up_left_gold", True, True)
     load_image("sprites/red_fish.png", "spr_red_fish", True, True)
     load_image("sprites/green_fish.png", "spr_green_fish", True, True)
     IMAGES["spr_green_fish_left"] = pygame.transform.flip(IMAGES["spr_green_fish"], 1, 0)
@@ -174,18 +184,18 @@ class GameState:
             pygame.K_DOWN: False,
             pygame.K_RIGHT: False
         }
-        self.current_state = GameState.START_SCREEN
+        self.current_state = GameState.PLAY_SCREEN
         self.one_powerup_sound = 0
         self.score_disappear_timer = 0
-        self.initialize_entities(images)
+        self.initialize_entities()
         self.start_screen_bg = start_screen_bg
         self.info_screen_bg = info_screen_bg
         self.is_paused = False
         self.joystick = joystick
 
-    def initialize_entities(self, images):
+    def initialize_entities(self):
         # Initialize all your entities here
-        self.player = Player(self.allsprites, images)
+        self.player = Player(self.allsprites, IMAGES)
         self.walls = []
         self.seaweeds = []
         for x_top in range(29):
@@ -222,7 +232,7 @@ class GameState:
         self.allsprites.empty()
         self.current_state = GameState.PLAY_SCREEN
         self.score = 0
-        self.initialize_entities(images)
+        self.initialize_entities()
         self.player.last_pressed = 0
         self.key_states = {
             pygame.K_UP: False,
@@ -547,14 +557,14 @@ class Joystick:
         self.pressed_direction = None  # To track the currently pressed direction
         # Define the positions and sizes of the arrows
         self.arrows = {
-            "up_left": self.images["spr_unpressed_arrow_up_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 200)),
-            "up_right": self.images["spr_unpressed_arrow_up_right"].get_rect(topleft=(150, SCREEN_HEIGHT - 200)),
-            "down_left": self.images["spr_unpressed_arrow_down_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 100)),
-            "down_right": self.images["spr_unpressed_arrow_down_right"].get_rect(topleft=(150, SCREEN_HEIGHT - 100)),
-            "up": self.images["spr_unpressed_arrow_up"].get_rect(topleft=(50, SCREEN_HEIGHT - 200)),
-            "down": self.images["spr_unpressed_arrow_down"].get_rect(topleft=(50, SCREEN_HEIGHT - 100)),
-            "left": self.images["spr_unpressed_arrow_left"].get_rect(topleft=(0, SCREEN_HEIGHT - 150)),
-            "right": self.images["spr_unpressed_arrow_right"].get_rect(topleft=(100, SCREEN_HEIGHT - 150))
+            "up_left": self.images["spr_unpressed_arrow_up_left"].get_rect(topleft=(20, SCREEN_HEIGHT - 280)),
+            "up_right": self.images["spr_unpressed_arrow_up_right"].get_rect(topleft=(200, SCREEN_HEIGHT - 280)),
+            "down_left": self.images["spr_unpressed_arrow_down_left"].get_rect(topleft=(20, SCREEN_HEIGHT - 100)),
+            "down_right": self.images["spr_unpressed_arrow_down_right"].get_rect(topleft=(200, SCREEN_HEIGHT - 100)),
+            "up": self.images["spr_unpressed_arrow_up"].get_rect(topleft=(110, SCREEN_HEIGHT - 280)),
+            "down": self.images["spr_unpressed_arrow_down"].get_rect(topleft=(110, SCREEN_HEIGHT - 100)),
+            "left": self.images["spr_unpressed_arrow_left"].get_rect(topleft=(20, SCREEN_HEIGHT - 190)),
+            "right": self.images["spr_unpressed_arrow_right"].get_rect(topleft=(200, SCREEN_HEIGHT - 190))
         }
         
         # Mapping of keyboard keys to joystick directions
