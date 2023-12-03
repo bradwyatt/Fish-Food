@@ -2,7 +2,7 @@ import pygame
 import os
 
 # Constants
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 FPS = 60
 
 IMAGES = {}
