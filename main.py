@@ -461,14 +461,25 @@ class GameState:
                     self.change_state(GameState.START_SCREEN)
             elif self.current_state == GameState.PLAY_SCREEN:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    direction = self.joystick.handle_click(event.pos)
-                    if pause_button_rect.collidepoint(event.pos):
-                        self.is_paused = not self.is_paused  
-                    for key in self.map_direction_to_key(direction):
-                        self.key_states[key] = True
+                     direction = self.joystick.handle_click(event.pos)
+                     if pause_button_rect.collidepoint(event.pos):
+                         self.is_paused = not self.is_paused
+                     for key in self.map_direction_to_key(direction):
+                         self.key_states[key] = True
+        
+                if event.type == pygame.MOUSEMOTION:
+                    if self.joystick.mouse_is_pressed:
+                        new_direction = self.joystick.handle_mouse_move(event.pos)
+                        print("new_direction:", new_direction)  # Check what new_direction is
+                        if new_direction:
+                            print("Updated key_states:", self.key_states)  # Debugging print
+                            for key in self.map_direction_to_key(new_direction):
+                                self.key_states[key] = True
+
+            
                 if event.type == pygame.MOUSEBUTTONUP:
-                    self.joystick.pressed_direction = None  # Reset the pressed direction
-                    # Reset key states
+                    self.joystick.handle_mouse_up()
+                    self.joystick.pressed_direction = None
                     for key in self.key_states:
                         self.key_states[key] = False
                         
@@ -581,6 +592,7 @@ class Joystick:
              (pygame.K_DOWN, pygame.K_RIGHT): "down_right",
              (pygame.K_DOWN, pygame.K_LEFT): "down_left",
          }
+        self.mouse_is_pressed = False
     
     def draw(self, key_states):
         diagonals_active = set()
@@ -610,8 +622,25 @@ class Joystick:
     def handle_click(self, mouse_pos):
         for direction, rect in self.arrows.items():
             if rect.collidepoint(mouse_pos):
-                return direction  # Diagonals are checked first
+                self.pressed_direction = direction
+                self.mouse_is_pressed = True
+                return direction
         return None
+    
+    def handle_mouse_up(self):
+        self.mouse_is_pressed = False
+        
+    def handle_mouse_move(self, mouse_pos):
+        if not self.mouse_is_pressed:
+            return
+    
+        for direction, rect in self.arrows.items():
+            if rect.collidepoint(mouse_pos):
+                if self.pressed_direction != direction:
+                    self.pressed_direction = direction
+                    print(f"Joystick pressed_direction updated to: {direction}")
+                    return direction # Return the new direction
+        return None # Return None if no new direction is detected
 
 
 # Main game loop
