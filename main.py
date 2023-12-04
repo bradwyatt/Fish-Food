@@ -215,7 +215,7 @@ class GameState:
             self.wall = Wall(self.allsprites)
             self.wall.rect.topleft = (SCREEN_WIDTH-32, y_right) #right walls
             self.walls.append(self.wall)
-        for x_pos in range(5, SCREEN_WIDTH-15, 60):
+        for x_pos in range(300, SCREEN_WIDTH-15, 60):
             self.seaweed = Seaweed(self.allsprites, x_pos, SCREEN_HEIGHT-200)
             self.seaweeds.append(self.seaweed)
         self.red_fishes = [RedFish(self.allsprites, IMAGES) for i in range(6)]
