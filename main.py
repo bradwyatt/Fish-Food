@@ -443,31 +443,34 @@ class GameState:
             if event.type == pygame.KEYUP:
                 if event.key in self.key_states:
                     self.key_states[event.key] = False
-    
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.current_state == GameState.GAME_OVER_SCREEN:
+                    
+            if self.current_state == GameState.GAME_OVER_SCREEN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     self.reset_game(IMAGES)
-                elif self.current_state == GameState.START_SCREEN:
+            elif self.current_state == GameState.START_SCREEN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     info_button_rect = pygame.Rect(500, 400, 200, 50)
                     start_button_rect = pygame.Rect(500, 250, 200, 50)
                     if info_button_rect.collidepoint(event.pos):
                         self.change_state(GameState.INFO_SCREEN)
                     elif start_button_rect.collidepoint(event.pos):
                         self.change_state(GameState.PLAY_SCREEN)
-                elif self.current_state == GameState.INFO_SCREEN:
+            elif self.current_state == GameState.INFO_SCREEN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     # Clicking anywhere on the Info screen returns to the Start screen
                     self.change_state(GameState.START_SCREEN)
-                elif self.current_state == GameState.PLAY_SCREEN:
+            elif self.current_state == GameState.PLAY_SCREEN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     direction = self.joystick.handle_click(event.pos)
                     if pause_button_rect.collidepoint(event.pos):
                         self.is_paused = not self.is_paused  
                     for key in self.map_direction_to_key(direction):
                         self.key_states[key] = True
-            if event.type == pygame.MOUSEBUTTONUP:
-                self.joystick.pressed_direction = None  # Reset the pressed direction
-                # Reset key states
-                for key in self.key_states:
-                    self.key_states[key] = False
+                if event.type == pygame.MOUSEBUTTONUP:
+                    self.joystick.pressed_direction = None  # Reset the pressed direction
+                    # Reset key states
+                    for key in self.key_states:
+                        self.key_states[key] = False
                         
     def map_direction_to_key(self, direction):
         mapping = {
