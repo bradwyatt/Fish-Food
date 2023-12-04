@@ -461,20 +461,26 @@ class GameState:
                     self.change_state(GameState.START_SCREEN)
             elif self.current_state == GameState.PLAY_SCREEN:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                     direction = self.joystick.handle_click(event.pos)
-                     if pause_button_rect.collidepoint(event.pos):
-                         self.is_paused = not self.is_paused
-                     for key in self.map_direction_to_key(direction):
-                         self.key_states[key] = True
+                    # Reset key_states here when the mouse button is pressed
+                    for key in self.key_states:
+                        self.key_states[key] = False
+            
+                    direction = self.joystick.handle_click(event.pos)
+                    if pause_button_rect.collidepoint(event.pos):
+                        self.is_paused = not self.is_paused
+                    else:
+                        for key in self.map_direction_to_key(direction):
+                            self.key_states[key] = True
         
                 if event.type == pygame.MOUSEMOTION:
                     if self.joystick.mouse_is_pressed:
                         new_direction = self.joystick.handle_mouse_move(event.pos)
-                        print("new_direction:", new_direction)  # Check what new_direction is
                         if new_direction:
-                            print("Updated key_states:", self.key_states)  # Debugging print
+                            for key in self.key_states:
+                                self.key_states[key] = False
                             for key in self.map_direction_to_key(new_direction):
                                 self.key_states[key] = True
+
 
             
                 if event.type == pygame.MOUSEBUTTONUP:
@@ -632,13 +638,12 @@ class Joystick:
         
     def handle_mouse_move(self, mouse_pos):
         if not self.mouse_is_pressed:
-            return
+            return None
     
         for direction, rect in self.arrows.items():
             if rect.collidepoint(mouse_pos):
                 if self.pressed_direction != direction:
                     self.pressed_direction = direction
-                    print(f"Joystick pressed_direction updated to: {direction}")
                     return direction # Return the new direction
         return None # Return None if no new direction is detected
 
