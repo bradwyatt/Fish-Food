@@ -828,7 +828,7 @@ def main():
                 SOUNDS["snd_powerup_timer"].stop()
 
         # Update the display
-        pygame.display.flip()
+        pygame.display.update()
 
     pygame.quit()
 
