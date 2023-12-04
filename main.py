@@ -482,13 +482,19 @@ class GameState:
                             for key in self.map_direction_to_key(new_direction):
                                 self.key_states[key] = True
 
-
-            
                 if event.type == pygame.MOUSEBUTTONUP:
-                    self.joystick.handle_mouse_up()
-                    self.joystick.pressed_direction = None
-                    for key in self.key_states:
-                        self.key_states[key] = False
+                    last_direction = self.joystick.handle_mouse_up()  # This should return the last pressed_direction
+                    if last_direction == "neutral":
+                        # If the last direction was the neutral zone, stop the player's movement
+                        for key in self.key_states:
+                            self.key_states[key] = False
+                    else:
+                        # If another direction was the last one before mouse up, you can choose to keep moving in that direction
+                        # Or stop the movement, depending on your game's design
+                        # This code snippet will stop the movement
+                        for key in self.key_states:
+                            self.key_states[key] = False
+                    self.joystick.pressed_direction = None  # Reset the pressed direction
                         
     def map_direction_to_key(self, direction):
         mapping = {
@@ -631,6 +637,10 @@ class Joystick:
         self.screen.blit(self.images[image_key], rect.topleft)
 
     def handle_click(self, mouse_pos):
+        if self.neutral_zone_rect.collidepoint(mouse_pos):
+            # Middle area clicked, set to neutral state
+            self.pressed_direction = "neutral"
+            return "neutral"
         for direction, rect in self.arrows.items():
             if rect.collidepoint(mouse_pos):
                 self.pressed_direction = direction
@@ -639,11 +649,20 @@ class Joystick:
         return None
     
     def handle_mouse_up(self):
+        # Return the last pressed direction when the mouse button is released
+        last_direction = self.pressed_direction
         self.mouse_is_pressed = False
+        self.pressed_direction = None  # Reset the pressed direction
+        return last_direction
         
     def handle_mouse_move(self, mouse_pos):
         if not self.mouse_is_pressed:
             return None
+        
+        if self.neutral_zone_rect.collidepoint(mouse_pos):
+            # Mouse dragged to middle area, stop movement
+            self.pressed_direction = "neutral"
+            return "neutral"
     
         for direction, rect in self.arrows.items():
             if rect.collidepoint(mouse_pos):
