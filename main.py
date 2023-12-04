@@ -94,6 +94,7 @@ def load_all_assets():
     load_image("sprites/unpressed_arrow_down_left.png", "spr_unpressed_arrow_down_left", True, True, 64)
     load_image("sprites/unpressed_arrow_left.png", "spr_unpressed_arrow_left", True, True, 64)
     load_image("sprites/unpressed_arrow_up_left.png", "spr_unpressed_arrow_up_left", True, True, 64)
+    load_image("sprites/neutral_zone.png", "spr_neutral_zone", True, True, 64)
     
     
     #font and texts
@@ -575,6 +576,8 @@ class Joystick:
         self.images = images
         self.screen = screen
         self.pressed_direction = None  # To track the currently pressed direction
+        #%% Go back to this
+        self.neutral_zone_rect = images['spr_neutral_zone'].get_rect(center=(158, SCREEN_HEIGHT - 143))
         # Define the positions and sizes of the arrows
         self.arrows = {
             "up_left": self.images["spr_unpressed_arrow_up_left"].get_rect(topleft=(20, SCREEN_HEIGHT - 280)),
@@ -618,6 +621,8 @@ class Joystick:
                 diagonal_active = any(direction in diag for diag in diagonals_active)
                 is_pressed = key_states.get(keys[0], False) and not diagonal_active
                 self.blit_arrow(direction, is_pressed)
+        
+        self.screen.blit(IMAGES['spr_neutral_zone'], self.neutral_zone_rect.topleft)
 
     def blit_arrow(self, direction, is_pressed):
         image_key = "spr_pressed_arrow_" if is_pressed else "spr_unpressed_arrow_"
