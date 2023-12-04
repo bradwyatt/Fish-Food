@@ -6,7 +6,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, allsprites, images):
         pygame.sprite.Sprite.__init__(self)
         self.images = images
-
+    
         # Store original images for each direction
         self.original_images = {
             "left": self.images["player_left"],
@@ -18,64 +18,86 @@ class Player(pygame.sprite.Sprite):
             "down_left": self.images["player_down_left"],
             "down_right": self.images["player_down_right"],
         }
-
+    
         self.current_direction = "left"  # Default direction
         self.original_image = self.original_images[self.current_direction]
         self.original_width, self.original_height = self.original_image.get_size()
-
-        # Initialize size_score and other properties before calling resize_player_image
+    
+        # Initialize size_score and other properties
         self.size_score = 0
         self.speed_power = 0
         self.speed_x, self.speed_y = 6, 6
         self.powerup_time_left, self.speed_time_left = 500, 500
         self.star_power, self.player_animate_timer = 0, 0
         self.pos = [SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100]
-
-        # Initialize self.rect before calling resize_player_image
-        self.rect = self.original_image.get_rect()
+    
+        # Initialize self.rect and self.image
+        self.image = self.original_image  # Set initial image
+        self.rect = self.image.get_rect()
         self.rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-
-        # Now call resize_player_image
-        self.resize_player_image()
-
+    
+        # Resize the player image based on the initial image
+        self.resize_player_image(self.image)
+    
         # Add the player to the allsprites group
         allsprites.add(self)
-
+    
         # Set initial position
         self.rect.topleft = (self.pos[0], self.pos[1])
-
+    
         self.last_pressed = 0
+
+        
     def update(self):
+        # Update the position of the player
         self.rect = self.image.get_rect()
         newpos = (self.pos[0], self.pos[1])
         self.rect.topleft = newpos
-        # STAR POWERUPS
-        if self.star_power == 0: #no star power
-            self.powerup_time_left = 500 #restart to 5 seconds
-        elif self.star_power == 1: #star powerup
-            self.player_animate_timer += 1
-            if self.player_animate_timer > 6:
-                self.player_animate_timer = 0
-            self.powerup_time_left -= 1
-        elif self.star_power == 2: #mini sharks
-            self.powerup_time_left -= 1
-        # SPEED POWERUPS/DEFECTS
-        if self.speed_power == 0:
-            self.speed_x, self.speed_y = 6, 6
-            self.speed_time_left = 500
-        elif (self.speed_power == 1 or self.speed_power == 2): # Seahorse & jellyfish
-            self.speed_time_left -= 1
-        # RESET TIMERS
-        if self.powerup_time_left < 0: # Powerup is over on the player
-            self.star_power = 0
-            self.powerup_time_left = 500
-        if self.speed_time_left < 0:
-            self.speed_power = 0
-            self.speed_time_left = 500
-    def resize_player_image(self):
-        # Get the original image for the current direction
-        base_image = self.original_images[self.current_direction]
     
+        # Handle star power animation for invincibility
+        if self.star_power == 1:
+            self.player_animate_timer += 1
+    
+            # Determine the image to use based on the animate timer
+            if self.player_animate_timer % 10 < 5:  # Adjust for animation speed
+                # Use gold image
+                animated_image_key = "player_" + self.current_direction + "_gold"
+            else:
+                # Use normal image
+                animated_image_key = "player_" + self.current_direction
+    
+            # Reset the animation timer if it reaches the end of the cycle
+            if self.player_animate_timer >= 20:  # Adjust for animation cycle length
+                self.player_animate_timer = 0
+    
+            # Set the image for animation
+            self.animated_image = self.images[animated_image_key]
+        else:
+            # If not in star power, use the normal image
+            self.animated_image = self.images["player_" + self.current_direction]
+        
+        # Resize the player image based on the animated image
+        self.resize_player_image(self.animated_image)
+    
+        # Decrement powerup timer and reset if over for both star_power 1 and 2
+        if self.star_power > 0:
+            self.powerup_time_left -= 1
+            if self.powerup_time_left < 0:  # Powerup is over
+                self.star_power = 0
+                self.powerup_time_left = 500  # Reset timer for the next powerup
+    
+        # Handle speed powerups/defects
+        if self.speed_power > 0:
+            self.speed_time_left -= 1
+            if self.speed_time_left < 0:  # Speed change is over
+                self.speed_power = 0
+                self.speed_x, self.speed_y = 6, 6  # Reset to default speed
+                self.speed_time_left = 500  # Reset timer for the next speed change
+
+    
+
+
+    def resize_player_image(self, base_image):
         # Scale the base image
         new_width = base_image.get_width() + self.size_score * 2
         new_height = base_image.get_height() + self.size_score * 2
@@ -83,6 +105,7 @@ class Player(pygame.sprite.Sprite):
     
         # Update the rect
         self.rect = self.image.get_rect(center=self.rect.center)
+
     def stop_movement(self):
         if self.speed_power == 1:  # Seahorse speed powerup
             self.speed_x, self.speed_y = 9, 9
@@ -90,135 +113,50 @@ class Player(pygame.sprite.Sprite):
             self.speed_x, self.speed_y = 2, 2
         else:
             self.speed_x, self.speed_y = 6, 6  # Default speed
-        # Adjust player size back to normal if needed
-        self.player_width, self.player_height = (41, 19)
-    
-        # Set appropriate image based on direction and starpower status
-        if self.last_pressed == 0:  # Last pressed was left or initial state
-            if self.star_power == 1:
-                if self.player_animate_timer > 2:
-                    self.image = self.images["player_left_gold"]
-                else:
-                    self.image = self.images["player_left"]
-            else:
-                self.image = self.images["player_left"]
-        else:  # Last pressed was right
-            if self.star_power == 1:
-                if self.player_animate_timer > 2:
-                    self.image = self.images["player_right_gold"]
-                else:
-                    self.image = self.images["player_right"]
-            else:
-                self.image = self.images["player_right"]
-        self.resize_player_image()
     def move_up(self):
-        self.player_width, self.player_height = (21, 42)
         self.current_direction = "up"
-        self.image = self.images["player_up"]
         if self.pos[1] > 50: # Boundary, 32 is block, added a few extra pixels to make it look nicer
             self.pos[1] -= self.speed_y
-        if self.star_power == 1:
-            if self.player_animate_timer > 2:
-                self.image = self.images["player_up_gold"]
-            if self.player_animate_timer > 4:
-                self.image = self.images["player_up"]
-        self.resize_player_image()
     def move_down(self):
-        self.player_width, self.player_height = (21, 42)
         self.current_direction = "down"
-        self.image = self.images["player_down"]
         if self.pos[1] < SCREEN_HEIGHT-75:
             self.pos[1] += self.speed_y
-        if self.star_power == 1:
-            if self.player_animate_timer > 2:
-                self.image = self.images["player_down_gold"]
-            if self.player_animate_timer > 4:
-                self.image = self.images["player_down"]
-        self.resize_player_image()
     def move_left(self):
-        self.player_width, self.player_height = (41, 19)
         self.current_direction = "left"
-        self.image = self.images["player_left"]
         if self.pos[0] > 32:
             self.pos[0] -= self.speed_x
-        if self.star_power == 1:
-            if self.player_animate_timer > 2:
-                self.image = self.images["player_left_gold"]
-            if self.player_animate_timer > 4:
-                self.image = self.images["player_left"]
-        self.resize_player_image()
     def move_right(self):
-        self.player_width, self.player_height = (41, 19)
         self.current_direction = "right"
-        self.image = self.images["player_right"]
         if self.pos[0] < SCREEN_WIDTH-75:
             self.pos[0] += self.speed_x
-        if self.star_power == 1:
-            if self.player_animate_timer > 2:
-                self.image = self.images["player_right_gold"]
-            if self.player_animate_timer > 4:
-                self.image = self.images["player_right"]
-        self.resize_player_image()
     def move_up_left(self):
-        self.player_width, self.player_height = (34, 34)
         self.current_direction = "up_left"
-        self.image = self.images["player_up_left"]
-        if self.star_power == 1:
-            if self.player_animate_timer > 2:
-                self.image = self.images["player_up_left"]
-            if self.player_animate_timer > 4:
-                self.image = self.images["player_up_left_gold"]
                 
         # Update position for diagonal movement
         if self.pos[1] > 50 and self.pos[0] > 32:
             self.pos[0] -= self.speed_x
             self.pos[1] -= self.speed_y
-        self.resize_player_image()
     def move_up_right(self):
-        self.player_width, self.player_height = (34, 34)
         self.current_direction = "up_right"
-        self.image = self.images["player_up_right"]
-        if self.star_power == 1:
-            if self.player_animate_timer > 2:
-                self.image = self.images["player_up_right"]
-            if self.player_animate_timer > 4:
-                self.image = self.images["player_up_right_gold"]
                 
         # Update position for diagonal movement
         if self.pos[1] > 50 and self.pos[0] < SCREEN_WIDTH-75:
             self.pos[0] += self.speed_x
-            self.pos[1] -= self.speed_y  
-        self.resize_player_image()
+            self.pos[1] -= self.speed_y
     def move_down_left(self):
-        self.player_width, self.player_height = (34, 34)
         self.current_direction = "down_left"
-        self.image = self.images["player_down_left"]
-        if self.star_power == 1:
-            if self.player_animate_timer > 2:
-                self.image = self.images["player_down_left_gold"]
-            if self.player_animate_timer > 4:
-                self.image = self.images["player_down_left"]
         
         # Update position for diagonal movement
         if self.pos[1] < SCREEN_HEIGHT-75 and self.pos[0] > 32:
             self.pos[0] -= self.speed_x
             self.pos[1] += self.speed_y
-        self.resize_player_image()
     def move_down_right(self):
-        self.player_width, self.player_height = (34, 34)
         self.current_direction = "down_right"
-        self.image = self.images["player_down_right"]
-        if self.star_power == 1:
-            if self.player_animate_timer > 2:
-                self.image = self.images["player_down_right_gold"]
-            if self.player_animate_timer > 4:
-                self.image = self.images["player_down_right"]
                 
         # Update position for diagonal movement
         if self.pos[1] < SCREEN_HEIGHT-75 and self.pos[0] < SCREEN_WIDTH-75:
             self.pos[0] += self.speed_x
             self.pos[1] += self.speed_y
-        self.resize_player_image()
     def collide_with_red_fish(self, score, score_blit):
         score_blit = 1
         score += 1
