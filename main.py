@@ -675,6 +675,29 @@ class Joystick:
                             return direction
         return None
 
+def zoom_in_on_player(screen, player, zoom_factor):
+    # Define the area around the player to zoom in on
+    zoom_width, zoom_height = 100, 100  # Adjust size as needed
+    zoom_rect = pygame.Rect(
+        player.rect.centerx - zoom_width // 2,
+        player.rect.centery - zoom_height // 2,
+        zoom_width,
+        zoom_height
+    )
+
+    # Ensure the zoom rectangle doesn't go outside the screen
+    zoom_rect.clamp_ip(screen.get_rect())
+
+    # Capture the area around the player
+    subsurface = screen.subsurface(zoom_rect)
+
+    # Scale up the captured area
+    zoomed_surface = pygame.transform.scale(
+        subsurface,
+        (zoom_rect.width * zoom_factor, zoom_rect.height * zoom_factor)
+    )
+
+    return zoomed_surface
 
 # Main game loop
 def main():
@@ -697,6 +720,15 @@ def main():
     running = True
     joystick = Joystick(IMAGES, screen)
     game_state_manager = GameState(IMAGES, IMAGES['start_menu_bg'], IMAGES['info_screen_bg'], joystick)
+    
+    # Ensure the zoomed surface is large enough to handle the maximum offset
+    zoom_factor = 2
+    zoomed_surface_size = (SCREEN_WIDTH * zoom_factor, SCREEN_HEIGHT * zoom_factor)
+    zoomed_surface = pygame.Surface(zoomed_surface_size)
+    
+    world_width = SCREEN_WIDTH
+    world_height = SCREEN_HEIGHT
+
     while running:
         clock.tick(FPS)
         game_state_manager.handle_input(pause_button_rect)
@@ -733,10 +765,11 @@ def main():
             if y_second >= SCREEN_HEIGHT:
                 y_second = -SCREEN_HEIGHT
                 
-            screen.blit(IMAGES['play_background'], (0, y_first))
-            screen.blit(IMAGES['play_background'], (0, y_second))
+            # screen.blit(IMAGES['play_background'], (0, y_first))
+            # screen.blit(IMAGES['play_background'], (0, y_second))
 
-            screen.blit(IMAGES['ground'], (0, SCREEN_HEIGHT-100))
+            # screen.blit(IMAGES['ground'], (0, SCREEN_HEIGHT-100))
+            
 
             # Update game state only if the game is not paused
             if not game_state_manager.is_paused:
@@ -746,8 +779,46 @@ def main():
                                                                 game_state_manager.player.star_power,
                                                                 game_state_manager.player.pos)
                 
+            # Calculate camera position with boundary limits
+            camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * zoom_factor),
+                                  world_width - SCREEN_WIDTH // zoom_factor))
+            camera_y = max(0, min(game_state_manager.player.rect.centery - SCREEN_HEIGHT // (2 * zoom_factor),
+                                  world_height - SCREEN_HEIGHT // zoom_factor))
+    
+            # Clear the zoomed surface
+            zoomed_surface.fill((0, 0, 0))
+    
+            # Draw game elements relative to the camera position
+            background_position_x = -camera_x
+            background_position_y = y_first - camera_y
+    
+            # Draw the background on zoomed_surface
+            zoomed_surface.blit(IMAGES['play_background'], (background_position_x, background_position_y))
+    
+            # Draw the ground only if the camera is near the bottom of the world
+            if camera_y + SCREEN_HEIGHT // zoom_factor > world_height - 100:
+                ground_position_y = world_height - 100 - camera_y
+                zoomed_surface.blit(IMAGES['ground'], (0, ground_position_y))
+    
+            # Adjust sprite positions and draw on zoomed_surface
+            for sprite in game_state_manager.allsprites:
+                sprite.rect.x -= camera_x
+                sprite.rect.y -= camera_y
+            game_state_manager.allsprites.draw(zoomed_surface)
+            # Reset sprite positions
+            for sprite in game_state_manager.allsprites:
+                sprite.rect.x += camera_x
+                sprite.rect.y += camera_y
+    
+            # Extract the relevant portion of the zoomed surface
+            visible_zoomed_area = zoomed_surface.subsurface((0, 0, SCREEN_WIDTH // zoom_factor, SCREEN_HEIGHT // zoom_factor))
+    
+            # Draw the extracted portion to the main screen
+            screen.blit(visible_zoomed_area, (0, 0))
+
+                
             # Draw sprites and game elements regardless of pause state
-            game_state_manager.allsprites.draw(screen)
+            # game_state_manager.allsprites.draw(screen)
             joystick.draw(game_state_manager.key_states)
             
 
