@@ -722,7 +722,7 @@ def main():
     game_state_manager = GameState(IMAGES, IMAGES['start_menu_bg'], IMAGES['info_screen_bg'], joystick)
     
     # Ensure the zoomed surface is large enough to handle the maximum offset
-    zoom_factor = 2
+    zoom_factor = 1.5
     zoomed_surface = pygame.Surface((SCREEN_WIDTH // zoom_factor, SCREEN_HEIGHT // zoom_factor))
 
     world_width = SCREEN_WIDTH
