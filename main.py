@@ -723,9 +723,8 @@ def main():
     
     # Ensure the zoomed surface is large enough to handle the maximum offset
     zoom_factor = 2
-    zoomed_surface_size = (SCREEN_WIDTH * zoom_factor, SCREEN_HEIGHT * zoom_factor)
-    zoomed_surface = pygame.Surface(zoomed_surface_size)
-    
+    zoomed_surface = pygame.Surface((SCREEN_WIDTH // zoom_factor, SCREEN_HEIGHT // zoom_factor))
+
     world_width = SCREEN_WIDTH
     world_height = SCREEN_HEIGHT
 
@@ -778,60 +777,53 @@ def main():
                 game_state_manager.rainbow_fish.handle_behavior(game_state_manager.player.size_score,
                                                                 game_state_manager.player.star_power,
                                                                 game_state_manager.player.pos)
-                
+            
             # Calculate camera position with boundary limits
             camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * zoom_factor),
-                                  world_width - SCREEN_WIDTH // zoom_factor))
+                              world_width - SCREEN_WIDTH // zoom_factor))
             camera_y = max(0, min(game_state_manager.player.rect.centery - SCREEN_HEIGHT // (2 * zoom_factor),
                                   world_height - SCREEN_HEIGHT // zoom_factor))
-    
+
             # Clear the zoomed surface
             zoomed_surface.fill((0, 0, 0))
     
             # Draw game elements relative to the camera position
-            background_position_x = -camera_x
-            background_position_y = y_first - camera_y
+            # background_position_x = -camera_x
+            # background_position_y = y_first - camera_y
     
             # Draw the background on zoomed_surface
-            zoomed_surface.blit(IMAGES['play_background'], (background_position_x, background_position_y))
-    
+            zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_first - camera_y))
+            zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_second - camera_y))
+            
             # Draw the ground only if the camera is near the bottom of the world
-            if camera_y + SCREEN_HEIGHT // zoom_factor > world_height - 100:
-                ground_position_y = world_height - 100 - camera_y
-                zoomed_surface.blit(IMAGES['ground'], (0, ground_position_y))
+            if camera_y > world_height - SCREEN_HEIGHT - 100:
+                zoomed_surface.blit(IMAGES['ground'], (-camera_x, world_height - 100 - camera_y))
+
     
             # Adjust sprite positions and draw on zoomed_surface
             for sprite in game_state_manager.allsprites:
+                original_position = (sprite.rect.x, sprite.rect.y)
                 sprite.rect.x -= camera_x
                 sprite.rect.y -= camera_y
-            game_state_manager.allsprites.draw(zoomed_surface)
-            # Reset sprite positions
-            for sprite in game_state_manager.allsprites:
-                sprite.rect.x += camera_x
-                sprite.rect.y += camera_y
+                zoomed_surface.blit(sprite.image, sprite.rect)
+                sprite.rect.x, sprite.rect.y = original_position
     
-            # Extract the relevant portion of the zoomed surface
-            visible_zoomed_area = zoomed_surface.subsurface((0, 0, SCREEN_WIDTH // zoom_factor, SCREEN_HEIGHT // zoom_factor))
+            # Scale the zoomed surface to fill the entire screen
+            scaled_zoomed_area = pygame.transform.scale(zoomed_surface, (SCREEN_WIDTH, SCREEN_HEIGHT))
     
-            # Draw the extracted portion to the main screen
-            screen.blit(visible_zoomed_area, (0, 0))
-
-                
-            # Draw sprites and game elements regardless of pause state
-            # game_state_manager.allsprites.draw(screen)
+            # Draw the scaled zoomed view to the main screen
+            screen.blit(scaled_zoomed_area, (0, 0))
+    
+            # Draw joystick and other UI elements on top
             joystick.draw(game_state_manager.key_states)
-            
 
-                
             # Menu Design
             screen.blit(IMAGES['available_prey_layer'], (0, 0))
-            
-            # Render and blit the "Available Prey:" text
             available_prey_text = FONTS['ocean_font_16'].render("Available Prey:", True, (255, 255, 255))
-            text_rect = available_prey_text.get_rect(topleft=(10, 5))  # topleft position of the text
+            text_rect = available_prey_text.get_rect(topleft=(10, 5))
             screen.blit(available_prey_text, text_rect)
-            
-            # Draw Pause Button
+
+            # Draw Pause Button and other UI elements
             pygame.draw.rect(screen, pause_button_color, pause_button_rect)
             screen.blit(pause_text_surface, (pause_text_x, pause_text_y))
             
