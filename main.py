@@ -253,7 +253,6 @@ class GameState:
             if self.rainbow_fish.arrow_warning == 1 and self.rainbow_fish.rect.top < 0:
                 screen.blit(IMAGES["arrow_warning_red"], (self.rainbow_fish.rect.topleft[0], 40))
                 SOUNDS["snd_shark_incoming"].play()
-            self.rainbow_fish.chase_player(self.player.size_score, self.player.star_power, self.player.pos)
         # Sharks
         if self.score >= 5:
             self.sharks[0].activate = 1
@@ -743,6 +742,9 @@ def main():
             if not game_state_manager.is_paused:
                 game_state_manager.allsprites.update()
                 game_state_manager.update()
+                game_state_manager.rainbow_fish.handle_behavior(game_state_manager.player.size_score,
+                                                                game_state_manager.player.star_power,
+                                                                game_state_manager.player.pos)
                 
             # Draw sprites and game elements regardless of pause state
             game_state_manager.allsprites.draw(screen)
