@@ -852,35 +852,41 @@ def main():
             
             # Starting position for the first icon
             icon_x = text_rect.right + 10  # 10 is a buffer; adjust as needed
-            icon_y = 10  # Y position for icons
-            
+            base_icon_y = 10  # Base Y position for icons
+        
             # Blit each icon with a buffer space in between
             icon_buffer = 10  # Space between icons
-            
-            # Blit standard icons
+        
+            # Standard icons
             standard_icons = ['spr_red_fish', 'spr_green_fish', 'spr_silver_fish']
+            max_height_standard = max(IMAGES[key].get_height() for key in standard_icons)
+        
             for icon_key in standard_icons:
                 icon = IMAGES[icon_key]
+                # Center align standard icons based on their original size
+                icon_y = base_icon_y + (max_height_standard - icon.get_height()) // 2
                 screen.blit(icon, (icon_x, icon_y))
                 icon_x += icon.get_width() + icon_buffer
-            
-            # Blit scaled icons conditionally
+        
+            # Scaled icons
             scaled_icon_size = (24, 15)  # Adjust the size as needed
-            
-            if game_state_manager.rainbow_fish.size[0]-45 <= game_state_manager.player.size_score:
-                blitted_rainbow_fish = pygame.transform.smoothscale(IMAGES["spr_rainbow_fish"], scaled_icon_size)
-                screen.blit(blitted_rainbow_fish, (icon_x, icon_y))
-                icon_x += blitted_rainbow_fish.get_width() + icon_buffer
-            
+            scaled_icons = []
+        
+            if game_state_manager.rainbow_fish.size[0] - 45 <= game_state_manager.player.size_score:
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish"], scaled_icon_size))
+        
             if game_state_manager.player.size_score >= 40:
-                blitted_big_green_fish = pygame.transform.smoothscale(IMAGES["spr_big_green_fish"], scaled_icon_size)
-                screen.blit(blitted_big_green_fish, (icon_x, icon_y))
-                icon_x += blitted_big_green_fish.get_width() + icon_buffer
-            
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish"], scaled_icon_size))
+        
             if game_state_manager.player.star_power == 2:
-                blitted_shark = pygame.transform.smoothscale(IMAGES["spr_shark"], scaled_icon_size)
-                screen.blit(blitted_shark, (icon_x, icon_y))
-                icon_x += blitted_shark.get_width() + icon_buffer
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark"], scaled_icon_size))
+        
+            for icon in scaled_icons:
+                # Calculate the vertical offset for the scaled icon
+                vertical_offset = (max_height_standard - icon.get_height()) // 2
+                icon_y = base_icon_y + vertical_offset
+                screen.blit(icon, (icon_x, icon_y))
+                icon_x += icon.get_width() + icon_buffer
 
 
             # Font On Top of Playing Screen
