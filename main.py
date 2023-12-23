@@ -246,11 +246,11 @@ class GameState:
         self.current_state = new_state
         
     def activate_game_objects(self):
-        # Rainbow Fish
+        # Rainbow Fish activation logic
         if self.rainbow_fish.rainbow_timer >= 200:
-            self.rainbow_fish.activate = 1
-        if self.rainbow_fish.activate == 1 and self.rainbow_fish.score_exit == 0:
-            if self.rainbow_fish.arrow_warning == 1 and self.rainbow_fish.rect.top < 0:
+            self.rainbow_fish.is_active = 1
+        if self.rainbow_fish.is_active == 1 and self.rainbow_fish.is_exiting == 0:
+            if self.rainbow_fish.arrow_warning_shown == 1 and self.rainbow_fish.rect.top < 0:
                 screen.blit(IMAGES["arrow_warning_red"], (self.rainbow_fish.rect.topleft[0], 40))
                 SOUNDS["snd_shark_incoming"].play()
         # Sharks
@@ -586,8 +586,7 @@ class Joystick:
     def __init__(self, images, screen):
         self.images = images
         self.screen = screen
-        self.pressed_direction = None  # To track the currently pressed direction
-        #%% Go back to this
+        self.pressed_direction = None  # To track the currently pressed direction        
         self.neutral_zone_rect = images['spr_neutral_zone'].get_rect(center=(158, SCREEN_HEIGHT - 143))
         # Define the positions and sizes of the arrows
         self.arrows = {
@@ -763,20 +762,18 @@ def main():
                 y_first = -SCREEN_HEIGHT
             if y_second >= SCREEN_HEIGHT:
                 y_second = -SCREEN_HEIGHT
-                
-            # screen.blit(IMAGES['play_background'], (0, y_first))
-            # screen.blit(IMAGES['play_background'], (0, y_second))
-
-            # screen.blit(IMAGES['ground'], (0, SCREEN_HEIGHT-100))
             
 
             # Update game state only if the game is not paused
             if not game_state_manager.is_paused:
                 game_state_manager.allsprites.update()
                 game_state_manager.update()
-                game_state_manager.rainbow_fish.handle_behavior(game_state_manager.player.size_score,
-                                                                game_state_manager.player.star_power,
-                                                                game_state_manager.player.pos)
+                if game_state_manager.rainbow_fish.is_active:
+                    game_state_manager.rainbow_fish.decide_chase_or_avoid(
+                        game_state_manager.player.size_score,
+                        game_state_manager.player.star_power,
+                        game_state_manager.player.pos
+                        )
             
             # Calculate camera position with boundary limits
             camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * zoom_factor),
