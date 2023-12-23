@@ -193,6 +193,7 @@ class GameState:
         self.info_screen_bg = info_screen_bg
         self.is_paused = False
         self.joystick = joystick
+        self.dead_fish_position = ()
 
     def initialize_entities(self):
         # Initialize all your entities here
@@ -306,6 +307,7 @@ class GameState:
         ##################
         for red_fish in self.red_fishes:
             if pygame.sprite.collide_mask(red_fish, self.player):
+                self.dead_fish_position = red_fish.rect.topleft
                 red_fish.collide_with_player()
                 self.score, self.score_blit = self.player.collide_with_red_fish(self.score, self.score_blit)
                 SOUNDS["snd_eat"].play()
@@ -326,6 +328,7 @@ class GameState:
                    self.player.size_score >= 40 or 
                    self.player.star_power == 1):
                     SOUNDS["snd_eat"].play()
+                    self.dead_fish_position = green_fish.rect.topleft  # Update the position here
                     self.score, self.score_blit = self.player.collide_with_green_fish(self.score, self.score_blit)
                     green_fish.small_collision_with_player()
                     green_fish.big_green_fish_score = 0
@@ -340,6 +343,7 @@ class GameState:
                     green_fish.collision_with_wall(wall.rect)
         if pygame.sprite.collide_mask(self.silver_fish, self.player):
             SOUNDS["snd_eat"].play()
+            self.dead_fish_position = self.silver_fish.rect.topleft
             self.score, self.score_blit = self.player.collide_with_silver_fish(self.score, self.score_blit)
             self.silver_fish.collide_with_player()
         if pygame.sprite.collide_mask(self.silver_fish, self.bright_blue_fish):
@@ -347,6 +351,7 @@ class GameState:
             self.silver_fish.collide_with_bright_blue_fish()
         for shark in self.sharks:
             if pygame.sprite.collide_mask(shark, self.player):
+                self.dead_fish_position = shark.rect.topleft
                 self.score, self.score_blit = self.player.collide_with_shark(self.score, self.score_blit)
                 shark.collide_with_player()
                 if self.player.star_power != 0:
@@ -367,6 +372,7 @@ class GameState:
             # Player eats rainbow_fish only when appears bigger (arbitrary)
             if (self.rainbow_fish.size[0]-45 <= self.player.size_score) or (self.player.star_power == 1):
                 SOUNDS["snd_eat"].play()
+                self.dead_fish_position = self.rainbow_fish.rect.topleft
                 self.score_blit = 2
                 self.score += 2
                 self.player.size_score += 2
@@ -804,6 +810,26 @@ def main():
                 sprite.rect.y -= camera_y
                 zoomed_surface.blit(sprite.image, sprite.rect)
                 sprite.rect.x, sprite.rect.y = original_position
+                
+            # Check if there is a score to blit
+            if game_state_manager.score_blit > 0:
+                # Calculate the relative position of the score text on the zoomed surface
+                relative_x = game_state_manager.dead_fish_position[0] - camera_x
+                relative_y = game_state_manager.dead_fish_position[1] - camera_y
+            
+                # Render the score text
+                SCORE_BLIT_TEXT = FONTS['ocean_font_16'].render("+" + str(game_state_manager.score_blit), True, (255, 255, 255))
+            
+                # Blit the score text at the adjusted position on the zoomed surface
+                zoomed_surface.blit(SCORE_BLIT_TEXT, (relative_x, relative_y))
+            
+                # Increment the disappear timer
+                game_state_manager.score_disappear_timer += 1
+            
+                # Reset the score blit and timer after a certain duration
+                if game_state_manager.score_disappear_timer > 30:
+                    game_state_manager.score_blit = 0
+                    game_state_manager.score_disappear_timer = 0
     
             # Scale the zoomed surface to fill the entire screen
             scaled_zoomed_area = pygame.transform.scale(zoomed_surface, (SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -868,21 +894,6 @@ def main():
             screen_width_percentage = 0.6  # 60% of screen width
             x_position_speed_timer = SCREEN_WIDTH * screen_width_percentage
             screen.blit(game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16']), (x_position_speed_timer, 5))
-            if game_state_manager.score_blit == 0:
-                SCORE_BLIT_TEXT = FONTS['ocean_font_16'].render("", 1, (255, 255, 255))
-            else:
-                SCORE_BLIT_TEXT = FONTS['ocean_font_16'].render("+" + str(game_state_manager.score_blit), 1, (255, 255, 255))
-                if game_state_manager.score_disappear_timer > 10:
-                    game_state_manager.score_blit = 0
-                    game_state_manager.score_disappear_timer = 0
-            screen.blit(SCORE_BLIT_TEXT, (game_state_manager.player.pos[0]+13, 
-                                          game_state_manager.player.pos[1]-25-(game_state_manager.player.size_score/2)))
-            
-            if game_state_manager.score_blit > 0: # Score Timer above player sprite
-                game_state_manager.score_disappear_timer += 1
-                
-            
-            
             
             ##################
             # Sound Checks
