@@ -13,14 +13,15 @@ class Shark(pygame.sprite.Sprite):
         """
         pygame.sprite.Sprite.__init__(self)
         self.images = images
-        self.image = images["spr_shark"]
+        self.image = images["spr_shark"].convert_alpha()
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.direction = (random.choice([-3, 3]), random.choice([-3, 3]))
         self.mini_shark = 0
         self.activate = 0
-        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -400)
+        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), 100)
         self.arrow_warning = 0
+        self.mask = pygame.mask.from_surface(self.image)  # Create a mask from the shark image
     def update(self):
         if self.rect.topleft[1] < 0:
             if self.activate == 1:
@@ -32,9 +33,10 @@ class Shark(pygame.sprite.Sprite):
                       self.rect.topleft[1] + self.direction[1])
             self.rect.topleft = newpos
         if self.mini_shark == 1:
-            self.image = pygame.transform.smoothscale(self.image, (60, 30))
+            self.image = pygame.transform.smoothscale(self.image.convert_alpha(), (60, 30))
         else:
-            self.image = self.images["spr_shark"]
+            self.image = self.images["spr_shark"].convert_alpha()
+        self.mask = pygame.mask.from_surface(self.image)  # Update the mask
     def collision_with_wall(self, rect):
         if self.rect.colliderect(rect):
             if self.rect.left < 32: #left walls

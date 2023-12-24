@@ -32,7 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.pos = [SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100]
     
         # Initialize self.rect and self.image
-        self.image = self.original_image  # Set initial image
+        self.image = self.original_image.convert_alpha()  # Set initial image
         self.rect = self.image.get_rect()
         self.rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     
@@ -46,6 +46,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.topleft = (self.pos[0], self.pos[1])
     
         self.last_pressed = 0
+        self.mask = pygame.mask.from_surface(self.image)
 
         
     def update(self):
@@ -78,6 +79,7 @@ class Player(pygame.sprite.Sprite):
         
         # Resize the player image based on the animated image
         self.resize_player_image(self.animated_image)
+        self.mask = pygame.mask.from_surface(self.image.convert_alpha())
     
         # Decrement powerup timer and reset if over for both star_power 1 and 2
         if self.star_power > 0:

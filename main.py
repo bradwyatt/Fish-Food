@@ -27,6 +27,7 @@ gameicon = pygame.image.load("sprites/red_fish_ico.png")
 pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
+DEBUG = True
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True, True)
@@ -358,6 +359,8 @@ class GameState:
             self.silver_fish.collide_with_bright_blue_fish()
         for shark in self.sharks:
             if pygame.sprite.collide_mask(shark, self.player):
+                self.is_paused = True
+                return
                 self.dead_fish_position = shark.rect.topleft
                 self.score, self.score_blit = self.player.collide_with_shark(self.score, self.score_blit)
                 shark.collide_with_player()
@@ -625,6 +628,7 @@ class Joystick:
              (pygame.K_DOWN, pygame.K_LEFT): "down_left",
          }
         self.mouse_is_pressed = False
+
     
     def draw(self, key_states):
         diagonals_active = set()
@@ -711,6 +715,11 @@ def zoom_in_on_player(screen, player, zoom_factor):
 
     return zoomed_surface
 
+def draw_mask(surface, mask, x, y, color=(255, 0, 0)):
+    # Create a surface from the mask
+    mask_surface = mask.to_surface(setcolor=color, unsetcolor=(0, 0, 0, 0))
+    surface.blit(mask_surface, (x, y))
+
 # Main game loop
 def main():
     # Define Pause Button Properties
@@ -734,7 +743,7 @@ def main():
     game_state_manager = GameState(IMAGES, IMAGES['start_menu_bg'], IMAGES['info_screen_bg'], joystick)
     
     # Ensure the zoomed surface is large enough to handle the maximum offset
-    zoom_factor = 1.5
+    zoom_factor = 1
     zoomed_surface = pygame.Surface((SCREEN_WIDTH // zoom_factor, SCREEN_HEIGHT // zoom_factor))
 
     world_width = SCREEN_WIDTH
@@ -817,6 +826,11 @@ def main():
                 sprite.rect.y -= camera_y
                 zoomed_surface.blit(sprite.image, sprite.rect)
                 sprite.rect.x, sprite.rect.y = original_position
+            
+            if DEBUG:
+                draw_mask(zoomed_surface, game_state_manager.player.mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
+                for shark in game_state_manager.sharks:
+                    draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
                 
             # Check if there is a score to blit
             if game_state_manager.score_blit > 0:
