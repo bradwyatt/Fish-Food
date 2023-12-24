@@ -11,67 +11,80 @@ class RainbowFish(pygame.sprite.Sprite):
         self.image = self.images["spr_rainbow_fish"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
-        self.score_exit = 0
+        self.is_exiting = 0
         self.rainbow_timer = 0
         self.size = [55, 35]
         self.pos = (random.randrange(100, SCREEN_WIDTH-100), -400)
         self.rect.topleft = self.pos
-        self.arrow_warning = 0
-        self.activate = 0
-        self.chase = 0
+        self.arrow_warning_shown = 0
+        self.is_active = 0
+        self.initial_descent_complete = False  # New attribute to track initial descent
 
     def update(self):
-        self.rect.topleft = (self.pos[0], self.pos[1])
         self.rainbow_timer += 1
+        self.image = pygame.transform.smoothscale(self.image, (self.size[0], self.size[1]))
 
-        # Handling fish movement and size
-        if self.activate == 1:
-            self.handle_activation()
+        if self.is_active:
+            if not self.is_exiting and not self.initial_descent_complete:
+                self.descend_to_start_position()
+            elif not self.is_exiting:
+                # Fish will engage in chasing or avoiding behavior
+                pass
+            elif self.is_exiting:
+                # When exiting, continue ascending
+                self.ascend_and_deactivate()
 
-    def handle_behavior(self, player_size_score, player_star_power, player_pos):
+        self.rect.topleft = self.pos
+
+        # Check for spawning and exiting conditions
+        self.manage_spawn_and_exit()
+
+
+    def decide_chase_or_avoid(self, player_size_score, player_star_power, player_pos):
         """
         Determine whether to chase or avoid the player based on the player's state
         and position.
         """
         # Only activate chasing or avoiding behavior if the fish is active and not exiting
-        if self.activate and not self.score_exit:
+        if self.is_active and not self.is_exiting:
             if self.size[0] - 45 <= player_size_score or player_star_power == 1:
                 self.avoid_player(player_pos)
             else:
                 self.chase_player(player_pos)
 
-    def handle_activation(self):
-        if self.rainbow_timer >= 2000 or self.score_exit == 1:
-            self.return_to_top()
+    def manage_spawn_and_exit(self):
+        if self.rainbow_timer >= 2000 and not self.is_exiting:
+            self.is_exiting = 1
 
-        elif self.rainbow_timer >= 300 and self.pos[1] < 200 and self.chase == 0 and self.score_exit == 0: 
-            self.move_down()
-
-    def return_to_top(self):
-        self.chase = 0
-        if self.pos[1] > -100:
-            self.score_exit = 1
+    def ascend_and_deactivate(self):
+        if self.pos[1] > -self.rect.height:
             self.pos = (self.pos[0], self.pos[1] - 3)
         else:
-            self.reset_fish()
+            self.reinitialize_for_next_spawn()
     
-    def move_down(self):
-        self.arrow_warning = 1
-        self.image = pygame.transform.smoothscale(self.image, (self.size[0], self.size[1]))
-        self.pos = (self.pos[0], self.pos[1] + 2)
-        if self.pos[1] >= 100:
-            self.arrow_warning = 0
+    def descend_to_start_position(self):
+        self.arrow_warning_shown = 1
+        if self.pos[1] < 200:
+            self.pos = (self.pos[0], self.pos[1] + 2)
+        else:
+            self.arrow_warning_shown = 0
+            self.initial_descent_complete = True
 
-    def reset_fish(self):
-        self.activate = 0
+    def reinitialize_for_next_spawn(self):
+        """
+        Restart all variables for the next spawn cycle.
+        """
+        self.is_active = 0
+        self.is_exiting = 0
+        self.initial_descent_complete = False
+        self.arrow_warning_shown = 0
+        self.rainbow_timer = 0
         self.pos = (random.randrange(100, SCREEN_WIDTH-100), -100)
-        self.rainbow_timer, self.score_exit = 0, 0
         if self.size[0] < self.MAX_SIZE[0] and self.size[1] < self.MAX_SIZE[1]:
             self.size[0] += 10
             self.size[1] += 10
             self.size[0] = min(self.size[0], self.MAX_SIZE[0])
             self.size[1] = min(self.size[1], self.MAX_SIZE[1])
-        self.image = self.images["spr_rainbow_fish"]
     
     def avoid_player(self, player_pos):
         #Avoid Player
@@ -85,11 +98,9 @@ class RainbowFish(pygame.sprite.Sprite):
             self.pos = (self.pos[0], self.pos[1]+2)
         # Rainbow fish can't go past walls, must go up if stuck
         if(self.pos[0] < 0 or self.pos[0] > SCREEN_WIDTH-32):
-            self.score_exit = 1
-            self.chase = 0
+            self.is_exiting = 1
         elif(self.pos[1] < 32 or self.pos[1] > SCREEN_HEIGHT-32):
-            self.score_exit = 1
-            self.chase = 0
+            self.is_exiting = 1
                 
     def chase_player(self, player_pos):
         if self.pos[0] > player_pos[0]:
@@ -103,7 +114,7 @@ class RainbowFish(pygame.sprite.Sprite):
 
     def collide_with_player(self):
         self.rainbow_timer = 0
-        self.activate = 0
+        self.is_active = 0
         self.pos = (random.randrange(100, SCREEN_WIDTH-100), -100)
         if self.size[0]-20 <= 55: #increases till max size
             self.size[0] += 10
