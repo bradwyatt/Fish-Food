@@ -137,11 +137,18 @@ def draw_text_button(screen, text, font, color, rect):
     return rect.collidepoint(pygame.mouse.get_pos())
 
 class Wall(pygame.sprite.Sprite):
+    # def __init__(self, allsprites):
+    #     pygame.sprite.Sprite.__init__(self)
+    #     self.image = IMAGES["spr_wall"]
+    #     self.rect = self.image.get_rect()
+    #     allsprites.add(self)
     def __init__(self, allsprites):
         pygame.sprite.Sprite.__init__(self)
-        self.image = IMAGES["spr_wall"]
+        self.image = pygame.Surface((32, 32))
+        self.image.fill((0, 0, 0, 0))  # Black color, can be changed to (0, 0, 0, 0) for invisible
+        self.image.set_colorkey((0, 0, 0))  # Make black color transparent
         self.rect = self.image.get_rect()
-        allsprites.add(self)
+        #self.rect.topleft = (x, y)
     def remove_sprite(self):
         self.kill()
 
@@ -200,7 +207,7 @@ class GameState:
         self.player = Player(self.allsprites, IMAGES)
         self.walls = []
         self.seaweeds = []
-        for x_top in range(29):
+        for x_top in range(31):
             self.wall = Wall(self.allsprites)
             self.wall.rect.topleft = (x_top*32, 0) #top walls
             self.walls.append(self.wall)
