@@ -32,6 +32,8 @@ def load_image(file, name, alpha=False, colorkey=None, global_alpha=None):
             image.set_colorkey(colorkey, pygame.RLEACCEL)
         if global_alpha is not None:
             image.set_alpha(global_alpha)
+        if alpha:
+            image = image.convert_alpha()
         
         # Store the image in the global IMAGES dictionary
         IMAGES[name] = image
