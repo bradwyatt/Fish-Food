@@ -69,7 +69,7 @@ def load_all_assets():
     load_image("sprites/big_green_fish_right_face.png", "spr_big_green_fish_right_face", True)
     
     load_image("sprites/silver_fish.png", "spr_silver_fish", True)
-    load_image("sprites/snake_1.png", "spr_snake", True)
+    load_image("sprites/snake_1.png", "spr_snake_1", True)
     load_image("sprites/snake_2.png", "spr_snake_2", True)
     load_image("sprites/snake_3.png", "spr_snake_3", True)
     load_image("sprites/snake_4.png", "spr_snake_4", True)
