@@ -20,7 +20,7 @@ class Player(pygame.sprite.Sprite):
         }
         
         # Load and store mask images
-        self.masks = {
+        self.face_masks = {
             "left": pygame.mask.from_surface(images["player_left_face"]),
             "right": pygame.mask.from_surface(images["player_right_face"]),
             "up": pygame.mask.from_surface(images["player_up_face"]),
@@ -29,6 +29,18 @@ class Player(pygame.sprite.Sprite):
             "up_right": pygame.mask.from_surface(images["player_up_right_face"]),
             "down_left": pygame.mask.from_surface(images["player_down_left_face"]),
             "down_right": pygame.mask.from_surface(images["player_down_right_face"])
+        }
+        
+        # Load and store full-body mask images for each direction
+        self.body_masks = {
+            "left": pygame.mask.from_surface(images["player_left"]),
+            "right": pygame.mask.from_surface(images["player_right"]),
+            "up": pygame.mask.from_surface(images["player_up"]),
+            "down": pygame.mask.from_surface(images["player_down"]),
+            "up_left": pygame.mask.from_surface(images["player_up_left"]),
+            "up_right": pygame.mask.from_surface(images["player_up_right"]),
+            "down_left": pygame.mask.from_surface(images["player_down_left"]),
+            "down_right": pygame.mask.from_surface(images["player_down_right"])
         }
     
         self.current_direction = "left"  # Default direction
@@ -49,7 +61,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     
         # Resize the player image based on the initial image
-        self.resize_player_image(self.image)
+        self.resize_player_image_and_masks(self.image)
     
         # Add the player to the allsprites group
         allsprites.add(self)
@@ -58,7 +70,9 @@ class Player(pygame.sprite.Sprite):
         self.rect.topleft = (self.pos[0], self.pos[1])
     
         self.last_pressed = 0
-        self.mask = pygame.mask.from_surface(self.image)
+        self.face_mask = self.face_masks[self.current_direction]  # Initialize face mask
+        self.body_mask = self.body_masks[self.current_direction]  # Initialize body mask
+
 
         
     def update(self):
@@ -111,14 +125,15 @@ class Player(pygame.sprite.Sprite):
         # Update the player image
         self.image = self.images["player_" + self.current_direction]
 
-        # Update the mask for the current direction
-        self.mask = self.masks[self.current_direction]
+        # Update the face and body masks for the current direction
+        self.face_mask = self.face_masks[self.current_direction]
+        self.body_mask = self.body_masks[self.current_direction]
 
-        # Resize the player image and mask
-        self.resize_player_image(self.image)
+        # Resize the player image and masks
+        self.resize_player_image_and_masks(self.image)
 
 
-    def resize_player_image(self, base_image):
+    def resize_player_image_and_masks(self, base_image):
         # Scale the base image (player's main image)
         new_width = base_image.get_width() + self.size_score * 2
         new_height = base_image.get_height() + self.size_score * 2
@@ -132,7 +147,12 @@ class Player(pygame.sprite.Sprite):
         face_mask_image = pygame.transform.smoothscale(face_mask_image, (new_width, new_height))
         
         # Update the mask from the resized face mask image
-        self.mask = pygame.mask.from_surface(face_mask_image)
+        self.face_mask = pygame.mask.from_surface(face_mask_image)
+        
+        # Scale the corresponding full-body mask image
+        body_mask_image = self.images["player_" + self.current_direction]
+        body_mask_image = pygame.transform.smoothscale(body_mask_image, (new_width, new_height))
+        self.body_mask = pygame.mask.from_surface(body_mask_image)
 
         # Update the rect
         self.rect = self.image.get_rect(center=self.rect.center)

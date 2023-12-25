@@ -27,7 +27,7 @@ gameicon = pygame.image.load("sprites/red_fish_ico.png")
 pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
-DEBUG = False
+DEBUG = True
 ZOOM_FACTOR = 1.5 # Recommended to be 1.5
 
 def load_all_assets():
@@ -293,9 +293,7 @@ class GameState:
         self.sharks = [Shark(self.allsprites, IMAGES) for i in range(1)]
         self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
         self.star = StarPowerup(self.allsprites, IMAGES)
-        #%% Rainbow fish (get back to this later)
         self.rainbow_fish = RainbowFish(self.allsprites, IMAGES)
-        self.rainbow_fish.kill()
         
     def reset_game(self, images):
         self.allsprites.empty()
@@ -857,6 +855,7 @@ def main():
                         game_state_manager.player.star_power,
                         game_state_manager.player.pos
                         )
+                    game_state_manager.rainbow_fish.update_player_position(game_state_manager.player.rect.center)
             
             # Calculate camera position with boundary limits
             camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * ZOOM_FACTOR),
@@ -889,7 +888,7 @@ def main():
                 sprite.rect.x, sprite.rect.y = original_position
             
             if DEBUG:
-                draw_mask(zoomed_surface, game_state_manager.player.mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
+                draw_mask(zoomed_surface, game_state_manager.player.face_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
                 for shark in game_state_manager.sharks:
                     draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
                 
@@ -955,10 +954,10 @@ def main():
             scaled_icons = []
         
             if game_state_manager.rainbow_fish.size[0] - 45 <= game_state_manager.player.size_score:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish"], scaled_icon_size))
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish_left"], scaled_icon_size))
         
             if game_state_manager.player.size_score >= 40:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish"], scaled_icon_size))
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish_left"], scaled_icon_size))
         
             if game_state_manager.player.star_power == 2:
                 scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark_left"], scaled_icon_size))
