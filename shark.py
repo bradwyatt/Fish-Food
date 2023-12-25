@@ -15,7 +15,7 @@ class Shark(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.images = images
         self.image = images["spr_shark_left"]
-        self.face_image = images["spr_shark_face"]  # Shark's face image for collision detection
+        self.face_image = images["spr_shark_face_left"]  # Shark's face image for collision detection
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.direction = (random.choice([-3, 3]), random.choice([-3, 3]))
@@ -54,8 +54,10 @@ class Shark(pygame.sprite.Sprite):
         else:
             if self.direction[0] > 0:
                 self.image = self.images["spr_shark_right"]
+                self.face_image = self.images["spr_shark_face_right"]
             else:
                 self.image = self.images["spr_shark_left"]
+                self.face_image = self.images["spr_shark_face_left"]
             self.mask = pygame.mask.from_surface(self.face_image)
     def move_shark(self):
         if not self.arrow_warning and self.rect.topleft[1] >= 0:

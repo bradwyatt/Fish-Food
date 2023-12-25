@@ -27,7 +27,7 @@ gameicon = pygame.image.load("sprites/red_fish_ico.png")
 pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
-DEBUG = False
+DEBUG = True
 ZOOM_FACTOR = 1.5 # Recommended to be 1.5
 
 def load_all_assets():
@@ -76,7 +76,8 @@ def load_all_assets():
     load_image("sprites/jellyfish_6.png", "spr_jellyfish_6", True)
     load_image("sprites/jellyfish_7.png", "spr_jellyfish_7", True)
     load_image("sprites/shark_left.png", "spr_shark_left", True)
-    load_image("sprites/shark_face_left.png", "spr_shark_face", True)
+    load_image("sprites/shark_face_left.png", "spr_shark_face_left", True)
+    load_image("sprites/shark_face_right.png", "spr_shark_face_right", True)
     load_image("sprites/shark_right.png", "spr_shark_right", True)
     load_image("sprites/shark_turning.png", "spr_shark_turning", True)
     load_image("sprites/bright_blue_fish.png", "spr_bright_blue_fish", True)
