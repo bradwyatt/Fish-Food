@@ -170,12 +170,13 @@ def draw_text_button(screen, text, font, color, rect):
     screen.blit(text_surf, text_rect)
     return rect.collidepoint(pygame.mouse.get_pos())
 
-def collide_rect_to_mask(sprite1, sprite2):
+def collide_rect_to_mask(sprite1, sprite2, mask_name='mask'):
     """
-    Check for collision between sprite1's rect and sprite2's mask.
+    Check for collision between sprite1's rect and a specified mask of sprite2.
 
     :param sprite1: The first sprite (uses its rect for collision).
-    :param sprite2: The second sprite (uses its mask for collision).
+    :param sprite2: The second sprite (whose specified mask is used for collision).
+    :param mask_name: The name of the mask attribute in sprite2 to use for collision.
     :return: True if there is a collision, False otherwise.
     """
     # First, check if the rectangles collide. If not, there can't be a mask collision.
@@ -186,12 +187,48 @@ def collide_rect_to_mask(sprite1, sprite2):
     mask1 = pygame.mask.Mask((sprite1.rect.width, sprite1.rect.height))
     mask1.fill()  # Fill the mask (all pixels set to 1)
 
+    # Get the specified mask from sprite2
+    mask2 = getattr(sprite2, mask_name, None)
+    if mask2 is None:
+        raise ValueError(f"Mask '{mask_name}' not found in sprite2")
+
     # Get the offset between the two sprites
     offset_x = sprite2.rect.left - sprite1.rect.left
     offset_y = sprite2.rect.top - sprite1.rect.top
 
     # Use the offset to check if the masks overlap
-    return mask1.overlap(sprite2.mask, (offset_x, offset_y)) is not None
+    return mask1.overlap(mask2, (offset_x, offset_y)) is not None
+
+
+def collide_mask_to_mask(sprite1, mask1_name, sprite2, mask2_name):
+    """
+    Check for collision between two masks of two different sprites, with an initial
+    rectangle collision check for optimization.
+
+    :param sprite1: The first sprite.
+    :param mask1_name: The name of the mask attribute in the first sprite.
+    :param sprite2: The second sprite.
+    :param mask2_name: The name of the mask attribute in the second sprite.
+    :return: True if there is a collision, False otherwise.
+    """
+    # Retrieve the actual mask objects from the sprites
+    mask1 = getattr(sprite1, mask1_name, None)
+    mask2 = getattr(sprite2, mask2_name, None)
+
+    # Ensure both masks are present
+    if not mask1 or not mask2:
+        return False
+
+    # First, check if the rectangles collide. If not, there can't be a mask collision.
+    if not sprite1.rect.colliderect(sprite2.rect):
+        return False
+
+    # Calculate the offset between the two sprites
+    offset_x = sprite2.rect.left - sprite1.rect.left
+    offset_y = sprite2.rect.top - sprite1.rect.top
+
+    # Check if the masks overlap
+    return mask1.overlap(mask2, (offset_x, offset_y)) is not None
 
 
 class Wall(pygame.sprite.Sprite):
@@ -372,7 +409,7 @@ class GameState:
         # COLLISIONS
         ##################
         for red_fish in self.red_fishes:
-            if pygame.sprite.collide_mask(red_fish, self.player):
+            if collide_rect_to_mask(red_fish, self.player, "face_mask"):
                 self.dead_fish_position = red_fish.rect.topleft
                 red_fish.collide_with_player()
                 self.score, self.score_blit = self.player.collide_with_red_fish(self.score, self.score_blit)
@@ -389,7 +426,7 @@ class GameState:
                 if red_fish.rect.colliderect(wall.rect):
                     red_fish.collision_with_wall(wall.rect)
         for green_fish in self.green_fishes:
-            if pygame.sprite.collide_mask(green_fish, self.player):
+            if collide_rect_to_mask(green_fish, self.player, "face_mask"):
                 if(green_fish.image == IMAGES["spr_green_fish"] or 
                    green_fish.image == IMAGES["spr_green_fish_left"] or 
                    self.player.size_score >= 40 or 
@@ -408,7 +445,7 @@ class GameState:
             for wall in self.walls:
                 if green_fish.rect.colliderect(wall.rect):
                     green_fish.collision_with_wall(wall.rect)
-        if pygame.sprite.collide_mask(self.silver_fish, self.player):
+        if collide_rect_to_mask(self.silver_fish, self.player, "face_mask"):
             SOUNDS["snd_eat"].play()
             self.dead_fish_position = self.silver_fish.rect.topleft
             self.score, self.score_blit = self.player.collide_with_silver_fish(self.score, self.score_blit)
@@ -420,14 +457,14 @@ class GameState:
             #%% Testing star power and not star power interaction with shark
             if self.player.star_power == 2:
                 shark.mini_shark = 1
-                if collide_rect_to_mask(shark, self.player):
+                if collide_rect_to_mask(shark, self.player, "face_mask"):
                     self.dead_fish_position = shark.rect.topleft
                     self.score, self.score_blit = self.player.collide_with_shark(self.score, self.score_blit)
                     SOUNDS["snd_eat_shark"].play()
                     shark.collide_with_player()
             else:
                 shark.mini_shark = 0
-                if collide_rect_to_mask(self.player, shark):
+                if collide_rect_to_mask(self.player, shark, "mask"):
                     self.is_paused = True
                     return
                     self.current_state = GameState.GAME_OVER_SCREEN
@@ -887,8 +924,12 @@ def main():
                 zoomed_surface.blit(sprite.image, sprite.rect)
                 sprite.rect.x, sprite.rect.y = original_position
             
+            #%% Debug
             if DEBUG:
+                draw_mask(zoomed_surface, game_state_manager.player.body_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y, (63, 26, 186))
+
                 draw_mask(zoomed_surface, game_state_manager.player.face_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
+
                 for shark in game_state_manager.sharks:
                     draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
                 
