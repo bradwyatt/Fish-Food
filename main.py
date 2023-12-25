@@ -27,7 +27,7 @@ gameicon = pygame.image.load("sprites/red_fish_ico.png")
 pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
-DEBUG = True
+DEBUG = False
 ZOOM_FACTOR = 1.5 # Recommended to be 1.5
 
 def load_all_assets():
@@ -150,6 +150,30 @@ def draw_text_button(screen, text, font, color, rect):
     pygame.draw.rect(screen, (0, 0, 0), rect)  # Draw button rectangle
     screen.blit(text_surf, text_rect)
     return rect.collidepoint(pygame.mouse.get_pos())
+
+def collide_rect_to_mask(sprite1, sprite2):
+    """
+    Check for collision between sprite1's rect and sprite2's mask.
+
+    :param sprite1: The first sprite (uses its rect for collision).
+    :param sprite2: The second sprite (uses its mask for collision).
+    :return: True if there is a collision, False otherwise.
+    """
+    # First, check if the rectangles collide. If not, there can't be a mask collision.
+    if not pygame.sprite.collide_rect(sprite1, sprite2):
+        return False
+
+    # Create a temporary mask for sprite1's rect
+    mask1 = pygame.mask.Mask((sprite1.rect.width, sprite1.rect.height))
+    mask1.fill()  # Fill the mask (all pixels set to 1)
+
+    # Get the offset between the two sprites
+    offset_x = sprite2.rect.left - sprite1.rect.left
+    offset_y = sprite2.rect.top - sprite1.rect.top
+
+    # Use the offset to check if the masks overlap
+    return mask1.overlap(sprite2.mask, (offset_x, offset_y)) is not None
+
 
 class Wall(pygame.sprite.Sprite):
     # def __init__(self, allsprites):
@@ -375,15 +399,19 @@ class GameState:
             SOUNDS["snd_eat"].play()
             self.silver_fish.collide_with_bright_blue_fish()
         for shark in self.sharks:
-            if pygame.sprite.collide_mask(shark, self.player):
-                self.is_paused = True
-                return
-                self.dead_fish_position = shark.rect.topleft
-                self.score, self.score_blit = self.player.collide_with_shark(self.score, self.score_blit)
-                shark.collide_with_player()
-                if self.player.star_power != 0:
+            #%% Testing star power and not star power interaction with shark
+            if self.player.star_power == 2:
+                shark.mini_shark = 1
+                if collide_rect_to_mask(shark, self.player):
+                    self.dead_fish_position = shark.rect.topleft
+                    self.score, self.score_blit = self.player.collide_with_shark(self.score, self.score_blit)
                     SOUNDS["snd_eat_shark"].play()
-                else:
+                    shark.collide_with_player()
+            else:
+                shark.mini_shark = 0
+                if collide_rect_to_mask(self.player, shark):
+                    self.is_paused = True
+                    return
                     self.current_state = GameState.GAME_OVER_SCREEN
             if pygame.sprite.collide_mask(shark, self.bright_blue_fish):
                 shark.collide_with_bright_blue_fish()
@@ -391,10 +419,6 @@ class GameState:
             for wall in self.walls:
                 if shark.rect.colliderect(wall.rect):
                     shark.collision_with_wall(wall.rect)
-            if self.player.star_power == 2:
-                shark.mini_shark = 1
-            else:
-                shark.mini_shark = 0
         if pygame.sprite.collide_mask(self.rainbow_fish, self.player):
             # Player eats rainbow_fish only when appears bigger (arbitrary)
             if (self.rainbow_fish.size[0]-45 <= self.player.size_score) or (self.player.star_power == 1):
