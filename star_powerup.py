@@ -9,6 +9,8 @@ class StarPowerup(pygame.sprite.Sprite):
     MOVE_INTERVAL = 1000  # Total interval before moving again
     ANIMATION_CYCLE_LENGTH = 30
     SPEED = 5
+    DIRECTION_LEFT = -1
+    DIRECTION_RIGHT = 1
 
     def __init__(self, allsprites, images):
         pygame.sprite.Sprite.__init__(self)
@@ -18,7 +20,7 @@ class StarPowerup(pygame.sprite.Sprite):
         allsprites.add(self)
         self.timer = -StarPowerup.MOVE_INTERVAL  # Start with a negative timer
         self.star_animator = 0
-        self.reset_position()  # Start off-screen right
+        self.reset_position()  # Determine initial spawn position and direction
 
     def update(self):
         self.timer += 1
@@ -26,19 +28,23 @@ class StarPowerup(pygame.sprite.Sprite):
         self.update_animation()
 
         if self.timer >= 0 and self.timer < StarPowerup.MOVE_INTERVAL:
-            self.move_left()
+            self.move()
 
-        if self.rect.right < StarPowerup.OFF_SCREEN_LEFT:
+        if (self.direction == StarPowerup.DIRECTION_LEFT and self.rect.right < StarPowerup.OFF_SCREEN_LEFT) or \
+           (self.direction == StarPowerup.DIRECTION_RIGHT and self.rect.left > StarPowerup.OFF_SCREEN_RIGHT):
             self.reset_position()
             
-    def move_left(self):
-        speed = StarPowerup.SPEED  # Adjust speed as needed
-        self.rect.x -= speed
+    def move(self):
+        self.rect.x += StarPowerup.SPEED * self.direction
 
     def reset_position(self):
-        self.rect.x = StarPowerup.OFF_SCREEN_RIGHT
+        self.direction = random.choice([StarPowerup.DIRECTION_LEFT, StarPowerup.DIRECTION_RIGHT])
+        if self.direction == StarPowerup.DIRECTION_LEFT:
+            self.rect.x = StarPowerup.OFF_SCREEN_RIGHT
+        else:
+            self.rect.x = StarPowerup.OFF_SCREEN_LEFT - self.rect.width  # Adjust for sprite width
         self.rect.y = StarPowerup.BOTTOM_POSITION_Y
-        self.timer = -StarPowerup.MOVE_INTERVAL  # Reset timer to negative for delay
+        self.timer = -StarPowerup.MOVE_INTERVAL
 
     def update_animation(self):
         # Determine which frame of the animation to show
