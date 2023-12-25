@@ -28,6 +28,7 @@ pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 DEBUG = False
+ZOOM_FACTOR = 1.5 # Recommended to be 1.5
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -696,7 +697,7 @@ class Joystick:
                             return direction
         return None
 
-def zoom_in_on_player(screen, player, zoom_factor):
+def zoom_in_on_player(screen, player, ZOOM_FACTOR):
     # Define the area around the player to zoom in on
     zoom_width, zoom_height = 100, 100  # Adjust size as needed
     zoom_rect = pygame.Rect(
@@ -715,7 +716,7 @@ def zoom_in_on_player(screen, player, zoom_factor):
     # Scale up the captured area
     zoomed_surface = pygame.transform.scale(
         subsurface,
-        (zoom_rect.width * zoom_factor, zoom_rect.height * zoom_factor)
+        (zoom_rect.width * ZOOM_FACTOR, zoom_rect.height * ZOOM_FACTOR)
     )
 
     return zoomed_surface
@@ -748,8 +749,8 @@ def main():
     game_state_manager = GameState(IMAGES, IMAGES['start_menu_bg'], IMAGES['info_screen_bg'], joystick)
     
     # Ensure the zoomed surface is large enough to handle the maximum offset
-    zoom_factor = 1.5
-    zoomed_surface = pygame.Surface((SCREEN_WIDTH // zoom_factor, SCREEN_HEIGHT // zoom_factor), pygame.SRCALPHA)
+    
+    zoomed_surface = pygame.Surface((SCREEN_WIDTH // ZOOM_FACTOR, SCREEN_HEIGHT // ZOOM_FACTOR), pygame.SRCALPHA)
 
     world_width = SCREEN_WIDTH
     world_height = SCREEN_HEIGHT
@@ -803,10 +804,10 @@ def main():
                         )
             
             # Calculate camera position with boundary limits
-            camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * zoom_factor),
-                              world_width - SCREEN_WIDTH // zoom_factor))
-            camera_y = max(0, min(game_state_manager.player.rect.centery - SCREEN_HEIGHT // (2 * zoom_factor),
-                                  world_height - SCREEN_HEIGHT // zoom_factor))
+            camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * ZOOM_FACTOR),
+                              world_width - SCREEN_WIDTH // ZOOM_FACTOR))
+            camera_y = max(0, min(game_state_manager.player.rect.centery - SCREEN_HEIGHT // (2 * ZOOM_FACTOR),
+                                  world_height - SCREEN_HEIGHT // ZOOM_FACTOR))
 
             # Clear the zoomed surface
             zoomed_surface.fill((0, 0, 0))
@@ -905,7 +906,7 @@ def main():
                 scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish"], scaled_icon_size))
         
             if game_state_manager.player.star_power == 2:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark"], scaled_icon_size))
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark_left"], scaled_icon_size))
         
             for icon in scaled_icons:
                 # Calculate the vertical offset for the scaled icon
