@@ -54,6 +54,8 @@ class Jellyfish(pygame.sprite.Sprite):
                 self.jellyfishtimer = 0
                 self.jellyfishrandom_spawn = random.randrange(500, 1200)
                 self.rect.topleft = random.randrange(100, SCREEN_WIDTH-100), -50
+        self.mask = pygame.mask.from_surface(self.image)  # Create a mask from the shark image
+
     def collide_with_player(self):
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -50)
         self.jellyfishtimer = 0
