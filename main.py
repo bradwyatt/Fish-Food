@@ -27,7 +27,7 @@ gameicon = pygame.image.load("sprites/red_fish_ico.png")
 pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
-DEBUG = True
+DEBUG = False
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -64,8 +64,10 @@ def load_all_assets():
     load_image("sprites/jellyfish_5.png", "spr_jellyfish_5", True)
     load_image("sprites/jellyfish_6.png", "spr_jellyfish_6", True)
     load_image("sprites/jellyfish_7.png", "spr_jellyfish_7", True)
-    load_image("sprites/shark.png", "spr_shark", True)
-    load_image("sprites/shark_face.png", "spr_shark_face", True)
+    load_image("sprites/shark_left.png", "spr_shark_left", True)
+    load_image("sprites/shark_face_left.png", "spr_shark_face", True)
+    load_image("sprites/shark_right.png", "spr_shark_right", True)
+    load_image("sprites/shark_turning.png", "spr_shark_turning", True)
     load_image("sprites/bright_blue_fish.png", "spr_bright_blue_fish", True)
     IMAGES["big_bright_blue_fish"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish"], (300, 200))
     IMAGES["big_bright_blue_fish_left"] = pygame.transform.flip(IMAGES["big_bright_blue_fish"], 1, 0)
@@ -233,10 +235,12 @@ class GameState:
         self.snake = Snake(self.allsprites, IMAGES)
         self.seahorse = Seahorse(self.allsprites, IMAGES)
         self.jellyfishes = [Jellyfish(self.allsprites, IMAGES) for i in range(3)]
-        self.sharks = [Shark(self.allsprites, IMAGES) for i in range(4)]
+        self.sharks = [Shark(self.allsprites, IMAGES) for i in range(1)]
         self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
         self.star = StarPowerup(self.allsprites, IMAGES)
+        #%% Rainbow fish (get back to this later)
         self.rainbow_fish = RainbowFish(self.allsprites, IMAGES)
+        self.rainbow_fish.kill()
         
     def reset_game(self, images):
         self.allsprites.empty()
@@ -268,21 +272,22 @@ class GameState:
             if self.sharks[0].arrow_warning == 1:
                 screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[0].rect.topleft[0], 40))
                 SOUNDS["snd_shark_incoming"].play()
-        if self.score >= 20:
-            self.sharks[1].activate = 1
-            if self.sharks[1].arrow_warning == 1:
-                screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[1].rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
-        if self.score >= 45:
-            self.sharks[2].activate = 1
-            if self.sharks[2].arrow_warning == 1:
-                screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[2].rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
-        if self.score >= 75:
-            self.sharks[3].activate = 1
-            if self.sharks[3].arrow_warning == 1:
-                screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[3].rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
+        #%% Get back to this later
+        # if self.score >= 20:
+        #     self.sharks[1].activate = 1
+        #     if self.sharks[1].arrow_warning == 1:
+        #         screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[1].rect.topleft[0], 40))
+        #         SOUNDS["snd_shark_incoming"].play()
+        # if self.score >= 45:
+        #     self.sharks[2].activate = 1
+        #     if self.sharks[2].arrow_warning == 1:
+        #         screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[2].rect.topleft[0], 40))
+        #         SOUNDS["snd_shark_incoming"].play()
+        # if self.score >= 75:
+        #     self.sharks[3].activate = 1
+        #     if self.sharks[3].arrow_warning == 1:
+        #         screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[3].rect.topleft[0], 40))
+        #         SOUNDS["snd_shark_incoming"].play()
         # Bright Blue Fish
         # Starts moving when you have a certain score
         if(self.bright_blue_fish.activate == 0 and (self.score % 50 >= 0 and self.score % 50 <= 2) and self.score >= 50):
