@@ -5,7 +5,7 @@ from utils import SCREEN_WIDTH, SCREEN_HEIGHT
 class Snake(pygame.sprite.Sprite):
     OFF_SCREEN_LEFT = -80
     OFF_SCREEN_RIGHT = SCREEN_WIDTH
-    MOVE_INTERVAL = 300
+    RESPAWN_TIMER = 800
     ANIMATION_CYCLE_LENGTH = 20
     SPEED = 2
     DIRECTION_LEFT = -1
@@ -18,19 +18,18 @@ class Snake(pygame.sprite.Sprite):
         self.image = self.images["spr_snake_1"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
-        self.timer = -Snake.MOVE_INTERVAL
+        self.timer = -Snake.RESPAWN_TIMER
         self.snake_animator = 0
         self.reset_position()
 
     def update(self):
         if not self.is_in_game_world():
             self.timer += 1
-        print(str(self.timer))
 
         self.snake_animator = (self.snake_animator + 1) % Snake.ANIMATION_CYCLE_LENGTH
         self.update_animation()
 
-        if self.timer >= 0 and self.timer < Snake.MOVE_INTERVAL:
+        if self.timer >= 0 and self.timer < Snake.RESPAWN_TIMER:
             self.move()
 
         if (self.direction == Snake.DIRECTION_LEFT and self.rect.right < Snake.OFF_SCREEN_LEFT) or \
@@ -47,7 +46,7 @@ class Snake(pygame.sprite.Sprite):
         else:
             self.rect.x = Snake.OFF_SCREEN_LEFT - self.rect.width
         self.rect.y = random.randint(*Snake.BOTTOM_POSITION_Y_RANGE)
-        self.timer = -Snake.MOVE_INTERVAL
+        self.timer = -Snake.RESPAWN_TIMER
 
     def update_animation(self):
         frame = (self.snake_animator // 5) % 4 + 1
