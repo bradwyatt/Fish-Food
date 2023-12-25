@@ -27,7 +27,7 @@ gameicon = pygame.image.load("sprites/red_fish_ico.png")
 pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
-DEBUG = False
+DEBUG = True
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -65,6 +65,7 @@ def load_all_assets():
     load_image("sprites/jellyfish_6.png", "spr_jellyfish_6", True)
     load_image("sprites/jellyfish_7.png", "spr_jellyfish_7", True)
     load_image("sprites/shark.png", "spr_shark", True)
+    load_image("sprites/shark_face.png", "spr_shark_face", True)
     load_image("sprites/bright_blue_fish.png", "spr_bright_blue_fish", True)
     IMAGES["big_bright_blue_fish"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish"], (300, 200))
     IMAGES["big_bright_blue_fish_left"] = pygame.transform.flip(IMAGES["big_bright_blue_fish"], 1, 0)
