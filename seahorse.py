@@ -22,9 +22,12 @@ class Seahorse(pygame.sprite.Sprite):
 
     def update(self):
         self.restart_timer += 1
+
+        if self.restart_timer >= self.random_spawn:
+            self.move()
+            self.check_bounds_and_reset()
+
         self.update_image()
-        self.move()
-        self.check_bounds_and_reset()
 
     def update_image(self):
         if self.direction == Seahorse.MOVE_RIGHT:
@@ -33,9 +36,8 @@ class Seahorse(pygame.sprite.Sprite):
             self.image = self.images["spr_seahorse"]
 
     def move(self):
-        if self.restart_timer > self.random_spawn:
-            move_amount = 3 if self.direction == Seahorse.MOVE_RIGHT else -3
-            self.rect.topleft = self.rect.topleft[0] + move_amount, self.rect.topleft[1]
+        move_amount = 3 if self.direction == Seahorse.MOVE_RIGHT else -3
+        self.rect.topleft = self.rect.topleft[0] + move_amount, self.rect.topleft[1]
 
     def check_bounds_and_reset(self):
         out_of_bounds_left = self.rect.left < Seahorse.OFF_SCREEN_LEFT and self.direction == Seahorse.MOVE_LEFT
@@ -49,7 +51,7 @@ class Seahorse(pygame.sprite.Sprite):
         self.rect.topleft = (random.choice([Seahorse.OFF_SCREEN_LEFT, Seahorse.OFF_SCREEN_RIGHT]),
                              random.randrange(50, SCREEN_HEIGHT - 200))
         self.direction = Seahorse.MOVE_RIGHT if self.rect.left == Seahorse.OFF_SCREEN_LEFT else Seahorse.MOVE_LEFT
-        self.restart_timer = 0
+        self.restart_timer = 0  # Reset the timer
 
     def set_random_spawn_time(self):
         self.random_spawn = random.randrange(Seahorse.MIN_SPAWN_TIME, Seahorse.MAX_SPAWN_TIME)
