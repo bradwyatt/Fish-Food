@@ -58,10 +58,16 @@ def load_all_assets():
     load_image("sprites/player_up_right_gold.png", "player_up_right_gold", True)
     load_image("sprites/player_up_gold.png", "player_up_gold", True)
     load_image("sprites/player_up_left_gold.png", "player_up_left_gold", True)
+    
     load_image("sprites/red_fish.png", "spr_red_fish", True)
     load_image("sprites/green_fish.png", "spr_green_fish", True)
     IMAGES["spr_green_fish_left"] = pygame.transform.flip(IMAGES["spr_green_fish"], 1, 0)
-    load_image("sprites/big_green_fish.png", "spr_big_green_fish", True)
+    
+    load_image("sprites/big_green_fish_left.png", "spr_big_green_fish_left", True)
+    load_image("sprites/big_green_fish_left_face.png", "spr_big_green_fish_left_face", True)
+    load_image("sprites/big_green_fish_right.png", "spr_big_green_fish_right", True)
+    load_image("sprites/big_green_fish_right_face.png", "spr_big_green_fish_right_face", True)
+    
     load_image("sprites/silver_fish.png", "spr_silver_fish", True)
     load_image("sprites/snake_1.png", "spr_snake", True)
     load_image("sprites/snake_2.png", "spr_snake_2", True)
@@ -80,9 +86,16 @@ def load_all_assets():
     load_image("sprites/shark_face_right.png", "spr_shark_face_right", True)
     load_image("sprites/shark_right.png", "spr_shark_right", True)
     load_image("sprites/shark_turning.png", "spr_shark_turning", True)
-    load_image("sprites/bright_blue_fish.png", "spr_bright_blue_fish", True)
-    IMAGES["big_bright_blue_fish"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish"], (300, 200))
-    IMAGES["big_bright_blue_fish_left"] = pygame.transform.flip(IMAGES["big_bright_blue_fish"], 1, 0)
+    
+    load_image("sprites/bright_blue_fish_right.png", "spr_bright_blue_fish_right", True)
+    IMAGES["big_bright_blue_fish_right"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right"], (300, 200))
+    load_image("sprites/bright_blue_fish_right_face.png", "spr_bright_blue_fish_right_face", True)
+    IMAGES["big_bright_blue_fish_right_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right_face"], (300, 200))
+    load_image("sprites/bright_blue_fish_left.png", "spr_bright_blue_fish_left", True)
+    IMAGES["big_bright_blue_fish_left"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left"], (300, 200))
+    load_image("sprites/bright_blue_fish_left_face.png", "spr_bright_blue_fish_left_face", True)
+    IMAGES["big_bright_blue_fish_left_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left_face"], (300, 200))
+    
     load_image("sprites/starfish_1.png", "spr_star", True)
     load_image("sprites/starfish_2.png", "spr_star_2", True)
     load_image("sprites/starfish_3.png", "spr_star_3", True)
@@ -92,7 +105,13 @@ def load_all_assets():
     load_image("sprites/seaweed_middle.png", "spr_seaweed", True)
     load_image("sprites/seaweed_left.png", "spr_seaweed_left", True)
     load_image("sprites/seaweed_right.png", "spr_seaweed_right", True)
-    load_image("sprites/rainbow_fish.png", "spr_rainbow_fish", True)
+    
+    load_image("sprites/rainbow_fish_left.png", "spr_rainbow_fish_left", True)
+    load_image("sprites/rainbow_fish_left_face.png", "spr_rainbow_fish_left_face", True)
+    load_image("sprites/rainbow_fish_turning.png", "spr_rainbow_fish_turning", True)
+    load_image("sprites/rainbow_fish_right.png", "spr_rainbow_fish_right", True)
+    load_image("sprites/rainbow_fish_right_face.png", "spr_rainbow_fish_right_face", True)
+
     # arrow keys
     load_image("sprites/unpressed_arrow_up.png", "spr_unpressed_arrow_up", True, 128)
     load_image("sprites/pressed_arrow_up.png", "spr_pressed_arrow_up", True, 128)
@@ -363,7 +382,8 @@ class GameState:
             for green_fish in self.green_fishes:
                 if red_fish.rect.colliderect(green_fish):
                     green_fish.collision_with_redfish()
-                    if green_fish.image != IMAGES["spr_big_green_fish"]:
+                    if(green_fish.image != IMAGES["spr_big_green_fish_left"] or
+                       green_fish.image != IMAGES["spr_big_green_fish_right"]):
                         red_fish.collide_with_green_fish()
             if pygame.sprite.collide_mask(red_fish, self.bright_blue_fish):
                 red_fish.collide_with_bright_blue_fish()

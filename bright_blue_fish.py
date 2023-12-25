@@ -11,7 +11,7 @@ class BrightBlueFish(pygame.sprite.Sprite):
         """
         pygame.sprite.Sprite.__init__(self)
         self.images = images
-        self.image = self.images["spr_bright_blue_fish"]
+        self.image = self.images["spr_bright_blue_fish_right"]
         self.direction = random.choice([0, 1]) #move left: 0, move right: 1
         self.rect = self.image.get_rect()
         allsprites.add(self)
@@ -23,7 +23,7 @@ class BrightBlueFish(pygame.sprite.Sprite):
         if self.activate == 1:
             self.arrow_warning = 1
             if self.direction == 1:
-                self.image = self.images["big_bright_blue_fish"]
+                self.image = self.images["big_bright_blue_fish_right"]
             elif self.direction == 0:
                 self.image = self.images["big_bright_blue_fish_left"]
             if self.direction == 1 and self.activate == 1: #right movements
@@ -40,7 +40,7 @@ class BrightBlueFish(pygame.sprite.Sprite):
                     self.activate = 0
 
         else:
-            self.image = self.images["spr_bright_blue_fish"]
+            self.image = self.images["spr_bright_blue_fish_right"]
         self.mask = pygame.mask.from_surface(self.image)  # Create a mask from the shark image
     def remove_sprite(self):
         self.kill()

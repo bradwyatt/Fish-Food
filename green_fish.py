@@ -46,7 +46,7 @@ class GreenFish(pygame.sprite.Sprite):
     def collision_with_redfish(self):
         self.big_green_fish_score += 10
         if self.big_green_fish_score == 70:
-            self.image = pygame.transform.smoothscale(self.images["spr_big_green_fish"], (103, 58))
+            self.image = pygame.transform.smoothscale(self.images["spr_big_green_fish_left"], (103, 58))
     def small_collision_with_player(self):
         self.image = self.images["spr_green_fish"]
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), random.randrange(100, SCREEN_HEIGHT-100))

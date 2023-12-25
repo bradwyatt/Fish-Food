@@ -8,7 +8,7 @@ class RainbowFish(pygame.sprite.Sprite):
     def __init__(self, allsprites, images):
         pygame.sprite.Sprite.__init__(self)
         self.images = images
-        self.image = self.images["spr_rainbow_fish"]
+        self.image = self.images["spr_rainbow_fish_left"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
         self.is_exiting = 0
