@@ -30,17 +30,18 @@ class Shark(pygame.sprite.Sprite):
 
         # Check if the turning period has elapsed
         if self.stop_timer > current_time:
-            # During the turning time, keep the turning sprite but continue moving
+            # During the turning time, keep the turning sprite
             if self.mini_shark == 1:
-                pygame.transform.smoothscale(self.images["spr_shark_turning"], (60, 30))
+                self.image = pygame.transform.smoothscale(self.images["spr_shark_turning"], (60, 30))
             else:
                 self.image = self.images["spr_shark_turning"]
+            # Do not move while in turning animation
         else:
             # After the turning period, update the sprite based on direction
             self.update_image_and_mask()
 
-        # Regular movement code, allows movement during the turning period
-        self.move_shark()
+            # Regular movement code, allows movement after the turning period
+            self.move_shark()
     def update_image_and_mask(self):
         # Update image based on direction
         if self.mini_shark == 1:
