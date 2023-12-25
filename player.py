@@ -18,6 +18,18 @@ class Player(pygame.sprite.Sprite):
             "down_left": self.images["player_down_left"],
             "down_right": self.images["player_down_right"],
         }
+        
+        # Load and store mask images
+        self.masks = {
+            "left": pygame.mask.from_surface(images["player_left_face"]),
+            "right": pygame.mask.from_surface(images["player_right_face"]),
+            "up": pygame.mask.from_surface(images["player_up_face"]),
+            "down": pygame.mask.from_surface(images["player_down_face"]),
+            "up_left": pygame.mask.from_surface(images["player_up_right_face"]),
+            "up_right": pygame.mask.from_surface(images["player_up_right_face"]),
+            "down_left": pygame.mask.from_surface(images["player_down_left_face"]),
+            "down_right": pygame.mask.from_surface(images["player_down_right_face"])
+        }
     
         self.current_direction = "left"  # Default direction
         self.original_image = self.original_images[self.current_direction]
@@ -77,9 +89,8 @@ class Player(pygame.sprite.Sprite):
             # If not in star power, use the normal image
             self.animated_image = self.images["player_" + self.current_direction]
         
-        # Resize the player image based on the animated image
-        self.resize_player_image(self.animated_image)
-        self.mask = pygame.mask.from_surface(self.image)
+        # Update image and mask regardless of movement
+        self.update_image_and_mask()
     
         # Decrement powerup timer and reset if over for both star_power 1 and 2
         if self.star_power > 0:
@@ -96,15 +107,33 @@ class Player(pygame.sprite.Sprite):
                 self.speed_x, self.speed_y = 6, 6  # Reset to default speed
                 self.speed_time_left = 500  # Reset timer for the next speed change
 
-    
+    def update_image_and_mask(self):
+        # Update the player image
+        self.image = self.images["player_" + self.current_direction]
+
+        # Update the mask for the current direction
+        self.mask = self.masks[self.current_direction]
+
+        # Resize the player image and mask
+        self.resize_player_image(self.image)
 
 
     def resize_player_image(self, base_image):
-        # Scale the base image
+        # Scale the base image (player's main image)
         new_width = base_image.get_width() + self.size_score * 2
         new_height = base_image.get_height() + self.size_score * 2
         self.image = pygame.transform.smoothscale(base_image, (new_width, new_height))
-    
+
+        # Get the corresponding face mask image based on the current direction
+        face_mask_key = "player_" + self.current_direction + "_face"
+        face_mask_image = self.images[face_mask_key]
+
+        # Scale the corresponding face mask image
+        face_mask_image = pygame.transform.smoothscale(face_mask_image, (new_width, new_height))
+        
+        # Update the mask from the resized face mask image
+        self.mask = pygame.mask.from_surface(face_mask_image)
+
         # Update the rect
         self.rect = self.image.get_rect(center=self.rect.center)
 
@@ -119,18 +148,22 @@ class Player(pygame.sprite.Sprite):
         self.current_direction = "up"
         if self.pos[1] > 50: # Boundary, 32 is block, added a few extra pixels to make it look nicer
             self.pos[1] -= self.speed_y
+        self.update_image_and_mask()
     def move_down(self):
         self.current_direction = "down"
         if self.pos[1] < SCREEN_HEIGHT-75:
             self.pos[1] += self.speed_y
+        self.update_image_and_mask()
     def move_left(self):
         self.current_direction = "left"
         if self.pos[0] > 32:
             self.pos[0] -= self.speed_x
+        self.update_image_and_mask()
     def move_right(self):
         self.current_direction = "right"
         if self.pos[0] < SCREEN_WIDTH-75:
             self.pos[0] += self.speed_x
+        self.update_image_and_mask()
     def move_up_left(self):
         self.current_direction = "up_left"
                 
@@ -138,6 +171,7 @@ class Player(pygame.sprite.Sprite):
         if self.pos[1] > 50 and self.pos[0] > 32:
             self.pos[0] -= self.speed_x
             self.pos[1] -= self.speed_y
+        self.update_image_and_mask()
     def move_up_right(self):
         self.current_direction = "up_right"
                 
@@ -145,6 +179,7 @@ class Player(pygame.sprite.Sprite):
         if self.pos[1] > 50 and self.pos[0] < SCREEN_WIDTH-75:
             self.pos[0] += self.speed_x
             self.pos[1] -= self.speed_y
+        self.update_image_and_mask()
     def move_down_left(self):
         self.current_direction = "down_left"
         
@@ -152,6 +187,7 @@ class Player(pygame.sprite.Sprite):
         if self.pos[1] < SCREEN_HEIGHT-75 and self.pos[0] > 32:
             self.pos[0] -= self.speed_x
             self.pos[1] += self.speed_y
+        self.update_image_and_mask()
     def move_down_right(self):
         self.current_direction = "down_right"
                 
@@ -159,6 +195,7 @@ class Player(pygame.sprite.Sprite):
         if self.pos[1] < SCREEN_HEIGHT-75 and self.pos[0] < SCREEN_WIDTH-75:
             self.pos[0] += self.speed_x
             self.pos[1] += self.speed_y
+        self.update_image_and_mask()
     def collide_with_red_fish(self, score, score_blit):
         score_blit = 1
         score += 1

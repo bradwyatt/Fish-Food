@@ -40,6 +40,16 @@ def load_all_assets():
     load_image("sprites/player_up_right.png", "player_up_right", True)
     load_image("sprites/player_up.png", "player_up", True)
     load_image("sprites/player_up_left.png", "player_up_left", True)
+    
+    load_image("sprites/player_left_face.png", "player_left_face", True)
+    load_image("sprites/player_down_left_face.png", "player_down_left_face", True)
+    load_image("sprites/player_down_face.png", "player_down_face", True)
+    load_image("sprites/player_down_right_face.png", "player_down_right_face", True)
+    load_image("sprites/player_right_face.png", "player_right_face", True)
+    load_image("sprites/player_up_right_face.png", "player_up_right_face", True)
+    load_image("sprites/player_up_face.png", "player_up_face", True)
+    load_image("sprites/player_up_left_face.png", "player_up_left_face", True)
+    
     load_image("sprites/player_left_gold.png", "player_left_gold", True)
     load_image("sprites/player_down_left_gold.png", "player_down_left_gold", True)
     load_image("sprites/player_down_gold.png", "player_down_gold", True)
