@@ -28,7 +28,7 @@ pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 DEBUG = True
-ZOOM_FACTOR = 1.5 # Recommended to be 1.5
+ZOOM_FACTOR = 1 # Recommended to be 1.5
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -96,7 +96,7 @@ def load_all_assets():
     load_image("sprites/bright_blue_fish_left_face.png", "spr_bright_blue_fish_left_face", True)
     IMAGES["big_bright_blue_fish_left_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left_face"], (300, 200))
     
-    load_image("sprites/starfish_1.png", "spr_star", True)
+    load_image("sprites/starfish_1.png", "spr_star_1", True)
     load_image("sprites/starfish_2.png", "spr_star_2", True)
     load_image("sprites/starfish_3.png", "spr_star_3", True)
     load_image("sprites/arrow_warning_red.png", "arrow_warning_red", True)

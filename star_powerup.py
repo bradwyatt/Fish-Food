@@ -2,42 +2,52 @@ import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py with constants
 
-
 class StarPowerup(pygame.sprite.Sprite):
+    OFF_SCREEN_RIGHT = SCREEN_WIDTH
+    OFF_SCREEN_LEFT = -80  # Assuming the width of the sprite is less than 80
+    BOTTOM_POSITION_Y = SCREEN_HEIGHT - 80  # Y-position near the bottom of the screen
+    MOVE_INTERVAL = 1000  # Total interval before moving again
+    ANIMATION_CYCLE_LENGTH = 30
+    SPEED = 5
+
     def __init__(self, allsprites, images):
-        """
-        Player becomes invincible for period of time
-        """
         pygame.sprite.Sprite.__init__(self)
         self.images = images
-        self.image = self.images["spr_star"]
+        self.image = images["spr_star_1"]
         self.rect = self.image.get_rect()
         allsprites.add(self)
+        self.timer = -StarPowerup.MOVE_INTERVAL  # Start with a negative timer
         self.star_animator = 0
-        self.spawn_timer = 0
-        self.pos = (SCREEN_WIDTH, SCREEN_HEIGHT-80) # Out of screen
-        self.rect.topleft = self.pos
+        self.reset_position()  # Start off-screen right
+
     def update(self):
-        self.spawn_timer += 1
-        self.star_animator += 1
-        self.rect.topleft = (self.pos[0], self.pos[1])
-        if self.spawn_timer == 2600: # Reset position, timer to 0
-            self.pos = (SCREEN_WIDTH, SCREEN_HEIGHT-80)
-            self.spawn_timer = 0
-        elif self.spawn_timer > 1500: # Respawn
-            self.pos = (self.pos[0]-5, SCREEN_HEIGHT-80)
-            if self.star_animator > 0:
-                self.image = self.images["spr_star"]
-            if self.star_animator > 10:
-                self.image = self.images["spr_star_2"]
-            if self.star_animator > 20:
-                self.image = self.images["spr_star_3"]
-            if self.star_animator > 30:
-                self.image = self.images["spr_star_2"]
-            if self.star_animator > 40:
-                self.star_animator = 0
+        self.timer += 1
+        self.star_animator = (self.star_animator + 1) % StarPowerup.ANIMATION_CYCLE_LENGTH
+        self.update_animation()
+
+        if self.timer >= 0 and self.timer < StarPowerup.MOVE_INTERVAL:
+            self.move_left()
+
+        if self.rect.right < StarPowerup.OFF_SCREEN_LEFT:
+            self.reset_position()
+            
+    def move_left(self):
+        speed = StarPowerup.SPEED  # Adjust speed as needed
+        self.rect.x -= speed
+
+    def reset_position(self):
+        self.rect.x = StarPowerup.OFF_SCREEN_RIGHT
+        self.rect.y = StarPowerup.BOTTOM_POSITION_Y
+        self.timer = -StarPowerup.MOVE_INTERVAL  # Reset timer to negative for delay
+
+    def update_animation(self):
+        # Determine which frame of the animation to show
+        frame = (self.star_animator // 10) % 3 + 1  # Cycles through frames 1-2-3
+        self.image = self.images[f"spr_star_{frame}"]
+
+
     def collide_with_player(self):
-        self.pos = (SCREEN_WIDTH, SCREEN_HEIGHT-80)
-        self.spawn_timer = 0
+        self.reset_position()
+
     def remove_sprite(self):
         self.kill()
