@@ -4,7 +4,7 @@ from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py w
 
 class RainbowFish(pygame.sprite.Sprite):
     MAX_SIZE = [85, 65]  # Maximum size for the RainbowFish
-
+    TURN_TIME_MS = 50
     def __init__(self, allsprites, images):
         pygame.sprite.Sprite.__init__(self)
         self.images = images
@@ -19,18 +19,36 @@ class RainbowFish(pygame.sprite.Sprite):
         self.arrow_warning_shown = 0
         self.is_active = 0
         self.initial_descent_complete = False  # New attribute to track initial descent
+        
+        self.current_direction = "left"  # Default direction
+        self.is_turning = False
+        self.turning_timer = 0
+        self.player_position = (0, 0)  # Initialize player position
+        
+    def update_player_position(self, player_pos):
+        """Update the player's position for the Rainbow Fish."""
+        self.player_position = player_pos
 
     def update(self):
         self.rainbow_timer += 1
+        # Update size and mask
         self.image = pygame.transform.smoothscale(self.image, (self.size[0], self.size[1]))
-        self.mask = pygame.mask.from_surface(self.image)  # Create a mask from the shark image
+        self.mask = pygame.mask.from_surface(self.image)
+
+        # Check player position relative to Rainbow Fish
+        player_on_left = self.player_position[0] < self.rect.centerx
+        player_on_right = self.player_position[0] > self.rect.centerx
 
         if self.is_active:
             if not self.is_exiting and not self.initial_descent_complete:
                 self.descend_to_start_position()
             elif not self.is_exiting:
                 # Fish will engage in chasing or avoiding behavior
-                pass
+                # Handle direction change and turning animation
+                if player_on_left and self.current_direction != "left":
+                    self.animate_turning("left")
+                elif player_on_right and self.current_direction != "right":
+                    self.animate_turning("right")
             elif self.is_exiting:
                 # When exiting, continue ascending
                 self.ascend_and_deactivate()
@@ -39,6 +57,20 @@ class RainbowFish(pygame.sprite.Sprite):
 
         # Check for spawning and exiting conditions
         self.manage_spawn_and_exit()
+        
+    def animate_turning(self, new_direction):
+        if not self.is_turning:
+            self.image = self.images["spr_rainbow_fish_turning"]
+            self.is_turning = True
+            self.turning_timer = pygame.time.get_ticks() + RainbowFish.TURN_TIME_MS
+        elif pygame.time.get_ticks() > self.turning_timer:
+            # After turning animation, change to the new direction
+            if new_direction == "left":
+                self.image = self.images["spr_rainbow_fish_left"]
+            elif new_direction == "right":
+                self.image = self.images["spr_rainbow_fish_right"]
+            self.current_direction = new_direction
+            self.is_turning = False
 
 
     def decide_chase_or_avoid(self, player_size_score, player_star_power, player_pos):
