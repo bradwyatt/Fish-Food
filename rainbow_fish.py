@@ -23,6 +23,7 @@ class RainbowFish(pygame.sprite.Sprite):
     def update(self):
         self.rainbow_timer += 1
         self.image = pygame.transform.smoothscale(self.image, (self.size[0], self.size[1]))
+        self.mask = pygame.mask.from_surface(self.image)  # Create a mask from the shark image
 
         if self.is_active:
             if not self.is_exiting and not self.initial_descent_complete:

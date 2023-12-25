@@ -41,5 +41,6 @@ class BrightBlueFish(pygame.sprite.Sprite):
 
         else:
             self.image = self.images["spr_bright_blue_fish"]
+        self.mask = pygame.mask.from_surface(self.image)  # Create a mask from the shark image
     def remove_sprite(self):
         self.kill()
