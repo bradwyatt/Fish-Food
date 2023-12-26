@@ -16,7 +16,7 @@ class GreenFish(pygame.sprite.Sprite):
     def __init__(self, allsprites, images):
         super().__init__()
         self.images = images
-        self.image = self.images["spr_green_fish"]
+        self.image = self.images["spr_green_fish_right"]
         self.rect = self.image.get_rect()
         self.reset_position()
         self.direction = (random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]), 
@@ -27,6 +27,10 @@ class GreenFish(pygame.sprite.Sprite):
         self.stop_timer = 0  # Timer for turning animation
 
         allsprites.add(self)
+        
+        self.body_mask = None
+        self.face_mask = None
+
 
     def update(self):
         current_time = pygame.time.get_ticks()
@@ -48,13 +52,20 @@ class GreenFish(pygame.sprite.Sprite):
         if self.is_big:
             if self.direction[0] < 0:  # Moving left
                 self.image = self.images["spr_big_green_fish_left"]
+                self.body_mask = pygame.mask.from_surface(self.images["spr_big_green_fish_left"])
+                self.face_mask = pygame.mask.from_surface(self.images["spr_big_green_fish_left_face"])
             else:  # Moving right
                 self.image = self.images["spr_big_green_fish_right"]
+                self.body_mask = pygame.mask.from_surface(self.images["spr_big_green_fish_right"])
+                self.face_mask = pygame.mask.from_surface(self.images["spr_big_green_fish_right_face"])
         else:
             if self.direction[0] < 0:  # Moving left
                 self.image = self.images["spr_green_fish_left"]
+                self.body_mask = pygame.mask.from_surface(self.images["spr_green_fish_left"])
             else:  # Moving right
-                self.image = self.images["spr_green_fish"]
+                self.image = self.images["spr_green_fish_right"]
+                self.body_mask = pygame.mask.from_surface(self.images["spr_green_fish_right"])
+
 
     def change_direction(self):
         new_directions = [(-self.direction[0], self.direction[1]),
@@ -91,6 +102,8 @@ class GreenFish(pygame.sprite.Sprite):
     def reset_position(self):
         self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
                              random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING))
+        self.big_green_fish_score = 0
+        self.is_big = False
 
     def collide_with_player(self):
         self.reset_position()

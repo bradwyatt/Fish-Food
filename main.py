@@ -60,8 +60,8 @@ def load_all_assets():
     load_image("sprites/player_up_left_gold.png", "player_up_left_gold", True)
     
     load_image("sprites/red_fish.png", "spr_red_fish", True)
-    load_image("sprites/green_fish.png", "spr_green_fish", True)
-    IMAGES["spr_green_fish_left"] = pygame.transform.flip(IMAGES["spr_green_fish"], 1, 0)
+    load_image("sprites/green_fish.png", "spr_green_fish_right", True)
+    IMAGES["spr_green_fish_left"] = pygame.transform.flip(IMAGES["spr_green_fish_right"], 1, 0)
     
     load_image("sprites/big_green_fish_left.png", "spr_big_green_fish_left", True)
     load_image("sprites/big_green_fish_left_face.png", "spr_big_green_fish_left_face", True)
@@ -422,22 +422,22 @@ class GameState:
                 if red_fish.rect.colliderect(wall.rect):
                     red_fish.collision_with_wall(wall.rect)
         for green_fish in self.green_fishes:
-            if collide_rect_to_mask(green_fish, self.player, "face_mask"):
-                if(green_fish.is_big == False or 
-                   self.player.size_score >= 40 or 
-                   self.player.star_power == 1):
-                    SOUNDS["snd_eat"].play()
-                    self.dead_fish_position = green_fish.rect.topleft  # Update the position here
-                    self.score, self.score_blit = self.player.collide_with_green_fish(self.score, self.score_blit)
-                    green_fish.collide_with_player()
-                    green_fish.big_green_fish_score = 0
-                else: # When it transforms to big green fish, player dies
+            if green_fish.is_big:
+                if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask"):
                     self.current_state = GameState.GAME_OVER_SCREEN
+                else: 
+                    #%% (NEEDS CHANGING) When player is bigger than big green fish
+                    if collide_rect_to_mask(green_fish, self.player, "face_mask"):
+                        if(green_fish.is_big == False or 
+                           self.player.size_score >= 40 or 
+                           self.player.star_power == 1):
+                            SOUNDS["snd_eat"].play()
+                            self.dead_fish_position = green_fish.rect.topleft  # Update the position here
+                            self.score, self.score_blit = self.player.collide_with_green_fish(self.score, self.score_blit)
+                            green_fish.collide_with_player()
+                            green_fish.big_green_fish_score = 0
             if pygame.sprite.collide_mask(green_fish, self.bright_blue_fish):
-                green_fish.big_green_fish_score = 0
-                green_fish.is_big = False
-                green_fish.image = IMAGES["spr_green_fish"]
-                green_fish.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), random.randrange(100, SCREEN_HEIGHT-100))
+                green_fish.reset_position()
             for wall in self.walls:
                 if green_fish.rect.colliderect(wall.rect):
                     green_fish.collision_with_wall(wall.rect)
@@ -822,8 +822,9 @@ def zoom_in_on_player(screen, player, ZOOM_FACTOR):
 
 def draw_mask(surface, mask, x, y, color=(255, 0, 0)):
     # Create a surface from the mask
-    mask_surface = mask.to_surface(setcolor=color, unsetcolor=(0, 0, 0, 0))
-    surface.blit(mask_surface, (x, y))
+    if mask:
+        mask_surface = mask.to_surface(setcolor=color, unsetcolor=(0, 0, 0, 0))
+        surface.blit(mask_surface, (x, y))
 
 # Main game loop
 def main():
@@ -944,6 +945,10 @@ def main():
                           game_state_manager.bright_blue_fish.mask, 
                           game_state_manager.bright_blue_fish.rect.x - camera_x, 
                           game_state_manager.bright_blue_fish.rect.y - camera_y)
+                for green_fish in game_state_manager.green_fishes:
+                    draw_mask(zoomed_surface, green_fish.body_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y, (0, 128, 0))
+                    draw_mask(zoomed_surface, green_fish.face_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y)
+
 
             # Check if there is a score to blit
             if game_state_manager.score_blit > 0:
@@ -992,7 +997,7 @@ def main():
             icon_buffer = 10  # Space between icons
         
             # Standard icons
-            standard_icons = ['spr_red_fish', 'spr_green_fish', 'spr_silver_fish']
+            standard_icons = ['spr_red_fish', 'spr_green_fish_left', 'spr_silver_fish']
             max_height_standard = max(IMAGES[key].get_height() for key in standard_icons)
         
             for icon_key in standard_icons:
