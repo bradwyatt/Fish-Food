@@ -9,7 +9,7 @@ class BrightBlueFish(pygame.sprite.Sprite):
     ARROW_REMOVAL_BOUNDARY = -200
     LEFT_SCREEN_BOUNDARY = -300
     SPAWN_Y_RANGE = (50, SCREEN_HEIGHT - 200)
-    ACTIVATION_SCORE = 10
+    ACTIVATION_SCORE = 50
 
     def __init__(self, allsprites, images):
         super().__init__()

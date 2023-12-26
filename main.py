@@ -67,6 +67,8 @@ def load_all_assets():
     load_image("sprites/big_green_fish_left_face.png", "spr_big_green_fish_left_face", True)
     load_image("sprites/big_green_fish_right.png", "spr_big_green_fish_right", True)
     load_image("sprites/big_green_fish_right_face.png", "spr_big_green_fish_right_face", True)
+    load_image("sprites/big_green_fish_turning.png", "spr_big_green_fish_turning", True)
+
     
     load_image("sprites/silver_fish.png", "spr_silver_fish", True)
     load_image("sprites/snake_1.png", "spr_snake_1", True)
@@ -411,9 +413,8 @@ class GameState:
                 SOUNDS["snd_eat"].play()
             for green_fish in self.green_fishes:
                 if red_fish.rect.colliderect(green_fish):
-                    green_fish.collision_with_redfish()
-                    if(green_fish.image != IMAGES["spr_big_green_fish_left"] or
-                       green_fish.image != IMAGES["spr_big_green_fish_right"]):
+                    green_fish.collision_with_red_fish()
+                    if green_fish.is_big == False:
                         red_fish.collide_with_green_fish()
             if pygame.sprite.collide_mask(red_fish, self.bright_blue_fish):
                 red_fish.collide_with_bright_blue_fish()
@@ -422,19 +423,19 @@ class GameState:
                     red_fish.collision_with_wall(wall.rect)
         for green_fish in self.green_fishes:
             if collide_rect_to_mask(green_fish, self.player, "face_mask"):
-                if(green_fish.image == IMAGES["spr_green_fish"] or 
-                   green_fish.image == IMAGES["spr_green_fish_left"] or 
+                if(green_fish.is_big == False or 
                    self.player.size_score >= 40 or 
                    self.player.star_power == 1):
                     SOUNDS["snd_eat"].play()
                     self.dead_fish_position = green_fish.rect.topleft  # Update the position here
                     self.score, self.score_blit = self.player.collide_with_green_fish(self.score, self.score_blit)
-                    green_fish.small_collision_with_player()
+                    green_fish.collide_with_player()
                     green_fish.big_green_fish_score = 0
                 else: # When it transforms to big green fish, player dies
                     self.current_state = GameState.GAME_OVER_SCREEN
             if pygame.sprite.collide_mask(green_fish, self.bright_blue_fish):
                 green_fish.big_green_fish_score = 0
+                green_fish.is_big = False
                 green_fish.image = IMAGES["spr_green_fish"]
                 green_fish.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), random.randrange(100, SCREEN_HEIGHT-100))
             for wall in self.walls:
