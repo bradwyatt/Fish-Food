@@ -74,7 +74,7 @@ def load_all_assets():
     load_image("sprites/snake_3.png", "spr_snake_3", True)
     load_image("sprites/snake_4.png", "spr_snake_4", True)
     load_image("sprites/seahorse.png", "spr_seahorse", True)
-    load_image("sprites/jellyfish_1.png", "spr_jellyfish", True)
+    load_image("sprites/jellyfish_1.png", "spr_jellyfish_1", True)
     load_image("sprites/jellyfish_2.png", "spr_jellyfish_2", True)
     load_image("sprites/jellyfish_3.png", "spr_jellyfish_3", True)
     load_image("sprites/jellyfish_4.png", "spr_jellyfish_4", True)
@@ -399,11 +399,11 @@ class GameState:
                 SOUNDS["snd_siren"].play()
         # Jellyfish
         if self.score >= 0:
-            self.jellyfishes[0].activate = 1
+            self.jellyfishes[0].activate = True
         if self.score >= 30:
-            self.jellyfishes[1].activate = 1    
-        if self.score == 60:
-            self.jellyfishes[2].activate = 1
+            self.jellyfishes[1].activate = True   
+        if self.score >= 60:
+            self.jellyfishes[2].activate = True
     def handle_collisions(self):
         ##################
         # COLLISIONS
