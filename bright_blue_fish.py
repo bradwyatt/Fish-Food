@@ -25,11 +25,10 @@ class BrightBlueFish(pygame.sprite.Sprite):
         return self.rect.right < 0 or self.rect.left > SCREEN_WIDTH
     
     def try_activate(self, score, last_activation_score):
-        # Activate the fish if the score has increased by increments of at least 50
-        # and it is not currently in the game world
-        if(score // BrightBlueFish.ACTIVATION_SCORE > last_activation_score // BrightBlueFish.ACTIVATION_SCORE 
-           and score >= BrightBlueFish.ACTIVATION_SCORE 
-           and self.is_out_of_world()):
+        # Check if the score has crossed the next multiple of ACTIVATION_SCORE since the last activation
+        if (last_activation_score // BrightBlueFish.ACTIVATION_SCORE < score // BrightBlueFish.ACTIVATION_SCORE 
+            and score >= BrightBlueFish.ACTIVATION_SCORE 
+            and self.is_out_of_world()):
             self.activate_fish()
             return True  # Return True to indicate that the fish has been activated
         return False

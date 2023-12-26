@@ -533,7 +533,7 @@ class GameState:
                 sounds_list = list(SOUNDS.keys()) # Returns list of keys in sounds
                 SOUNDS[sounds_list[i]].stop() # Stops all sounds
             SOUNDS["snd_powerup_timer"].play()
-        if pygame.sprite.collide_mask(self.bright_blue_fish, self.player):
+        if collide_mask_to_mask(self.bright_blue_fish, "mask", self.player, "body_mask"):
             if self.player.star_power != 1:
                 self.current_state = GameState.GAME_OVER_SCREEN
                 
