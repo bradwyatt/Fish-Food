@@ -10,6 +10,8 @@ class GreenFish(pygame.sprite.Sprite):
     MOVE_SPEED = 4
     BIG_FISH_SCORE_THRESHOLD = 20
     CHANGE_DIR_RANGE = (50, 300)
+    TURN_TIME_MS = 50  # Duration in milliseconds for the turning animation
+
 
     def __init__(self, allsprites, images):
         super().__init__()
@@ -21,13 +23,22 @@ class GreenFish(pygame.sprite.Sprite):
                           random.choice([-self.MOVE_SPEED, 0, self.MOVE_SPEED]))
         self.change_dir_timer = 0
         self.big_green_fish_score = 0
-        self.is_big = False  # Indicates if the fish is a big green fish
+        self.is_big = False
+        self.stop_timer = 0  # Timer for turning animation
 
         allsprites.add(self)
 
     def update(self):
+        current_time = pygame.time.get_ticks()
+
+        if self.stop_timer > current_time and self.is_big:
+            # During the turning time, keep the turning sprite
+            self.image = self.images["spr_big_green_fish_turning"]
+        else:
+            # Regular image update
+            self.update_image()
+
         self.rect.move_ip(*self.direction)
-        self.update_image()
         self.change_dir_timer += 1
         if self.change_dir_timer > random.randrange(*self.CHANGE_DIR_RANGE):
             self.change_direction()
@@ -50,6 +61,10 @@ class GreenFish(pygame.sprite.Sprite):
                           (self.direction[0], -self.direction[1]),
                           (-self.direction[0], -self.direction[1])]
         self.direction = random.choice(new_directions)
+
+        if self.is_big:
+            self.stop_timer = pygame.time.get_ticks() + GreenFish.TURN_TIME_MS
+
 
     def collision_with_wall(self, rect):
         if self.rect.colliderect(rect):
