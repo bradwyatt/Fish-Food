@@ -9,7 +9,7 @@ class BrightBlueFish(pygame.sprite.Sprite):
     ARROW_REMOVAL_BOUNDARY = -200
     LEFT_SCREEN_BOUNDARY = -300
     SPAWN_Y_RANGE = (50, SCREEN_HEIGHT - 200)
-    ACTIVATION_SCORE = 50
+    ACTIVATION_SCORE = 10
 
     def __init__(self, allsprites, images):
         super().__init__()
@@ -55,18 +55,26 @@ class BrightBlueFish(pygame.sprite.Sprite):
     def update(self):
         if self.activate:
             self.update_movement_and_images()
+            self.update_mask()
         else:
             self.image = self.images["spr_bright_blue_fish_right"]
-        self.mask = pygame.mask.from_surface(self.image)
+            self.mask = pygame.mask.from_surface(self.images["spr_bright_blue_fish_right_face"])  # Default mask
+
+    def update_mask(self):
+        # Update the mask based on the current direction of the fish
+        if self.direction == 1:  # Moving right
+            self.mask = pygame.mask.from_surface(self.images["spr_bright_blue_fish_right_face"])
+        elif self.direction == 0:  # Moving left
+            self.mask = pygame.mask.from_surface(self.images["spr_bright_blue_fish_left_face"])
 
     def update_movement_and_images(self):
         self.arrow_warning = True
         if self.direction == 1:  # Moving right
-            self.image = self.images["big_bright_blue_fish_right"]
+            self.image = self.images["spr_bright_blue_fish_right"]
             self.rect.move_ip(self.MOVEMENT_SPEED, 0)
             self.manage_boundaries_for_right_movement()
         elif self.direction == 0:  # Moving left
-            self.image = self.images["big_bright_blue_fish_left"]
+            self.image = self.images["spr_bright_blue_fish_left"]
             self.rect.move_ip(-self.MOVEMENT_SPEED, 0)
             self.manage_boundaries_for_left_movement()
 

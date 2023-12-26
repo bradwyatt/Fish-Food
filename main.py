@@ -88,13 +88,13 @@ def load_all_assets():
     load_image("sprites/shark_turning.png", "spr_shark_turning", True)
     
     load_image("sprites/bright_blue_fish_right.png", "spr_bright_blue_fish_right", True)
-    IMAGES["big_bright_blue_fish_right"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right"], (300, 200))
+    IMAGES["spr_bright_blue_fish_right"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right"], (300, 200))
     load_image("sprites/bright_blue_fish_right_face.png", "spr_bright_blue_fish_right_face", True)
-    IMAGES["big_bright_blue_fish_right_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right_face"], (300, 200))
+    IMAGES["spr_bright_blue_fish_right_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right_face"], (300, 200))
     load_image("sprites/bright_blue_fish_left.png", "spr_bright_blue_fish_left", True)
-    IMAGES["big_bright_blue_fish_left"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left"], (300, 200))
+    IMAGES["spr_bright_blue_fish_left"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left"], (300, 200))
     load_image("sprites/bright_blue_fish_left_face.png", "spr_bright_blue_fish_left_face", True)
-    IMAGES["big_bright_blue_fish_left_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left_face"], (300, 200))
+    IMAGES["spr_bright_blue_fish_left_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left_face"], (300, 200))
     
     load_image("sprites/starfish_1.png", "spr_star_1", True)
     load_image("sprites/starfish_2.png", "spr_star_2", True)
@@ -935,12 +935,15 @@ def main():
             #%% Debug
             if DEBUG:
                 draw_mask(zoomed_surface, game_state_manager.player.body_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y, (63, 26, 186))
-
                 draw_mask(zoomed_surface, game_state_manager.player.face_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
 
                 for shark in game_state_manager.sharks:
                     draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
-                
+                draw_mask(zoomed_surface, 
+                          game_state_manager.bright_blue_fish.mask, 
+                          game_state_manager.bright_blue_fish.rect.x - camera_x, 
+                          game_state_manager.bright_blue_fish.rect.y - camera_y)
+
             # Check if there is a score to blit
             if game_state_manager.score_blit > 0:
                 # Calculate the relative position of the score text on the zoomed surface
