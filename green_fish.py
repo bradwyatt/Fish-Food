@@ -68,7 +68,7 @@ class GreenFish(pygame.sprite.Sprite):
 
     def collision_with_red_fish(self):
         self.big_green_fish_score += 10
-        if self.big_green_fish_score >= 70 and not self.is_big:
+        if self.big_green_fish_score >= GreenFish.BIG_FISH_SCORE_THRESHOLD and not self.is_big:
             self.is_big = True
             # Update image based on current direction
             self.update_image()
