@@ -296,6 +296,8 @@ class GameState:
         self.is_paused = False
         self.joystick = joystick
         self.dead_fish_position = ()
+        self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
+
 
     def initialize_entities(self):
         # Initialize all your entities here
@@ -380,13 +382,6 @@ class GameState:
         #         SOUNDS["snd_shark_incoming"].play()
         # Bright Blue Fish
         # Starts moving when you have a certain score
-        if(self.bright_blue_fish.activate == 0 and (self.score % 50 >= 0 and self.score % 50 <= 2) and self.score >= 50):
-            self.bright_blue_fish.direction = random.choice([0, 1])
-            self.bright_blue_fish.activate = 1
-            if self.bright_blue_fish.direction == 1: # MOVING RIGHT
-                self.bright_blue_fish.rect.topright = (-500, random.randrange(50, SCREEN_HEIGHT-200))
-            elif self.bright_blue_fish.direction == 0: # MOVING LEFT
-                self.bright_blue_fish.rect.topleft = (SCREEN_WIDTH+500, random.randrange(50, SCREEN_HEIGHT-200))
         # Arrow Warning for Bright Blue Fish
         if self.bright_blue_fish.arrow_warning == 1:
             if self.bright_blue_fish.direction == 1 and self.bright_blue_fish.rect.topleft[0] < 0: # MOVING RIGHT
@@ -689,6 +684,19 @@ class GameState:
         # Stop movement if no arrow keys are pressed
         if not any(self.key_states.values()):
             self.player.stop_movement()
+            
+        # Activate Bright Blue Fish every time the score increases by increments of at least 50
+        if self.bright_blue_fish.try_activate(self.score, self.last_bbf_activation_score):
+            self.last_bbf_activation_score = self.score
+
+    def activate_bright_blue_fish(self):
+        self.bright_blue_fish.direction = random.choice([0, 1])
+        self.bright_blue_fish.activate = True  # Assuming 'activate' is a boolean
+        if self.bright_blue_fish.direction == 1:  # Moving right
+            self.bright_blue_fish.rect.topright = (-500, random.randrange(50, SCREEN_HEIGHT - 200))
+        elif self.bright_blue_fish.direction == 0:  # Moving left
+            self.bright_blue_fish.rect.topleft = (SCREEN_WIDTH + 500, random.randrange(50, SCREEN_HEIGHT - 200))
+        self.last_bbf_activation_score = self.score  # Update last activation score
     
     def draw(self, screen):
         # Draw game entities

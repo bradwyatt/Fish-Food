@@ -1,46 +1,86 @@
 import pygame
 import random
-from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py with constants
-
+from utils import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class BrightBlueFish(pygame.sprite.Sprite):
+    OFFSCREEN_LEFT = -1000
+    OFFSCREEN_RIGHT = SCREEN_WIDTH + 1000
+    MOVEMENT_SPEED = 4
+    ARROW_REMOVAL_BOUNDARY = -200
+    LEFT_SCREEN_BOUNDARY = -300
+    SPAWN_Y_RANGE = (50, SCREEN_HEIGHT - 200)
+    ACTIVATION_SCORE = 50
+
     def __init__(self, allsprites, images):
-        """
-        Biggest predator in the game, eats everything that comes in contact
-        Player can avoid if they have a star powerup
-        """
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
         self.images = images
+        self.direction = random.choice([0, 1])  # 0: move left, 1: move right
+        self.activate = False
+        self.arrow_warning = False
+        self.initialize_sprite(allsprites)
+        self.reset_position()
+        
+    def is_out_of_world(self):
+        # Check if the fish is outside the game world boundaries
+        return self.rect.right < 0 or self.rect.left > SCREEN_WIDTH
+    
+    def try_activate(self, score, last_activation_score):
+        # Activate the fish if the score has increased by increments of at least 50
+        # and it is not currently in the game world
+        if(score // BrightBlueFish.ACTIVATION_SCORE > last_activation_score // BrightBlueFish.ACTIVATION_SCORE 
+           and score >= BrightBlueFish.ACTIVATION_SCORE 
+           and self.is_out_of_world()):
+            self.activate_fish()
+            return True  # Return True to indicate that the fish has been activated
+        return False
+    
+    def activate_fish(self):
+        self.direction = random.choice([0, 1])
+        self.activate = True
+        if self.direction == 1:  # Moving right
+            self.rect.topright = (-500, random.randrange(50, SCREEN_HEIGHT - 200))
+        else:  # Moving left
+            self.rect.topleft = (SCREEN_WIDTH + 500, random.randrange(50, SCREEN_HEIGHT - 200))
+
+    def initialize_sprite(self, allsprites):
         self.image = self.images["spr_bright_blue_fish_right"]
-        self.direction = random.choice([0, 1]) #move left: 0, move right: 1
         self.rect = self.image.get_rect()
         allsprites.add(self)
-        self.activate = 0
-        self.rect.topleft = (random.choice([-1000, SCREEN_WIDTH+1000]),
-                             random.randrange(50, SCREEN_HEIGHT-200))
-        self.arrow_warning = 0
-    def update(self):
-        if self.activate == 1:
-            self.arrow_warning = 1
-            if self.direction == 1:
-                self.image = self.images["big_bright_blue_fish_right"]
-            elif self.direction == 0:
-                self.image = self.images["big_bright_blue_fish_left"]
-            if self.direction == 1 and self.activate == 1: #right movements
-                self.rect.topleft = self.rect.topleft[0]+4, self.rect.topleft[1]
-                if self.rect.right > -200: # Remove arrow
-                    self.arrow_warning = 0
-                if self.rect.left > SCREEN_WIDTH: # Past right side of screen
-                    self.activate = 0
-            elif self.direction == 0 and self.activate == 1: #left movements
-                self.rect.topleft = self.rect.topleft[0]-4, self.rect.topleft[1]
-                if self.rect.left <= SCREEN_WIDTH:
-                    self.arrow_warning = 0
-                if self.rect.right < -300: # Past left side of screen
-                    self.activate = 0
 
+    def reset_position(self):
+        x_position = random.choice([self.OFFSCREEN_LEFT, self.OFFSCREEN_RIGHT])
+        y_position = random.randrange(*self.SPAWN_Y_RANGE)
+        self.rect.topleft = (x_position, y_position)
+
+    def update(self):
+        if self.activate:
+            self.update_movement_and_images()
         else:
             self.image = self.images["spr_bright_blue_fish_right"]
-        self.mask = pygame.mask.from_surface(self.image)  # Create a mask from the shark image
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update_movement_and_images(self):
+        self.arrow_warning = True
+        if self.direction == 1:  # Moving right
+            self.image = self.images["big_bright_blue_fish_right"]
+            self.rect.move_ip(self.MOVEMENT_SPEED, 0)
+            self.manage_boundaries_for_right_movement()
+        elif self.direction == 0:  # Moving left
+            self.image = self.images["big_bright_blue_fish_left"]
+            self.rect.move_ip(-self.MOVEMENT_SPEED, 0)
+            self.manage_boundaries_for_left_movement()
+
+    def manage_boundaries_for_right_movement(self):
+        if self.rect.right > self.ARROW_REMOVAL_BOUNDARY:
+            self.arrow_warning = False
+        if self.rect.left > SCREEN_WIDTH:
+            self.activate = False
+
+    def manage_boundaries_for_left_movement(self):
+        if self.rect.left <= SCREEN_WIDTH:
+            self.arrow_warning = False
+        if self.rect.right < self.LEFT_SCREEN_BOUNDARY:
+            self.activate = False
+
     def remove_sprite(self):
         self.kill()

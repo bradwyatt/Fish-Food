@@ -2,15 +2,10 @@ import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py with constants
 
-
-import pygame
-import random
-from utils import SCREEN_WIDTH, SCREEN_HEIGHT
-
 class RedFish(pygame.sprite.Sprite):
     EDGE_PADDING = 100
     CHANGE_DIR_RANGE = (100, 600)
-    SPEED_CHOICES = [-2, 0, 2]
+    SPEED_CHOICES = [-2, 2]
     WALL_PADDING = 32
     BOTTOM_WALL_Y = SCREEN_HEIGHT - 64
     RIGHT_WALL_X = SCREEN_WIDTH - 32

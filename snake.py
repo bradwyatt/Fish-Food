@@ -60,6 +60,9 @@ class Snake(pygame.sprite.Sprite):
 
     def collide_with_player(self):
         self.reset_position()
+        
+    def collide_with_bright_blue_fish(self):
+        self.reset_position()
 
     def remove_sprite(self):
         self.kill()
