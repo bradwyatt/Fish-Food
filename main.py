@@ -459,7 +459,7 @@ class GameState:
                     shark.collide_with_player()
             else:
                 shark.mini_shark = 0
-                if collide_rect_to_mask(self.player, shark, "mask"):
+                if collide_mask_to_mask(self.player, "body_mask", shark, "mask"):
                     self.is_paused = True
                     return
                     self.current_state = GameState.GAME_OVER_SCREEN
