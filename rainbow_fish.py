@@ -5,6 +5,8 @@ from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py w
 class RainbowFish(pygame.sprite.Sprite):
     MAX_SIZE = [85, 65]  # Maximum size for the RainbowFish
     TURN_TIME_MS = 50
+    NUM_OF_TICKS_FOR_ENTRANCE = 1800
+    NUM_OF_TICKS_FOR_EXIT = 2000
     def __init__(self, allsprites, images):
         pygame.sprite.Sprite.__init__(self)
         self.images = images
@@ -86,7 +88,7 @@ class RainbowFish(pygame.sprite.Sprite):
                 self.chase_player(player_pos)
 
     def manage_spawn_and_exit(self):
-        if self.rainbow_timer >= 2000 and not self.is_exiting:
+        if self.rainbow_timer >= RainbowFish.NUM_OF_TICKS_FOR_EXIT and not self.is_exiting:
             self.is_exiting = 1
 
     def ascend_and_deactivate(self):

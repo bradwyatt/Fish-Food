@@ -8,8 +8,8 @@ class GreenFish(pygame.sprite.Sprite):
     BOTTOM_WALL_Y = SCREEN_HEIGHT - 64
     RIGHT_WALL_X = SCREEN_WIDTH - 32
     MOVE_SPEED = 4
-    BIG_FISH_SCORE_THRESHOLD = 20
-    CHANGE_DIR_RANGE = (50, 300)
+    BIG_FISH_SCORE_THRESHOLD = 10
+    CHANGE_DIR_RANGE = (300, 400)
     TURN_TIME_MS = 50  # Duration in milliseconds for the turning animation
 
 

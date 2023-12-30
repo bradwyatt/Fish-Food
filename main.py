@@ -202,15 +202,16 @@ def collide_rect_to_mask(sprite1, sprite2, mask_name='mask'):
     return mask1.overlap(mask2, (offset_x, offset_y)) is not None
 
 
-def collide_mask_to_mask(sprite1, mask1_name, sprite2, mask2_name):
+def collide_mask_to_mask(sprite1, mask1_name, sprite2, mask2_name, use_rect_check=True):
     """
-    Check for collision between two masks of two different sprites, with an initial
+    Check for collision between two masks of two different sprites, with an optional
     rectangle collision check for optimization.
 
     :param sprite1: The first sprite.
     :param mask1_name: The name of the mask attribute in the first sprite.
     :param sprite2: The second sprite.
     :param mask2_name: The name of the mask attribute in the second sprite.
+    :param use_rect_check: Whether to perform an initial rectangle collision check.
     :return: True if there is a collision, False otherwise.
     """
     # Retrieve the actual mask objects from the sprites
@@ -221,8 +222,8 @@ def collide_mask_to_mask(sprite1, mask1_name, sprite2, mask2_name):
     if not mask1 or not mask2:
         return False
 
-    # First, check if the rectangles collide. If not, there can't be a mask collision.
-    if not sprite1.rect.colliderect(sprite2.rect):
+    # First, check if the rectangles collide if use_rect_check is True.
+    if use_rect_check and not sprite1.rect.colliderect(sprite2.rect):
         return False
 
     # Calculate the offset between the two sprites
@@ -354,7 +355,7 @@ class GameState:
         
     def activate_game_objects(self):
         # Rainbow Fish activation logic
-        if self.rainbow_fish.rainbow_timer >= 200:
+        if self.rainbow_fish.rainbow_timer >= RainbowFish.NUM_OF_TICKS_FOR_ENTRANCE:
             self.rainbow_fish.is_active = 1
         if self.rainbow_fish.is_active == 1 and self.rainbow_fish.is_exiting == 0:
             if self.rainbow_fish.arrow_warning_shown == 1 and self.rainbow_fish.rect.top < 0:
@@ -366,7 +367,8 @@ class GameState:
             if self.sharks[0].arrow_warning == 1:
                 screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[0].rect.topleft[0], 40))
                 SOUNDS["snd_shark_incoming"].play()
-        #%% Get back to this later
+        #%% Get back to this later        
+        
         # if self.score >= 20:
         #     self.sharks[1].activate = 1
         #     if self.sharks[1].arrow_warning == 1:
@@ -423,7 +425,10 @@ class GameState:
                     red_fish.collision_with_wall(wall.rect)
         for green_fish in self.green_fishes:
             if green_fish.is_big:
-                if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask"):
+                if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask", False):
+                    #%% (CHANGE THIS LATER)
+                    self.is_paused = True
+                    return
                     self.current_state = GameState.GAME_OVER_SCREEN
                 else: 
                     #%% (NEEDS CHANGING) When player is bigger than big green fish
@@ -450,7 +455,9 @@ class GameState:
             SOUNDS["snd_eat"].play()
             self.silver_fish.collide_with_bright_blue_fish()
         for shark in self.sharks:
+            
             #%% Testing star power and not star power interaction with shark
+            
             if self.player.star_power == 2:
                 shark.mini_shark = 1
                 if collide_rect_to_mask(shark, self.player, "face_mask"):
@@ -460,10 +467,11 @@ class GameState:
                     shark.collide_with_player()
             else:
                 shark.mini_shark = 0
-                if collide_mask_to_mask(self.player, "body_mask", shark, "mask"):
+                if collide_mask_to_mask(self.player, "body_mask", shark, "mask", False):
                     self.is_paused = True
                     return
                     self.current_state = GameState.GAME_OVER_SCREEN
+            #%%
             if pygame.sprite.collide_mask(shark, self.bright_blue_fish):
                 shark.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
