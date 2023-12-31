@@ -6,8 +6,9 @@ class Jellyfish(pygame.sprite.Sprite):
     EDGE_PADDING = 50
     MAX_DOWN_Y = SCREEN_HEIGHT - 80
     OFFSCREEN_Y = -50
-    MIN_SPAWN_TIME = 700
-    MAX_SPAWN_TIME = 900
+    MIN_SPAWN_TIME = 200
+    MAX_SPAWN_TIME = 300
+    JELLYFISHES_SCORE_TO_SPAWN = [0, 30, 60]
 
     def __init__(self, all_sprites, images):
         super().__init__()

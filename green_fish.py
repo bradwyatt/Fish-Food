@@ -8,9 +8,10 @@ class GreenFish(pygame.sprite.Sprite):
     BOTTOM_WALL_Y = SCREEN_HEIGHT - 64
     RIGHT_WALL_X = SCREEN_WIDTH - 32
     MOVE_SPEED = 4
-    BIG_FISH_SCORE_THRESHOLD = 10
+    BIG_FISH_SCORE_THRESHOLD = 40
     CHANGE_DIR_RANGE = (300, 400)
     TURN_TIME_MS = 50  # Duration in milliseconds for the turning animation
+    SCORE_VALUE = 2
 
 
     def __init__(self, allsprites, images):
@@ -74,7 +75,7 @@ class GreenFish(pygame.sprite.Sprite):
         self.direction = random.choice(new_directions)
 
         if self.is_big:
-            self.stop_timer = pygame.time.get_ticks() + GreenFish.TURN_TIME_MS
+            self.stop_timer = pygame.time.get_ticks() + self.TURN_TIME_MS
 
 
     def collision_with_wall(self, rect):
@@ -94,7 +95,7 @@ class GreenFish(pygame.sprite.Sprite):
 
     def collision_with_red_fish(self):
         self.big_green_fish_score += 10
-        if self.big_green_fish_score >= GreenFish.BIG_FISH_SCORE_THRESHOLD and not self.is_big:
+        if self.big_green_fish_score >= self.BIG_FISH_SCORE_THRESHOLD and not self.is_big:
             self.is_big = True
             # Update image based on current direction
             self.update_image()
@@ -107,6 +108,10 @@ class GreenFish(pygame.sprite.Sprite):
 
     def collide_with_player(self):
         self.reset_position()
+        self.big_green_fish_score = 0
+        
+    def get_score_value(self):
+        return self.SCORE_VALUE
 
     def remove_sprite(self):
         self.kill()

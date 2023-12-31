@@ -4,6 +4,9 @@ from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py w
 
 class Shark(pygame.sprite.Sprite):
     TURN_TIME_MS = 100
+    SHARKS_SCORES_TO_SPAWN = [5]
+    MOVE_SPEED = 3
+    # SHARKS_SCORES_TO_SPAWN = [5, 20, 45, 75]
     def __init__(self, allsprites, images):
         """
         Most frequently-seen predator in the game.
@@ -18,11 +21,12 @@ class Shark(pygame.sprite.Sprite):
         self.face_image = images["spr_shark_face_left"]  # Shark's face image for collision detection
         self.rect = self.image.get_rect()
         allsprites.add(self)
-        self.direction = (random.choice([-3, 3]), random.choice([-3, 3]))
-        self.mini_shark = 0
-        self.activate = 0
+        self.direction = (random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]),
+                          random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]))
+        self.mini_shark = False
+        self.activate = False
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), 100)
-        self.arrow_warning = 0
+        self.arrow_warning = False
         self.stop_timer = 0  # Timer for stopping the shark
         self.mask = pygame.mask.from_surface(self.face_image)  # Create a mask from the shark image
     def update(self):
@@ -31,7 +35,7 @@ class Shark(pygame.sprite.Sprite):
         # Check if the turning period has elapsed
         if self.stop_timer > current_time:
             # During the turning time, keep the turning sprite
-            if self.mini_shark == 1:
+            if self.mini_shark == True:
                 self.image = pygame.transform.smoothscale(self.images["spr_shark_turning"], (60, 30))
             else:
                 self.image = self.images["spr_shark_turning"]
@@ -44,7 +48,7 @@ class Shark(pygame.sprite.Sprite):
             self.move_shark()
     def update_image_and_mask(self):
         # Update image based on direction
-        if self.mini_shark == 1:
+        if self.mini_shark == True:
             if self.direction[0] > 0:
                 self.image = pygame.transform.smoothscale(self.images["spr_shark_right"], (60, 30))
             else:
@@ -89,35 +93,35 @@ class Shark(pygame.sprite.Sprite):
         # Determine the new direction based on which wall the shark collided with
         # The actual direction update happens after the turning animation
         if self.rect.left < 32:  # Collided with left wall
-            self.direction = (3, random.choice([-3, 3]))
+            self.direction = (self.MOVE_SPEED, random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]))
         elif self.rect.right > SCREEN_WIDTH - 32:  # Collided with right wall
-            self.direction = (-3, random.choice([-3, 3]))
+            self.direction = (-self.MOVE_SPEED, random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]))
         elif self.rect.top < 32:  # Collided with top wall
-            self.direction = (random.choice([-3, 3]), 3)
+            self.direction = (random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]), self.MOVE_SPEED)
         elif self.rect.bottom > SCREEN_HEIGHT - 64:  # Collided with bottom wall
-            self.direction = (random.choice([-3, 3]), -3)
+            self.direction = (random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]), -self.MOVE_SPEED)
 
         # Update sprite based on new direction
         if self.direction[0] > 0:
-            if self.mini_shark == 1:
+            if self.mini_shark == True:
                 pygame.transform.smoothscale(self.images["spr_shark_right"], (60, 30))
             else:
                 self.image = self.images["spr_shark_right"]
         else:
-            if self.mini_shark == 1:
+            if self.mini_shark == True:
                 pygame.transform.smoothscale(self.images["spr_shark_left"], (60, 30))
             else:
                 self.image = self.images["spr_shark_left"]
     def handle_timer_event(self):
         # This method should be called when a USEREVENT + 1 is triggered
         if self.rect.left < 32:  # Left walls
-            self.direction = (3, random.choice([-3, 3]))
+            self.direction = (3, random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]))
         elif self.rect.top > SCREEN_HEIGHT - 64:  # Bottom walls
-            self.direction = (random.choice([-3, 3]), -3)
+            self.direction = (random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]), -self.MOVE_SPEED)
         elif self.rect.right > SCREEN_WIDTH - 32:  # Right walls
-            self.direction = (-3, random.choice([-3, 3]))
+            self.direction = (-self.MOVE_SPEED, random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]))
         elif self.rect.top < 32:  # Top walls
-            self.direction = (random.choice([-3, 3]), 3)
+            self.direction = (random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]), self.MOVE_SPEED)
 
         # Update sprite based on new direction
         if self.direction[0] > 0:

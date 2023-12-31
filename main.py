@@ -27,7 +27,7 @@ gameicon = pygame.image.load("sprites/red_fish_ico.png")
 pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
-DEBUG = True
+DEBUG = False
 ZOOM_FACTOR = 1 # Recommended to be 1.5
 
 def load_all_assets():
@@ -279,6 +279,7 @@ class GameState:
     PLAY_SCREEN = 1
     GAME_OVER_SCREEN = 2
     INFO_SCREEN = 3
+    SCORE_BLIT_TICKS_TO_DISAPPEAR = 30
 
     def __init__(self, images, start_screen_bg=None, info_screen_bg=None, joystick=None):
         self.allsprites = pygame.sprite.Group()
@@ -331,8 +332,8 @@ class GameState:
         self.silver_fish = SilverFish(self.allsprites, IMAGES)
         self.snake = Snake(self.allsprites, IMAGES)
         self.seahorse = Seahorse(self.allsprites, IMAGES)
-        self.jellyfishes = [Jellyfish(self.allsprites, IMAGES) for i in range(3)]
-        self.sharks = [Shark(self.allsprites, IMAGES) for i in range(1)]
+        self.jellyfishes = [Jellyfish(self.allsprites, IMAGES) for i in range(len(Jellyfish.JELLYFISHES_SCORE_TO_SPAWN))]
+        self.sharks = [Shark(self.allsprites, IMAGES) for i in range(len(Shark.SHARKS_SCORES_TO_SPAWN))]
         self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
         self.star = StarPowerup(self.allsprites, IMAGES)
         self.rainbow_fish = RainbowFish(self.allsprites, IMAGES)
@@ -356,53 +357,34 @@ class GameState:
     def activate_game_objects(self):
         # Rainbow Fish activation logic
         if self.rainbow_fish.rainbow_timer >= RainbowFish.NUM_OF_TICKS_FOR_ENTRANCE:
-            self.rainbow_fish.is_active = 1
-        if self.rainbow_fish.is_active == 1 and self.rainbow_fish.is_exiting == 0:
-            if self.rainbow_fish.arrow_warning_shown == 1 and self.rainbow_fish.rect.top < 0:
+            self.rainbow_fish.is_active = True
+        if self.rainbow_fish.is_active == True and self.rainbow_fish.is_exiting == False:
+            if self.rainbow_fish.arrow_warning_shown == True and self.rainbow_fish.rect.top < 0:
                 screen.blit(IMAGES["arrow_warning_red"], (self.rainbow_fish.rect.topleft[0], 40))
                 SOUNDS["snd_shark_incoming"].play()
         # Sharks
-        if self.score >= 5:
-            self.sharks[0].activate = 1
-            if self.sharks[0].arrow_warning == 1:
-                screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[0].rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
-        #%% Get back to this later        
-        
-        # if self.score >= 20:
-        #     self.sharks[1].activate = 1
-        #     if self.sharks[1].arrow_warning == 1:
-        #         screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[1].rect.topleft[0], 40))
-        #         SOUNDS["snd_shark_incoming"].play()
-        # if self.score >= 45:
-        #     self.sharks[2].activate = 1
-        #     if self.sharks[2].arrow_warning == 1:
-        #         screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[2].rect.topleft[0], 40))
-        #         SOUNDS["snd_shark_incoming"].play()
-        # if self.score >= 75:
-        #     self.sharks[3].activate = 1
-        #     if self.sharks[3].arrow_warning == 1:
-        #         screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[3].rect.topleft[0], 40))
-        #         SOUNDS["snd_shark_incoming"].play()
+        for s in range(len(Shark.SHARKS_SCORES_TO_SPAWN)):
+            if self.score >= s:
+                self.sharks[s].activate = True
+                if self.sharks[s].arrow_warning == True:
+                    screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[0].rect.topleft[0], 40))
+                    SOUNDS["snd_shark_incoming"].play()
         # Bright Blue Fish
         # Starts moving when you have a certain score
         # Arrow Warning for Bright Blue Fish
-        if self.bright_blue_fish.arrow_warning == 1:
-            if self.bright_blue_fish.direction == 1 and self.bright_blue_fish.rect.topleft[0] < 0: # MOVING RIGHT
+        if self.bright_blue_fish.arrow_warning == True:
+            if self.bright_blue_fish.direction == BrightBlueFish.DIR_RIGHT and self.bright_blue_fish.rect.topleft[0] < 0: # MOVING RIGHT
                 screen.blit(IMAGES["arrow_warning_blue"], (20, self.bright_blue_fish.rect.midright[1]+40))
                 SOUNDS["snd_siren"].play()
-            elif self.bright_blue_fish.direction == 0 and self.bright_blue_fish.rect.topleft[0] > SCREEN_WIDTH: # MOVING LEFT
+            elif self.bright_blue_fish.direction == BrightBlueFish.DIR_LEFT and self.bright_blue_fish.rect.topleft[0] > SCREEN_WIDTH: # MOVING LEFT
                 screen.blit(pygame.transform.flip(IMAGES["arrow_warning_blue"], 1, 0),
                             (SCREEN_WIDTH-70, self.bright_blue_fish.rect.midright[1]+40))
                 SOUNDS["snd_shark_incoming"].stop()
                 SOUNDS["snd_siren"].play()
         # Jellyfish
-        if self.score >= 0:
-            self.jellyfishes[0].activate = True
-        if self.score >= 30:
-            self.jellyfishes[1].activate = True   
-        if self.score >= 60:
-            self.jellyfishes[2].activate = True
+        for j in range(len(Jellyfish.JELLYFISHES_SCORE_TO_SPAWN)):
+            if self.score >= Jellyfish.JELLYFISHES_SCORE_TO_SPAWN[j]:
+                self.jellyfishes[j].activate = True
     def handle_collisions(self):
         ##################
         # COLLISIONS
@@ -424,23 +406,24 @@ class GameState:
                 if red_fish.rect.colliderect(wall.rect):
                     red_fish.collision_with_wall(wall.rect)
         for green_fish in self.green_fishes:
-            if green_fish.is_big:
+            if(green_fish.is_big == False or 
+               self.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH or 
+               self.player.star_power == Player.INVINCIBLE_POWERUP):
+                if collide_mask_to_mask(green_fish, "body_mask", self.player, "face_mask", False):
+                    # Green fish is small or player is bigger than green fish or player has star power
+                    SOUNDS["snd_eat"].play()
+                    self.dead_fish_position = green_fish.rect.topleft  # Update the position here
+                    fish_score = green_fish.get_score_value()
+                    self.score += fish_score
+                    self.score_blit = fish_score
+                    green_fish.collide_with_player()
+            else: 
                 if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask", False):
-                    #%% (CHANGE THIS LATER)
-                    self.is_paused = True
-                    return
-                    self.current_state = GameState.GAME_OVER_SCREEN
-                else: 
-                    #%% (NEEDS CHANGING) When player is bigger than big green fish
-                    if collide_rect_to_mask(green_fish, self.player, "face_mask"):
-                        if(green_fish.is_big == False or 
-                           self.player.size_score >= 40 or 
-                           self.player.star_power == 1):
-                            SOUNDS["snd_eat"].play()
-                            self.dead_fish_position = green_fish.rect.topleft  # Update the position here
-                            self.score, self.score_blit = self.player.collide_with_green_fish(self.score, self.score_blit)
-                            green_fish.collide_with_player()
-                            green_fish.big_green_fish_score = 0
+                    if green_fish.is_big:
+                        # Green fish is bigger than player
+                        self.is_paused = True
+                        return
+                        self.current_state = GameState.GAME_OVER_SCREEN
             if pygame.sprite.collide_mask(green_fish, self.bright_blue_fish):
                 green_fish.reset_position()
             for wall in self.walls:
@@ -455,23 +438,21 @@ class GameState:
             SOUNDS["snd_eat"].play()
             self.silver_fish.collide_with_bright_blue_fish()
         for shark in self.sharks:
-            
-            #%% Testing star power and not star power interaction with shark
-            
-            if self.player.star_power == 2:
-                shark.mini_shark = 1
+            if self.player.star_power == Player.SHARK_SHRINKER_POWERUP:
+                shark.mini_shark = True
                 if collide_rect_to_mask(shark, self.player, "face_mask"):
                     self.dead_fish_position = shark.rect.topleft
                     self.score, self.score_blit = self.player.collide_with_shark(self.score, self.score_blit)
                     SOUNDS["snd_eat_shark"].play()
                     shark.collide_with_player()
+            elif self.player.star_power == Player.INVINCIBLE_POWERUP:
+                pass
             else:
-                shark.mini_shark = 0
+                shark.mini_shark = False
                 if collide_mask_to_mask(self.player, "body_mask", shark, "mask", False):
                     self.is_paused = True
                     return
                     self.current_state = GameState.GAME_OVER_SCREEN
-            #%%
             if pygame.sprite.collide_mask(shark, self.bright_blue_fish):
                 shark.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
@@ -488,14 +469,14 @@ class GameState:
                 self.player.size_score += 2
                 self.rainbow_fish.collide_with_player()
             else:
-                if self.player.star_power != 1:
+                if self.player.star_power != Player.INVINCIBLE_POWERUP:
                     self.current_state = GameState.GAME_OVER_SCREEN
         if pygame.sprite.collide_mask(self.rainbow_fish, self.bright_blue_fish):
             SOUNDS["snd_eat"].play()
             self.rainbow_fish.collide_with_bright_blue_fish()
         if pygame.sprite.collide_mask(self.snake, self.player):
             self.snake.collide_with_player()
-            if self.player.star_power != 1:
+            if self.player.star_power != Player.INVINCIBLE_POWERUP:
                 self.player.collide_with_snake()
                 SOUNDS["snd_size_down"].play()
             else:
@@ -516,7 +497,7 @@ class GameState:
         for jellyfish in self.jellyfishes:
             if pygame.sprite.collide_mask(jellyfish, self.player):
                 jellyfish.collide_with_player()
-                if self.player.star_power == 1:
+                if self.player.star_power == Player.INVINCIBLE_POWERUP:
                     SOUNDS["snd_eat"].play()
                 else:
                     self.player.collide_with_jellyfish()
@@ -543,7 +524,7 @@ class GameState:
                 SOUNDS[sounds_list[i]].stop() # Stops all sounds
             SOUNDS["snd_powerup_timer"].play()
         if collide_mask_to_mask(self.bright_blue_fish, "mask", self.player, "body_mask"):
-            if self.player.star_power != 1:
+            if self.player.star_power != Player.INVINCIBLE_POWERUP:
                 self.current_state = GameState.GAME_OVER_SCREEN
                 
     def handle_input(self, pause_button_rect):
@@ -846,8 +827,6 @@ def main():
     pause_text_x = pause_button_rect.x + (pause_button_rect.width - pause_text_surface.get_width()) // 2
     pause_text_y = pause_button_rect.y + (pause_button_rect.height - pause_text_surface.get_height()) // 2
     
-    debug_message = 0
-    
     (x_first, y_first) = (0, 0)
     (x_second, y_second) = (0, -SCREEN_HEIGHT)
     load_all_assets()
@@ -974,7 +953,7 @@ def main():
                 game_state_manager.score_disappear_timer += 1
             
                 # Reset the score blit and timer after a certain duration
-                if game_state_manager.score_disappear_timer > 30:
+                if game_state_manager.score_disappear_timer > GameState.SCORE_BLIT_TICKS_TO_DISAPPEAR:
                     game_state_manager.score_blit = 0
                     game_state_manager.score_disappear_timer = 0
     
@@ -1022,10 +1001,10 @@ def main():
             if game_state_manager.rainbow_fish.size[0] - 45 <= game_state_manager.player.size_score:
                 scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish_left"], scaled_icon_size))
         
-            if game_state_manager.player.size_score >= 40:
+            if game_state_manager.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH:
                 scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish_left"], scaled_icon_size))
         
-            if game_state_manager.player.star_power == 2:
+            if game_state_manager.player.star_power == Player.SHARK_SHRINKER_POWERUP:
                 scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark_left"], scaled_icon_size))
         
             for icon in scaled_icons:
@@ -1051,7 +1030,7 @@ def main():
             ##################
             # Sound Checks
             ##################
-            if game_state_manager.player.star_power == 0: # Powerup is over on the player
+            if game_state_manager.player.star_power == Player.NO_STAR_POWER: # Powerup is over on the player
                 game_state_manager.one_powerup_sound -= 1
                 SOUNDS["snd_powerup_timer"].stop()
             if game_state_manager.player.speed_time_left < 0:

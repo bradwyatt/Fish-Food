@@ -7,7 +7,7 @@ class SilverFish(pygame.sprite.Sprite):
     OFFSCREEN_RIGHT = SCREEN_WIDTH
     MOVE_SPEED = 3
     SPAWN_Y_RANGE = (50, 150)
-    RESET_TIMER_THRESHOLD = 250
+    RESET_TIMER_THRESHOLD = 100
     RESET_POSITION_LEFT = -40
     RESET_POSITION_RIGHT = SCREEN_WIDTH - 10
 
@@ -56,10 +56,12 @@ class SilverFish(pygame.sprite.Sprite):
     def collide_with_player(self):
         self.in_game_world = False
         self.restart_timer = 0
+        self.reset_position()
 
     def collide_with_bright_blue_fish(self):
         self.in_game_world = False
         self.restart_timer = 0
+        self.reset_position()
 
     def remove_sprite(self):
         self.kill()
