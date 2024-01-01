@@ -19,8 +19,9 @@ class GreenFish(pygame.sprite.Sprite):
         super().__init__()
         self.images = images
         self.image = self.images["spr_green_fish_right"]
+        self.original_image = self.image  # Set the initial image as the original
         self.rect = self.image.get_rect()
-        self.reset_position()
+        
         self.direction = (random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]), 
                           random.choice([-self.MOVE_SPEED, 0, self.MOVE_SPEED]))
         self.change_dir_timer = 0
@@ -33,7 +34,14 @@ class GreenFish(pygame.sprite.Sprite):
         self.body_mask = None
         self.face_mask = None
         
+        self.visible = False  # Initially invisible
+        # Initialize the alpha surface here
+        self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
+        self.alpha_surface.blit(self.original_image, (0, 0))
+
+        self.reset_position()
         self.init_fade_in()
+        self.reset_position()
 
 
     def update(self):
@@ -54,14 +62,15 @@ class GreenFish(pygame.sprite.Sprite):
             
         # Fade in logic
         if self.fading_in:
+            self.visible = True  # Make sprite visible when fade-in starts
             if self.alpha < self.max_alpha:
                 self.alpha += self.fade_rate
                 self.alpha_surface.set_alpha(self.alpha)
             else:
                 self.fading_in = False
-    
-        # Use alpha surface as the sprite's image for rendering
-        self.image = self.alpha_surface
+
+        if self.visible:
+            self.image = self.alpha_surface
             
     def init_fade_in(self):
         self.alpha = 0
@@ -70,6 +79,8 @@ class GreenFish(pygame.sprite.Sprite):
         self.fade_rate = 2
         self.alpha_surface = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
         self.alpha_surface.blit(self.image, (0, 0))
+        pygame.time.set_timer(pygame.USEREVENT + 1, 100)  # Delay in milliseconds
+
 
     def update_image(self):
         if self.is_big:
@@ -127,15 +138,44 @@ class GreenFish(pygame.sprite.Sprite):
             self.update_image()
             
     def reset_position(self):
-        self.is_big = False
+        # Set the sprite to be fully transparent (invisible)
+        self.alpha = 0
+        self.alpha_surface.set_alpha(self.alpha)
+        self.visible = False
+
+        # Reposition the sprite
         self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
                              random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING))
-        self.big_green_fish_score = 0
-        self.init_fade_in()  # Re-initialize fade-in effect when position is reset
+
+        # Initialize the fade-in process
+        self.fading_in = True
+        
+    def handle_user_event(self, event):
+        if event.type == pygame.USEREVENT + 1:
+            pygame.time.set_timer(pygame.USEREVENT + 1, 0)  # Stop the timer
+            self.fading_in = True  # Start the fade-in process
 
 
     def collide_with_player(self):
+        # When eaten by the player, the fish should become small again
+        self.is_big = False
+        self.big_green_fish_score = 0  # Reset the score that tracks progress to becoming big
+
+        # Update the image to the small fish image
+        self.update_to_small_fish_image()
+
+        # Reset the fish's position and reinitialize the fade-in effect
         self.reset_position()
+        
+    def update_to_small_fish_image(self):
+        # Set the image to the small green fish and update the alpha surface
+        self.original_image = self.images["spr_green_fish_right"]  # Assuming this is the default small fish image
+        self.image = self.original_image
+
+        # Update the alpha surface with the new small fish image
+        self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
+        self.alpha_surface.blit(self.original_image, (0, 0))
+        self.alpha_surface.set_alpha(self.alpha)
         
     def get_score_value(self):
         return self.PLAYER_SCORE_VALUE
