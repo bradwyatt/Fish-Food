@@ -391,10 +391,13 @@ class GameState:
         ##################
         for red_fish in self.red_fishes:
             if collide_rect_to_mask(red_fish, self.player, "face_mask"):
-                self.dead_fish_position = red_fish.rect.topleft
-                red_fish.collide_with_player()
-                self.score, self.score_blit = self.player.collide_with_red_fish(self.score, self.score_blit)
                 SOUNDS["snd_eat"].play()
+                self.dead_fish_position = red_fish.rect.topleft
+                fish_score = red_fish.get_score_value()
+                self.score += fish_score
+                self.score_blit = fish_score
+                red_fish.collide_with_player()
+                self.player.collide_with_red_fish()
             for green_fish in self.green_fishes:
                 if red_fish.rect.colliderect(green_fish):
                     green_fish.collision_with_red_fish()
@@ -417,6 +420,7 @@ class GameState:
                     self.score += fish_score
                     self.score_blit = fish_score
                     green_fish.collide_with_player()
+                    self.player.collide_with_green_fish()
             else: 
                 if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask", False):
                     if green_fish.is_big:
@@ -432,11 +436,25 @@ class GameState:
         if collide_rect_to_mask(self.silver_fish, self.player, "face_mask"):
             SOUNDS["snd_eat"].play()
             self.dead_fish_position = self.silver_fish.rect.topleft
-            self.score, self.score_blit = self.player.collide_with_silver_fish(self.score, self.score_blit)
+            fish_score = red_fish.get_score_value()
+            self.score += fish_score
+            self.score_blit = fish_score
             self.silver_fish.collide_with_player()
-        if pygame.sprite.collide_mask(self.silver_fish, self.bright_blue_fish):
-            SOUNDS["snd_eat"].play()
-            self.silver_fish.collide_with_bright_blue_fish()
+            self.player.collide_with_silver_fish()
+        if pygame.sprite.collide_mask(self.rainbow_fish, self.player):
+            # Player eats rainbow_fish only when appears bigger (arbitrary)
+            if (self.rainbow_fish.size_score <= self.player.size_score or 
+                self.player.star_power == self.player.INVINCIBLE_POWERUP):
+                SOUNDS["snd_eat"].play()
+                self.dead_fish_position = self.rainbow_fish.rect.topleft
+                fish_score = self.rainbow_fish.get_score_value()
+                self.score += fish_score
+                self.score_blit = fish_score
+                self.player.collide_with_rainbow_fish()
+                self.rainbow_fish.collide_with_player()
+            else:
+                if self.player.star_power != Player.INVINCIBLE_POWERUP:
+                    self.current_state = GameState.GAME_OVER_SCREEN
         for shark in self.sharks:
             if self.player.star_power == Player.SHARK_SHRINKER_POWERUP:
                 shark.mini_shark = True
@@ -459,18 +477,6 @@ class GameState:
             for wall in self.walls:
                 if shark.rect.colliderect(wall.rect):
                     shark.collision_with_wall(wall.rect)
-        if pygame.sprite.collide_mask(self.rainbow_fish, self.player):
-            # Player eats rainbow_fish only when appears bigger (arbitrary)
-            if (self.rainbow_fish.size[0]-45 <= self.player.size_score) or (self.player.star_power == 1):
-                SOUNDS["snd_eat"].play()
-                self.dead_fish_position = self.rainbow_fish.rect.topleft
-                self.score_blit = 2
-                self.score += 2
-                self.player.size_score += 2
-                self.rainbow_fish.collide_with_player()
-            else:
-                if self.player.star_power != Player.INVINCIBLE_POWERUP:
-                    self.current_state = GameState.GAME_OVER_SCREEN
         if pygame.sprite.collide_mask(self.rainbow_fish, self.bright_blue_fish):
             SOUNDS["snd_eat"].play()
             self.rainbow_fish.collide_with_bright_blue_fish()
@@ -481,6 +487,9 @@ class GameState:
                 SOUNDS["snd_size_down"].play()
             else:
                 SOUNDS["snd_eat"].play()
+        if pygame.sprite.collide_mask(self.silver_fish, self.bright_blue_fish):
+            SOUNDS["snd_eat"].play()
+            self.silver_fish.collide_with_bright_blue_fish()
         if pygame.sprite.collide_mask(self.snake, self.bright_blue_fish):
             self.snake.collide_with_bright_blue_fish()
         if pygame.sprite.collide_mask(self.seahorse, self.player):
@@ -900,10 +909,6 @@ def main():
             # Clear the zoomed surface
             zoomed_surface.fill((0, 0, 0))
     
-            # Draw game elements relative to the camera position
-            # background_position_x = -camera_x
-            # background_position_y = y_first - camera_y
-    
             # Draw the background on zoomed_surface
             zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_first - camera_y))
             zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_second - camera_y))
@@ -921,20 +926,26 @@ def main():
                 zoomed_surface.blit(sprite.image, sprite.rect)
                 sprite.rect.x, sprite.rect.y = original_position
             
+            
             #%% Debug
+            print("player size score: " + str(game_state_manager.player.size_score))
+            print("rainbow fish size score: " + str(game_state_manager.rainbow_fish.size_score))
+
             if DEBUG:
                 draw_mask(zoomed_surface, game_state_manager.player.body_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y, (63, 26, 186))
                 draw_mask(zoomed_surface, game_state_manager.player.face_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
+                draw_mask(zoomed_surface, game_state_manager.rainbow_fish.body_mask, game_state_manager.rainbow_fish.rect.x - camera_x, game_state_manager.rainbow_fish.rect.y - camera_y, (0, 128, 0))
+                draw_mask(zoomed_surface, game_state_manager.rainbow_fish.face_mask, game_state_manager.rainbow_fish.rect.x - camera_x, game_state_manager.rainbow_fish.rect.y - camera_y)
 
-                for shark in game_state_manager.sharks:
-                    draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
-                draw_mask(zoomed_surface, 
-                          game_state_manager.bright_blue_fish.mask, 
-                          game_state_manager.bright_blue_fish.rect.x - camera_x, 
-                          game_state_manager.bright_blue_fish.rect.y - camera_y)
-                for green_fish in game_state_manager.green_fishes:
-                    draw_mask(zoomed_surface, green_fish.body_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y, (0, 128, 0))
-                    draw_mask(zoomed_surface, green_fish.face_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y)
+                # for shark in game_state_manager.sharks:
+                #     draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
+                # draw_mask(zoomed_surface, 
+                #           game_state_manager.bright_blue_fish.mask, 
+                #           game_state_manager.bright_blue_fish.rect.x - camera_x, 
+                #           game_state_manager.bright_blue_fish.rect.y - camera_y)
+                # for green_fish in game_state_manager.green_fishes:
+                #     draw_mask(zoomed_surface, green_fish.body_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y, (0, 128, 0))
+                #     draw_mask(zoomed_surface, green_fish.face_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y)
 
 
             # Check if there is a score to blit
@@ -998,7 +1009,7 @@ def main():
             scaled_icon_size = (24, 15)  # Adjust the size as needed
             scaled_icons = []
         
-            if game_state_manager.rainbow_fish.size[0] - 45 <= game_state_manager.player.size_score:
+            if game_state_manager.rainbow_fish.size_score <= game_state_manager.player.size_score:
                 scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish_left"], scaled_icon_size))
         
             if game_state_manager.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH:

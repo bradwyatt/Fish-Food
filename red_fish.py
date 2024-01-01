@@ -5,10 +5,12 @@ from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py w
 class RedFish(pygame.sprite.Sprite):
     EDGE_PADDING = 100
     CHANGE_DIR_RANGE = (100, 600)
-    SPEED_CHOICES = [-2, 2]
+    MOVE_SPEED = 2
+    SPEED_CHOICES = [-MOVE_SPEED, MOVE_SPEED]
     WALL_PADDING = 32
     BOTTOM_WALL_Y = SCREEN_HEIGHT - 64
     RIGHT_WALL_X = SCREEN_WIDTH - 32
+    PLAYER_SCORE_VALUE = 1
 
     def __init__(self, allsprites, images):
         super().__init__()
@@ -46,13 +48,13 @@ class RedFish(pygame.sprite.Sprite):
 
     def bounce_off_walls(self):
         if self.rect.left < self.WALL_PADDING:  # Left wall
-            self.direction = (2, random.choice(self.SPEED_CHOICES))
+            self.direction = (self.MOVE_SPEED, random.choice(self.SPEED_CHOICES))
         elif self.rect.top > self.BOTTOM_WALL_Y:  # Bottom wall
-            self.direction = (random.choice(self.SPEED_CHOICES), -2)
+            self.direction = (random.choice(self.SPEED_CHOICES), -self.MOVE_SPEED)
         elif self.rect.right > self.RIGHT_WALL_X:  # Right wall
-            self.direction = (-2, random.choice(self.SPEED_CHOICES))
+            self.direction = (-self.MOVE_SPEED, random.choice(self.SPEED_CHOICES))
         elif self.rect.top < self.WALL_PADDING:  # Top wall
-            self.direction = (random.choice(self.SPEED_CHOICES), 2)
+            self.direction = (random.choice(self.SPEED_CHOICES), self.MOVE_SPEED)
 
     def reset_position(self):
         self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
@@ -60,6 +62,9 @@ class RedFish(pygame.sprite.Sprite):
 
     def collide_with_player(self):
         self.reset_position()
+        
+    def get_score_value(self):
+        return self.PLAYER_SCORE_VALUE
 
     def collide_with_bright_blue_fish(self):
         self.reset_position()

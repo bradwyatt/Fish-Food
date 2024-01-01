@@ -10,6 +10,7 @@ class SilverFish(pygame.sprite.Sprite):
     RESET_TIMER_THRESHOLD = 100
     RESET_POSITION_LEFT = -40
     RESET_POSITION_RIGHT = SCREEN_WIDTH - 10
+    PLAYER_SCORE_VALUE = 3
 
     def __init__(self, allsprites, images):
         super().__init__()
@@ -57,6 +58,9 @@ class SilverFish(pygame.sprite.Sprite):
         self.in_game_world = False
         self.restart_timer = 0
         self.reset_position()
+        
+    def get_score_value(self):
+        return self.PLAYER_SCORE_VALUE
 
     def collide_with_bright_blue_fish(self):
         self.in_game_world = False

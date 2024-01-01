@@ -7,7 +7,7 @@ class Player(pygame.sprite.Sprite):
     NO_STAR_POWER = 0
     INVINCIBLE_POWERUP = 1
     SHARK_SHRINKER_POWERUP = 2
-    STAR_POWERUP_TIMER_IN_TICKS = 1000
+    STAR_POWERUP_TIMER_IN_TICKS = 500
     NO_SPEED_POWER = 0
     SPEED_SURGE = 1
     SPEED_REDUCER = 2
@@ -249,21 +249,14 @@ class Player(pygame.sprite.Sprite):
             self.pos[0] += self.speed_x
             self.pos[1] += self.speed_y
         self.update_player_image()
-    def collide_with_red_fish(self, score, score_blit):
-        score_blit = 1
-        score += 1
+    def collide_with_red_fish(self):
         self.size_score += 1
-        return score, score_blit
-    def collide_with_green_fish(self, score, score_blit):
-        score_blit = 2
-        score += 2
+    def collide_with_green_fish(self):
         self.size_score += 2
-        return score, score_blit
-    def collide_with_silver_fish(self, score, score_blit):
-        score_blit = 3
-        score += 3
+    def collide_with_silver_fish(self):
         self.size_score += 3
-        return score, score_blit
+    def collide_with_rainbow_fish(self):
+        self.size_score += 2
     def collide_with_shark(self, score, score_blit):
         if self.star_power == self.SHARK_SHRINKER_POWERUP: # Mini-sharks
             score_blit = 1
