@@ -395,7 +395,6 @@ class GameState:
                 self.sharks[s].activate = True
                 if self.sharks[s].activate and not self.sharks[s].initial_descent_complete:
                     self.silver_arrow_warnings[s].visible = True
-                    print("MEOW")
                     SOUNDS["snd_shark_incoming"].play()
                 else:
                     self.silver_arrow_warnings[s].visible = False
