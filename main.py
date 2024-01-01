@@ -371,7 +371,7 @@ class GameState:
             if self.score >= s:
                 self.sharks[s].activate = True
                 if self.sharks[s].arrow_warning == True:
-                    screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[0].rect.topleft[0], 40))
+                    screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[s].rect.topleft[0], 40))
                     SOUNDS["snd_shark_incoming"].play()
         # Bright Blue Fish
         # Starts moving when you have a certain score

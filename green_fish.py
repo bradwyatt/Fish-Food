@@ -102,14 +102,13 @@ class GreenFish(pygame.sprite.Sprite):
             self.update_image()
             
     def reset_position(self):
+        self.is_big = False
         self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
                              random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING))
         self.big_green_fish_score = 0
-        self.is_big = False
 
     def collide_with_player(self):
         self.reset_position()
-        self.big_green_fish_score = 0
         
     def get_score_value(self):
         return self.PLAYER_SCORE_VALUE

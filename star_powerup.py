@@ -6,7 +6,7 @@ class StarPowerup(pygame.sprite.Sprite):
     OFF_SCREEN_RIGHT = SCREEN_WIDTH
     OFF_SCREEN_LEFT = -80  # Assuming the width of the sprite is less than 80
     BOTTOM_POSITION_Y = SCREEN_HEIGHT - 80  # Y-position near the bottom of the screen
-    RESPAWN_TIMER = 500  # Total interval before moving again
+    RESPAWN_TIMER = 1000  # Total interval before moving again
     ANIMATION_CYCLE_LENGTH = 30
     SPEED = 5
     DIRECTION_LEFT = -1
