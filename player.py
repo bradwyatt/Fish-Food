@@ -249,22 +249,6 @@ class Player(pygame.sprite.Sprite):
             self.pos[0] += self.speed_x
             self.pos[1] += self.speed_y
         self.update_player_image()
-    def collide_with_red_fish(self):
-        self.size_score += 1
-    def collide_with_green_fish(self):
-        self.size_score += 2
-    def collide_with_silver_fish(self):
-        self.size_score += 3
-    def collide_with_rainbow_fish(self):
-        self.size_score += 2
-    def collide_with_shark(self, score, score_blit):
-        if self.star_power == self.SHARK_SHRINKER_POWERUP: # Mini-sharks
-            score_blit = 1
-            score += 1
-            self.size_score += 1
-            return score, score_blit
-        else:
-            return score, score_blit
     def collide_with_seahorse(self):
         self.speed_power = self.SPEED_SURGE
         self.speed_x, self.speed_y = self.SURGE_MOVE_SPEED, self.SURGE_MOVE_SPEED

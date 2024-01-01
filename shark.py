@@ -5,8 +5,9 @@ from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py w
 class Shark(pygame.sprite.Sprite):
     TURN_TIME_MS = 100
     SHARKS_SCORES_TO_SPAWN = [5]
-    MOVE_SPEED = 3
     # SHARKS_SCORES_TO_SPAWN = [5, 20, 45, 75]
+    MOVE_SPEED = 3
+    PLAYER_SCORE_VALUE = 2
     def __init__(self, allsprites, images):
         """
         Most frequently-seen predator in the game.
@@ -132,5 +133,7 @@ class Shark(pygame.sprite.Sprite):
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -100)
     def collide_with_player(self):
         self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -100)
+    def get_score_value(self):
+        return self.PLAYER_SCORE_VALUE
     def remove_sprite(self):
         self.kill()

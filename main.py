@@ -385,19 +385,23 @@ class GameState:
         for j in range(len(Jellyfish.JELLYFISHES_SCORE_TO_SPAWN)):
             if self.score >= Jellyfish.JELLYFISHES_SCORE_TO_SPAWN[j]:
                 self.jellyfishes[j].activate = True
+                
+    def player_eat_prey_collision(self, prey, snd="snd_eat"):
+        SOUNDS[snd].play()
+        self.dead_fish_position = prey.rect.topleft
+        fish_score = prey.get_score_value()
+        self.score += fish_score
+        self.score_blit = fish_score
+        self.player.size_score += fish_score
+        prey.collide_with_player()
+
     def handle_collisions(self):
         ##################
         # COLLISIONS
         ##################
         for red_fish in self.red_fishes:
             if collide_rect_to_mask(red_fish, self.player, "face_mask"):
-                SOUNDS["snd_eat"].play()
-                self.dead_fish_position = red_fish.rect.topleft
-                fish_score = red_fish.get_score_value()
-                self.score += fish_score
-                self.score_blit = fish_score
-                red_fish.collide_with_player()
-                self.player.collide_with_red_fish()
+                self.player_eat_prey_collision(red_fish)
             for green_fish in self.green_fishes:
                 if red_fish.rect.colliderect(green_fish):
                     green_fish.collision_with_red_fish()
@@ -414,19 +418,11 @@ class GameState:
                self.player.star_power == Player.INVINCIBLE_POWERUP):
                 if collide_mask_to_mask(green_fish, "body_mask", self.player, "face_mask", False):
                     # Green fish is small or player is bigger than green fish or player has star power
-                    SOUNDS["snd_eat"].play()
-                    self.dead_fish_position = green_fish.rect.topleft  # Update the position here
-                    fish_score = green_fish.get_score_value()
-                    self.score += fish_score
-                    self.score_blit = fish_score
-                    green_fish.collide_with_player()
-                    self.player.collide_with_green_fish()
+                    self.player_eat_prey_collision(green_fish)
             else: 
                 if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask", False):
                     if green_fish.is_big:
                         # Green fish is bigger than player
-                        self.is_paused = True
-                        return
                         self.current_state = GameState.GAME_OVER_SCREEN
             if pygame.sprite.collide_mask(green_fish, self.bright_blue_fish):
                 green_fish.reset_position()
@@ -434,24 +430,12 @@ class GameState:
                 if green_fish.rect.colliderect(wall.rect):
                     green_fish.collision_with_wall(wall.rect)
         if collide_rect_to_mask(self.silver_fish, self.player, "face_mask"):
-            SOUNDS["snd_eat"].play()
-            self.dead_fish_position = self.silver_fish.rect.topleft
-            fish_score = red_fish.get_score_value()
-            self.score += fish_score
-            self.score_blit = fish_score
-            self.silver_fish.collide_with_player()
-            self.player.collide_with_silver_fish()
+            self.player_eat_prey_collision(self.silver_fish)
         if pygame.sprite.collide_mask(self.rainbow_fish, self.player):
             # Player eats rainbow_fish only when appears bigger (arbitrary)
             if (self.rainbow_fish.size_score <= self.player.size_score or 
                 self.player.star_power == self.player.INVINCIBLE_POWERUP):
-                SOUNDS["snd_eat"].play()
-                self.dead_fish_position = self.rainbow_fish.rect.topleft
-                fish_score = self.rainbow_fish.get_score_value()
-                self.score += fish_score
-                self.score_blit = fish_score
-                self.player.collide_with_rainbow_fish()
-                self.rainbow_fish.collide_with_player()
+                self.player_eat_prey_collision(self.rainbow_fish)
             else:
                 if self.player.star_power != Player.INVINCIBLE_POWERUP:
                     self.current_state = GameState.GAME_OVER_SCREEN
@@ -459,17 +443,12 @@ class GameState:
             if self.player.star_power == Player.SHARK_SHRINKER_POWERUP:
                 shark.mini_shark = True
                 if collide_rect_to_mask(shark, self.player, "face_mask"):
-                    self.dead_fish_position = shark.rect.topleft
-                    self.score, self.score_blit = self.player.collide_with_shark(self.score, self.score_blit)
-                    SOUNDS["snd_eat_shark"].play()
-                    shark.collide_with_player()
+                    self.player_eat_prey_collision(shark, "snd_eat_shark")
             elif self.player.star_power == Player.INVINCIBLE_POWERUP:
                 pass
             else:
                 shark.mini_shark = False
                 if collide_mask_to_mask(self.player, "body_mask", shark, "mask", False):
-                    self.is_paused = True
-                    return
                     self.current_state = GameState.GAME_OVER_SCREEN
             if pygame.sprite.collide_mask(shark, self.bright_blue_fish):
                 shark.collide_with_bright_blue_fish()
@@ -650,12 +629,14 @@ class GameState:
     def show_game_over_screen(self, screen):
         screen.fill((0, 0, 0))
         font = pygame.font.SysFont(None, 36)
-        text = font.render("Game Over. Click to restart", True, (255, 255, 255))
-        
+        game_over_text = font.render("Game Over. Click to restart", True, (255, 255, 255))
+        points_on_game_over_screen = font.render("Points: " + str(self.score), True, (255, 255, 255))
         # Center the text
-        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-        
-        screen.blit(text, text_rect)
+        text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+        points_on_game_over_screen_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, (SCREEN_HEIGHT // 2)+30))
+        screen.blit(game_over_text, text_rect)
+        screen.blit(points_on_game_over_screen, points_on_game_over_screen_rect)
+
 
     def update(self):
         self.handle_collisions()
@@ -928,9 +909,6 @@ def main():
             
             
             #%% Debug
-            print("player size score: " + str(game_state_manager.player.size_score))
-            print("rainbow fish size score: " + str(game_state_manager.rainbow_fish.size_score))
-
             if DEBUG:
                 draw_mask(zoomed_surface, game_state_manager.player.body_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y, (63, 26, 186))
                 draw_mask(zoomed_surface, game_state_manager.player.face_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
