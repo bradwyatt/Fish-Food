@@ -235,18 +235,12 @@ def collide_mask_to_mask(sprite1, mask1_name, sprite2, mask2_name, use_rect_chec
 
 
 class Wall(pygame.sprite.Sprite):
-    # def __init__(self, allsprites):
-    #     pygame.sprite.Sprite.__init__(self)
-    #     self.image = IMAGES["spr_wall"]
-    #     self.rect = self.image.get_rect()
-    #     allsprites.add(self)
     def __init__(self, allsprites):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((32, 32))
         self.image.fill((0, 0, 0, 0))  # Black color, can be changed to (0, 0, 0, 0) for invisible
         self.image.set_colorkey((0, 0, 0))  # Make black color transparent
         self.rect = self.image.get_rect()
-        #self.rect.topleft = (x, y)
     def remove_sprite(self):
         self.kill()
 
@@ -880,9 +874,10 @@ def main():
                 game_state_manager.allsprites.update()
                 game_state_manager.update()
                 if game_state_manager.rainbow_fish.is_active:
+                    is_player_invincibile = game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP
                     game_state_manager.rainbow_fish.decide_chase_or_avoid(
                         game_state_manager.player.size_score,
-                        game_state_manager.player.star_power,
+                        is_player_invincibile,
                         game_state_manager.player.pos
                         )
                     game_state_manager.rainbow_fish.update_player_position(game_state_manager.player.rect.center)

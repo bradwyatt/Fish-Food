@@ -6,6 +6,7 @@ class RainbowFish(pygame.sprite.Sprite):
     MAX_SIZE = [85, 65]  # Maximum size for the RainbowFish
     TURN_TIME_MS = 50
     NUM_OF_TICKS_FOR_ENTRANCE = 200
+    Y_POSITION_TO_START_PLAYING = 200
     NUM_OF_TICKS_FOR_EXIT = 1400
     INITIAL_SIZE_SCORE = 10
     INCREMENTAL_SIZE_SCORE = 10
@@ -112,14 +113,14 @@ class RainbowFish(pygame.sprite.Sprite):
         self.face_mask = pygame.mask.from_surface(scaled_face_image)
 
 
-    def decide_chase_or_avoid(self, player_size_score, player_star_power, player_pos):
+    def decide_chase_or_avoid(self, player_size_score, is_player_invincibile, player_pos):
         """
         Determine whether to chase or avoid the player based on the player's state
         and position.
         """
         # Only activate chasing or avoiding behavior if the fish is active and not exiting
         if self.is_active and not self.is_exiting:
-            if self.size_score <= player_size_score or player_star_power == 1:
+            if self.size_score <= player_size_score or is_player_invincibile:
                 self.avoid_player(player_pos)
             else:
                 self.chase_player(player_pos)
@@ -136,7 +137,12 @@ class RainbowFish(pygame.sprite.Sprite):
     
     def descend_to_start_position(self):
         self.arrow_warning_shown = True
-        if self.pos[1] < 200:
+        if self.pos[1] < self.Y_POSITION_TO_START_PLAYING:
+            # Ensure the image is set to the correct directional image at the start of the descent
+            # if not self.is_turning:
+            #     self.image = self.images[f"spr_rainbow_fish_{self.current_direction}"]
+            #     self.update_masks()
+    
             self.pos = (self.pos[0], self.pos[1] + self.DESCEND_SPEED)
         else:
             self.arrow_warning_shown = False
@@ -191,9 +197,7 @@ class RainbowFish(pygame.sprite.Sprite):
         self.rainbow_timer = 0
         self.is_active = 0
         self.pos = (random.randrange(100, SCREEN_WIDTH-100), -100)
-        if self.size_score <= self.MAX_SIZE_SCORE: #increases till max size
-            self.size[0] += 10
-            self.size[1] += 10
+        self.reinitialize_for_next_spawn()
     def collide_with_bright_blue_fish(self):
         self.pos = (random.randrange(100, SCREEN_WIDTH-100), -100)
         self.rainbow_timer = 0

@@ -26,7 +26,7 @@ class Shark(pygame.sprite.Sprite):
                           random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]))
         self.mini_shark = False
         self.activate = False
-        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), 100)
+        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -400)
         self.arrow_warning = False
         self.stop_timer = 0  # Timer for stopping the shark
         self.mask = pygame.mask.from_surface(self.face_image)  # Create a mask from the shark image

@@ -90,8 +90,6 @@ class Player(pygame.sprite.Sprite):
         self.body_mask = self.body_masks[self.current_direction]  # Initialize body mask
 
 
-        
-
     def update(self):
         # Update the position of the player
         self.rect = self.image.get_rect()
