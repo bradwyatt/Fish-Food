@@ -358,13 +358,13 @@ class GameState:
             self.bright_blue_fish.rect.topleft = (SCREEN_WIDTH + 500, random.randrange(50, SCREEN_HEIGHT - 200))
         self.last_bbf_activation_score = self.score  # Update last activation score
 
-    def activate_game_objects(self):
+    def activate_game_objects(self, zoomed_surface):
         # Rainbow Fish activation logic
         if self.rainbow_fish.rainbow_timer >= RainbowFish.NUM_OF_TICKS_FOR_ENTRANCE:
             self.rainbow_fish.is_active = True
         if self.rainbow_fish.is_active == True and self.rainbow_fish.is_exiting == False:
             if self.rainbow_fish.arrow_warning_shown == True and self.rainbow_fish.rect.top < 0:
-                screen.blit(IMAGES["arrow_warning_red"], (self.rainbow_fish.rect.topleft[0], 40))
+                zoomed_surface.blit(IMAGES["arrow_warning_red"], (self.rainbow_fish.rect.topleft[0], 40))
                 SOUNDS["snd_shark_incoming"].play()
         # Sharks
         for s in range(len(Shark.SHARKS_SCORES_TO_SPAWN)):
@@ -646,9 +646,9 @@ class GameState:
         screen.blit(points_on_game_over_screen, points_on_game_over_screen_rect)
 
 
-    def update(self):
+    def update(self, zoomed_surface):
         self.handle_collisions()
-        self.activate_game_objects()
+        self.activate_game_objects(zoomed_surface)
         # Diagonal Movements
         if self.key_states[pygame.K_UP] and self.key_states[pygame.K_RIGHT]:
             self.player.move_up_right()
@@ -869,24 +869,7 @@ def main():
                 y_second = -SCREEN_HEIGHT
             
 
-            # Update game state only if the game is not paused
-            if not game_state_manager.is_paused:
-                # Update RainbowFish with player's current state
-                game_state_manager.rainbow_fish.player_size_score = game_state_manager.player.size_score
-                game_state_manager.rainbow_fish.player_star_power = game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP
-                game_state_manager.rainbow_fish.player_position = game_state_manager.player.rect.center
-    
-                # Update all sprites
-                game_state_manager.allsprites.update()
-                game_state_manager.update()
-    
-                # Decide chase or avoid behavior for the RainbowFish
-                if game_state_manager.rainbow_fish.is_active:
-                    game_state_manager.rainbow_fish.decide_chase_or_avoid(
-                        game_state_manager.player.size_score,
-                        game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP,
-                        game_state_manager.player.rect.center
-                    )
+
             
             # Calculate camera position with boundary limits
             camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * ZOOM_FACTOR),
@@ -904,7 +887,25 @@ def main():
             # Draw the ground only if the camera is near the bottom of the world
             if camera_y > world_height - SCREEN_HEIGHT - 100:
                 zoomed_surface.blit(IMAGES['ground'], (-camera_x, world_height - 100 - camera_y))
-
+                
+            # Update game state only if the game is not paused
+            if not game_state_manager.is_paused:
+                # Update RainbowFish with player's current state
+                game_state_manager.rainbow_fish.player_size_score = game_state_manager.player.size_score
+                game_state_manager.rainbow_fish.player_star_power = game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP
+                game_state_manager.rainbow_fish.player_position = game_state_manager.player.rect.center
+    
+                # Update all sprites
+                game_state_manager.allsprites.update()
+                game_state_manager.update(zoomed_surface)
+    
+                # Decide chase or avoid behavior for the RainbowFish
+                if game_state_manager.rainbow_fish.is_active:
+                    game_state_manager.rainbow_fish.decide_chase_or_avoid(
+                        game_state_manager.player.size_score,
+                        game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP,
+                        game_state_manager.player.rect.center
+                    )
     
             # Adjust sprite positions and draw on zoomed_surface
             for sprite in game_state_manager.allsprites:

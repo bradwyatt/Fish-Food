@@ -13,7 +13,7 @@ class RainbowFish(pygame.sprite.Sprite):
     MAX_SIZE_SCORE = 60
     MOVE_CHASE_SPEED = 1
     MOVE_AVOID_SPEED = 2
-    ASCEND_SPEED = 2
+    ASCEND_SPEED = 4
     DESCEND_SPEED = 2
     PLAYER_SCORE_VALUE = 2
     def __init__(self, allsprites, images):
