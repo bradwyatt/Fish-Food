@@ -6,7 +6,8 @@ class RainbowFish(pygame.sprite.Sprite):
     MAX_SIZE = [85, 65]  # Maximum size for the RainbowFish
     TURN_TIME_MS = 50
     NUM_OF_TICKS_FOR_ENTRANCE = 200
-    Y_POSITION_TO_START_PLAYING = 200
+    Y_POSITION_SPAWN = -400
+    Y_POSITION_TO_START_PLAYING = 125
     NUM_OF_TICKS_FOR_EXIT = 1400
     INITIAL_SIZE_SCORE = 10
     INCREMENTAL_SIZE_SCORE = 10
@@ -26,9 +27,8 @@ class RainbowFish(pygame.sprite.Sprite):
         self.rainbow_timer = 0
         self.size = [55, 35]
         self.size_score = self.INITIAL_SIZE_SCORE
-        self.pos = (random.randrange(100, SCREEN_WIDTH-100), -400)
+        self.pos = (random.randrange(100, SCREEN_WIDTH-100), self.Y_POSITION_SPAWN)
         self.rect.topleft = self.pos
-        self.arrow_warning_shown = False
         self.is_active = False
         self.initial_descent_complete = False  # New attribute to track initial descent
         
@@ -133,7 +133,6 @@ class RainbowFish(pygame.sprite.Sprite):
             self.reinitialize_for_next_spawn()
     
     def descend_to_start_position(self):
-        self.arrow_warning_shown = True
         if self.pos[1] < self.Y_POSITION_TO_START_PLAYING:
             # Ensure the image is set to the correct directional image at the start of the descent
             # if not self.is_turning:
@@ -142,7 +141,6 @@ class RainbowFish(pygame.sprite.Sprite):
     
             self.pos = (self.pos[0], self.pos[1] + self.DESCEND_SPEED)
         else:
-            self.arrow_warning_shown = False
             self.initial_descent_complete = True
 
     def reinitialize_for_next_spawn(self):
@@ -152,9 +150,9 @@ class RainbowFish(pygame.sprite.Sprite):
         self.is_active = False
         self.is_exiting = False
         self.initial_descent_complete = False
-        self.arrow_warning_shown = False
         self.rainbow_timer = 0
-        self.pos = (random.randrange(100, SCREEN_WIDTH-100), -100)
+        self.is_active = 0
+        self.pos = (random.randrange(100, SCREEN_WIDTH-100), self.Y_POSITION_SPAWN)
         if self.size_score <= self.MAX_SIZE_SCORE:
             self.size[0] += 10
             self.size[1] += 10
@@ -191,12 +189,8 @@ class RainbowFish(pygame.sprite.Sprite):
         return self.PLAYER_SCORE_VALUE
 
     def collide_with_player(self):
-        self.rainbow_timer = 0
-        self.is_active = 0
-        self.pos = (random.randrange(100, SCREEN_WIDTH-100), -100)
         self.reinitialize_for_next_spawn()
     def collide_with_bright_blue_fish(self):
-        self.pos = (random.randrange(100, SCREEN_WIDTH-100), -100)
-        self.rainbow_timer = 0
+        self.reinitialize_for_next_spawn()
     def remove_sprite(self):
         self.kill()

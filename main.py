@@ -28,7 +28,7 @@ pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 DEBUG = False
-ZOOM_FACTOR = 1 # Recommended to be 1.5
+ZOOM_FACTOR = 1.5 # Recommended to be 1.5
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -267,6 +267,20 @@ class Seaweed(pygame.sprite.Sprite):
             self.image = seaweed_images[0]
     def remove_sprite(self):
         self.kill()
+
+class ArrowWarning(pygame.sprite.Sprite):
+    def __init__(self, arrow_warning_sprites, arrow_type, target_sprite):
+        pygame.sprite.Sprite.__init__(self)
+        self.arrow_type = arrow_type
+        self.image = IMAGES[f"arrow_warning_{arrow_type}"]  # e.g., "arrow_warning_red"
+        self.rect = self.image.get_rect()
+        self.target_sprite = target_sprite
+        self.rect.y = 40  # Fixed Y position
+        arrow_warning_sprites.add(self)
+        self.visible = True
+    def update(self):
+        # Update the arrow's X position to match the target sprite's X position
+        self.rect.x = self.target_sprite.rect.left  # Align with the center of the target
         
 class GameState:
     START_SCREEN = 0
@@ -277,6 +291,7 @@ class GameState:
 
     def __init__(self, images, start_screen_bg=None, info_screen_bg=None, joystick=None):
         self.allsprites = pygame.sprite.Group()
+        self.arrow_warning_sprites = pygame.sprite.Group()
         self.score = 0
         self.score_blit = 0
         self.key_states = {
@@ -295,7 +310,7 @@ class GameState:
         self.joystick = joystick
         self.dead_fish_position = ()
         self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
-
+        self.red_arrow = None
 
     def initialize_entities(self):
         # Initialize all your entities here
@@ -331,9 +346,13 @@ class GameState:
         self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
         self.star = StarPowerup(self.allsprites, IMAGES)
         self.rainbow_fish = RainbowFish(self.allsprites, IMAGES)
+        self.red_arrow_warning = ArrowWarning(self.arrow_warning_sprites, "red", self.rainbow_fish)
+        #self.blue_arrow_warning = ArrowWarning(self.arrow_warning_sprites, IMAGES, "blue")
+        #self.silver_arrow_warnings = [ArrowWarning(self.arrow_warning_sprites, IMAGES), "silver"]
         
     def reset_game(self, images):
         self.allsprites.empty()
+        self.arrow_warning_sprites.empty()
         self.current_state = GameState.PLAY_SCREEN
         self.score = 0
         self.initialize_entities()
@@ -362,10 +381,11 @@ class GameState:
         # Rainbow Fish activation logic
         if self.rainbow_fish.rainbow_timer >= RainbowFish.NUM_OF_TICKS_FOR_ENTRANCE:
             self.rainbow_fish.is_active = True
-        if self.rainbow_fish.is_active == True and self.rainbow_fish.is_exiting == False:
-            if self.rainbow_fish.arrow_warning_shown == True and self.rainbow_fish.rect.top < 0:
-                zoomed_surface.blit(IMAGES["arrow_warning_red"], (self.rainbow_fish.rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
+        if self.rainbow_fish.is_active and not self.rainbow_fish.initial_descent_complete:
+            self.red_arrow_warning.visible = True
+            SOUNDS["snd_shark_incoming"].play()
+        else:
+            self.red_arrow_warning.visible = False
         # Sharks
         for s in range(len(Shark.SHARKS_SCORES_TO_SPAWN)):
             if self.score >= s:
@@ -678,10 +698,6 @@ class GameState:
             self.last_bbf_activation_score = self.score
 
 
-    def draw(self, screen):
-        # Draw game entities
-        self.allsprites.draw(screen)
-
 class Joystick:
     def __init__(self, images, screen):
         self.images = images
@@ -868,9 +884,6 @@ def main():
             if y_second >= SCREEN_HEIGHT:
                 y_second = -SCREEN_HEIGHT
             
-
-
-            
             # Calculate camera position with boundary limits
             camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * ZOOM_FACTOR),
                               world_width - SCREEN_WIDTH // ZOOM_FACTOR))
@@ -897,6 +910,7 @@ def main():
     
                 # Update all sprites
                 game_state_manager.allsprites.update()
+                game_state_manager.arrow_warning_sprites.update()
                 game_state_manager.update(zoomed_surface)
     
                 # Decide chase or avoid behavior for the RainbowFish
@@ -914,6 +928,11 @@ def main():
                 sprite.rect.y -= camera_y
                 zoomed_surface.blit(sprite.image, sprite.rect)
                 sprite.rect.x, sprite.rect.y = original_position
+            # Update and draw arrow warning sprites on zoomed_surface
+            for arrow_sprite in game_state_manager.arrow_warning_sprites:
+                arrow_sprite.update()
+                if arrow_sprite.visible:
+                    zoomed_surface.blit(arrow_sprite.image, (arrow_sprite.rect.x - camera_x, arrow_sprite.rect.y - camera_y))
             
             
             #%% Debug
