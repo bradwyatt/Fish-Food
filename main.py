@@ -28,7 +28,7 @@ pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 DEBUG = False
-ZOOM_FACTOR = 1.5 # Recommended to be 1.5
+ZOOM_FACTOR = 1 # Recommended to be 1.5
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -277,7 +277,7 @@ class ArrowWarning(pygame.sprite.Sprite):
         self.target_sprite = target_sprite
         self.rect.y = 40  # Fixed Y position
         arrow_warning_sprites.add(self)
-        self.visible = True
+        self.visible = False
     def update(self):
         # Update the arrow's X position to match the target sprite's X position
         self.rect.x = self.target_sprite.rect.left  # Align with the center of the target
@@ -342,13 +342,16 @@ class GameState:
         self.snake = Snake(self.allsprites, IMAGES)
         self.seahorse = Seahorse(self.allsprites, IMAGES)
         self.jellyfishes = [Jellyfish(self.allsprites, IMAGES) for i in range(len(Jellyfish.JELLYFISHES_SCORE_TO_SPAWN))]
-        self.sharks = [Shark(self.allsprites, IMAGES) for i in range(len(Shark.SHARKS_SCORES_TO_SPAWN))]
+        self.sharks = []
+        self.silver_arrow_warnings = []
+        for s in range(len(Shark.SHARKS_SCORES_TO_SPAWN)):
+            self.sharks.append(Shark(self.allsprites, IMAGES))
+            self.silver_arrow_warnings.append(ArrowWarning(self.arrow_warning_sprites, "silver", self.sharks[s]))
         self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
         self.star = StarPowerup(self.allsprites, IMAGES)
         self.rainbow_fish = RainbowFish(self.allsprites, IMAGES)
         self.red_arrow_warning = ArrowWarning(self.arrow_warning_sprites, "red", self.rainbow_fish)
         #self.blue_arrow_warning = ArrowWarning(self.arrow_warning_sprites, IMAGES, "blue")
-        #self.silver_arrow_warnings = [ArrowWarning(self.arrow_warning_sprites, IMAGES), "silver"]
         
     def reset_game(self, images):
         self.allsprites.empty()
@@ -388,11 +391,14 @@ class GameState:
             self.red_arrow_warning.visible = False
         # Sharks
         for s in range(len(Shark.SHARKS_SCORES_TO_SPAWN)):
-            if self.score >= s:
+            if self.score >= Shark.SHARKS_SCORES_TO_SPAWN[s]:
                 self.sharks[s].activate = True
-                if self.sharks[s].arrow_warning == True:
-                    screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[s].rect.topleft[0], 40))
+                if self.sharks[s].activate and not self.sharks[s].initial_descent_complete:
+                    self.silver_arrow_warnings[s].visible = True
+                    print("MEOW")
                     SOUNDS["snd_shark_incoming"].play()
+                else:
+                    self.silver_arrow_warnings[s].visible = False
         # Bright Blue Fish
         # Starts moving when you have a certain score
         # Arrow Warning for Bright Blue Fish

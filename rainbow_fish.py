@@ -5,7 +5,7 @@ from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py w
 class RainbowFish(pygame.sprite.Sprite):
     MAX_SIZE = [85, 65]  # Maximum size for the RainbowFish
     TURN_TIME_MS = 50
-    NUM_OF_TICKS_FOR_ENTRANCE = 200
+    NUM_OF_TICKS_FOR_ENTRANCE = 1200
     Y_POSITION_SPAWN = -400
     Y_POSITION_TO_START_PLAYING = 125
     NUM_OF_TICKS_FOR_EXIT = 1400
@@ -30,7 +30,7 @@ class RainbowFish(pygame.sprite.Sprite):
         self.pos = (random.randrange(100, SCREEN_WIDTH-100), self.Y_POSITION_SPAWN)
         self.rect.topleft = self.pos
         self.is_active = False
-        self.initial_descent_complete = False  # New attribute to track initial descent
+        self.initial_descent_complete = False
         
         self.current_direction = "left"  # Default direction
         self.is_turning = False

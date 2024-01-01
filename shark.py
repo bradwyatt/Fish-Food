@@ -8,6 +8,10 @@ class Shark(pygame.sprite.Sprite):
     # SHARKS_SCORES_TO_SPAWN = [5, 20, 45, 75]
     MOVE_SPEED = 3
     PLAYER_SCORE_VALUE = 2
+    Y_POSITION_SPAWN = -400
+    Y_POSITION_TO_START_PLAYING = 125
+    OFFSET_FROM_WALL = 10
+    DESCEND_SPEED = 1
     def __init__(self, allsprites, images):
         """
         Most frequently-seen predator in the game.
@@ -26,27 +30,34 @@ class Shark(pygame.sprite.Sprite):
                           random.choice([-self.MOVE_SPEED, self.MOVE_SPEED]))
         self.mini_shark = False
         self.activate = False
-        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -400)
-        self.arrow_warning = False
+        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), self.Y_POSITION_SPAWN)
         self.stop_timer = 0  # Timer for stopping the shark
+        self.initial_descent_complete = False
         self.mask = pygame.mask.from_surface(self.face_image)  # Create a mask from the shark image
     def update(self):
-        current_time = pygame.time.get_ticks()
-
-        # Check if the turning period has elapsed
-        if self.stop_timer > current_time:
-            # During the turning time, keep the turning sprite
-            if self.mini_shark == True:
-                self.image = pygame.transform.smoothscale(self.images["spr_shark_turning"], (60, 30))
+        if self.activate and not self.initial_descent_complete:
+            if self.rect.top < self.Y_POSITION_TO_START_PLAYING:
+                self.rect.y += self.DESCEND_SPEED # Move the shark downwards until it is fully visible
             else:
-                self.image = self.images["spr_shark_turning"]
-            # Do not move while in turning animation
-        else:
-            # After the turning period, update the sprite based on direction
+                self.initial_descent_complete = True
             self.update_image_and_mask()
-
-            # Regular movement code, allows movement after the turning period
-            self.move_shark()
+        else:
+            current_time = pygame.time.get_ticks()
+    
+            # Check if the turning period has elapsed
+            if self.stop_timer > current_time:
+                # During the turning time, keep the turning sprite
+                if self.mini_shark == True:
+                    self.image = pygame.transform.smoothscale(self.images["spr_shark_turning"], (60, 30))
+                else:
+                    self.image = self.images["spr_shark_turning"]
+                # Do not move while in turning animation
+            else:
+                # After the turning period, update the sprite based on direction
+                self.update_image_and_mask()
+    
+                # Regular movement code, allows movement after the turning period
+                self.move_shark()
     def update_image_and_mask(self):
         # Update image based on direction
         if self.mini_shark == True:
@@ -65,7 +76,7 @@ class Shark(pygame.sprite.Sprite):
                 self.face_image = self.images["spr_shark_face_left"]
             self.mask = pygame.mask.from_surface(self.face_image)
     def move_shark(self):
-        if not self.arrow_warning and self.rect.topleft[1] >= 0:
+        if self.rect.topleft[1] >= 0:
             newpos = self.rect.topleft[0] + self.direction[0], self.rect.topleft[1] + self.direction[1]
             self.rect.topleft = newpos
     def collision_with_wall(self, rect):
@@ -83,13 +94,13 @@ class Shark(pygame.sprite.Sprite):
     def offset_from_wall(self):
         # Offset the shark away from the wall based on its new direction
         if self.direction[0] > 0:  # Moving right
-            self.rect.left += 10
+            self.rect.left += self.OFFSET_FROM_WALL
         elif self.direction[0] < 0:  # Moving left
-            self.rect.right -= 10
+            self.rect.right -= self.OFFSET_FROM_WALL
         if self.direction[1] > 0:  # Moving down
-            self.rect.top += 10
+            self.rect.top += self.OFFSET_FROM_WALL
         elif self.direction[1] < 0:  # Moving up
-            self.rect.bottom -= 10
+            self.rect.bottom -= self.OFFSET_FROM_WALL
     def update_direction(self):
         # Determine the new direction based on which wall the shark collided with
         # The actual direction update happens after the turning animation
@@ -129,10 +140,13 @@ class Shark(pygame.sprite.Sprite):
             self.image = self.images["spr_shark_right"]
         else:
             self.image = self.images["spr_shark_left"]
+    def reinitialize_for_next_spawn(self):
+        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), self.Y_POSITION_SPAWN)
+        self.initial_descent_complete = False
     def collide_with_bright_blue_fish(self):
-        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -100)
+        self.reinitialize_for_next_spawn()
     def collide_with_player(self):
-        self.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), -100)
+        self.reinitialize_for_next_spawn()
     def get_score_value(self):
         return self.PLAYER_SCORE_VALUE
     def remove_sprite(self):
