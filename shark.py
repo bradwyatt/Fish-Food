@@ -4,8 +4,8 @@ from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py w
 
 class Shark(pygame.sprite.Sprite):
     TURN_TIME_MS = 50
-    SHARKS_SCORES_TO_SPAWN = [5]
-    # SHARKS_SCORES_TO_SPAWN = [5, 20, 45, 75]
+    # SHARKS_SCORES_TO_SPAWN = [5]
+    SHARKS_SCORES_TO_SPAWN = [5, 20, 45, 75]
     MOVE_SPEED = 3
     PLAYER_SCORE_VALUE = 2
     Y_POSITION_SPAWN = -400
