@@ -8,6 +8,7 @@ class Jellyfish(pygame.sprite.Sprite):
     OFFSCREEN_Y = -50
     MIN_SPAWN_TIME = 200
     MAX_SPAWN_TIME = 300
+    MOVE_VERTICAL = 3
     JELLYFISHES_SCORE_TO_SPAWN = [0, 30, 60]
 
     def __init__(self, all_sprites, images):
@@ -49,9 +50,9 @@ class Jellyfish(pygame.sprite.Sprite):
             self.return_back = True
     
         if not self.return_back:
-            self.rect.move_ip(0, 3)
+            self.rect.move_ip(0, self.MOVE_VERTICAL)
         else:
-            self.rect.move_ip(0, -3)
+            self.rect.move_ip(0, -self.MOVE_VERTICAL)
             
     def update_timer(self):
         self.jellyfish_timer += 1

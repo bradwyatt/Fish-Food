@@ -250,17 +250,17 @@ class Player(pygame.sprite.Sprite):
     def collide_with_seahorse(self):
         self.speed_power = self.SPEED_SURGE
         self.speed_x, self.speed_y = self.SURGE_MOVE_SPEED, self.SURGE_MOVE_SPEED
-        self.speed_time_left += self.SPEED_POWERUP_TIMER_IN_TICKS
+        self.speed_time_left = self.SPEED_POWERUP_TIMER_IN_TICKS
     def collide_with_jellyfish(self):
         self.speed_power = self.SPEED_REDUCER
         self.size_score = 0
         self.speed_x, self.speed_y = self.REDUCER_MOVE_SPEED, self.REDUCER_MOVE_SPEED
-        self.speed_time_left += self.SPEED_POWERUP_TIMER_IN_TICKS
+        self.speed_time_left = self.SPEED_POWERUP_TIMER_IN_TICKS
     def collide_with_snake(self):
         self.size_score = 0
     def collide_with_star(self):
         self.star_power = self.STAR_POWER_SELECTED
-        self.powerup_time_left += self.STAR_POWERUP_TIMER_IN_TICKS
+        self.powerup_time_left = self.STAR_POWERUP_TIMER_IN_TICKS
     def get_powerup_timer_text(self, font):
         if self.star_power != self.NO_STAR_POWER:
             return font.render("Powerup Timer: " + str((self.powerup_time_left//100)+1), 1, (255, 255, 255))

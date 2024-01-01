@@ -871,16 +871,22 @@ def main():
 
             # Update game state only if the game is not paused
             if not game_state_manager.is_paused:
+                # Update RainbowFish with player's current state
+                game_state_manager.rainbow_fish.player_size_score = game_state_manager.player.size_score
+                game_state_manager.rainbow_fish.player_star_power = game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP
+                game_state_manager.rainbow_fish.player_position = game_state_manager.player.rect.center
+    
+                # Update all sprites
                 game_state_manager.allsprites.update()
                 game_state_manager.update()
+    
+                # Decide chase or avoid behavior for the RainbowFish
                 if game_state_manager.rainbow_fish.is_active:
-                    is_player_invincibile = game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP
                     game_state_manager.rainbow_fish.decide_chase_or_avoid(
                         game_state_manager.player.size_score,
-                        is_player_invincibile,
-                        game_state_manager.player.pos
-                        )
-                    game_state_manager.rainbow_fish.update_player_position(game_state_manager.player.rect.center)
+                        game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP,
+                        game_state_manager.player.rect.center
+                    )
             
             # Calculate camera position with boundary limits
             camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * ZOOM_FACTOR),
