@@ -353,7 +353,17 @@ class GameState:
     
     def change_state(self, new_state):
         self.current_state = new_state
-        
+
+    def activate_bright_blue_fish(self):
+        self.bright_blue_fish.direction = random.choice([self.bright_blue_fish.DIR_LEFT,
+                                                         self.bright_blue_fish.DIR_RIGHT])
+        self.bright_blue_fish.activate = True  # Assuming 'activate' is a boolean
+        if self.bright_blue_fish.direction == self.bright_blue_fish.DIR_RIGHT:  # Moving right
+            self.bright_blue_fish.rect.topright = (-500, random.randrange(50, SCREEN_HEIGHT - 200))
+        elif self.bright_blue_fish.direction == self.bright_blue_fish.DIR_LEFT:  # Moving left
+            self.bright_blue_fish.rect.topleft = (SCREEN_WIDTH + 500, random.randrange(50, SCREEN_HEIGHT - 200))
+        self.last_bbf_activation_score = self.score  # Update last activation score
+
     def activate_game_objects(self):
         # Rainbow Fish activation logic
         if self.rainbow_fish.rainbow_timer >= RainbowFish.NUM_OF_TICKS_FOR_ENTRANCE:
@@ -394,6 +404,9 @@ class GameState:
         self.score_blit = fish_score
         self.player.size_score += fish_score
         prey.collide_with_player()
+        
+    def predator_eat_player_collision(self):
+        self.current_state = self.GAME_OVER_SCREEN
 
     def handle_collisions(self):
         ##################
@@ -423,7 +436,7 @@ class GameState:
                 if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask", False):
                     if green_fish.is_big:
                         # Green fish is bigger than player
-                        self.current_state = GameState.GAME_OVER_SCREEN
+                        self.predator_eat_player_collision()
             if pygame.sprite.collide_mask(green_fish, self.bright_blue_fish):
                 green_fish.reset_position()
             for wall in self.walls:
@@ -431,6 +444,9 @@ class GameState:
                     green_fish.collision_with_wall(wall.rect)
         if collide_rect_to_mask(self.silver_fish, self.player, "face_mask"):
             self.player_eat_prey_collision(self.silver_fish)
+        if collide_mask_to_mask(self.bright_blue_fish, "mask", self.player, "body_mask"):
+            if self.player.star_power != Player.INVINCIBLE_POWERUP:
+                self.predator_eat_player_collision()
         if pygame.sprite.collide_mask(self.rainbow_fish, self.player):
             # Player eats rainbow_fish only when appears bigger (arbitrary)
             if (self.rainbow_fish.size_score <= self.player.size_score or 
@@ -438,7 +454,7 @@ class GameState:
                 self.player_eat_prey_collision(self.rainbow_fish)
             else:
                 if self.player.star_power != Player.INVINCIBLE_POWERUP:
-                    self.current_state = GameState.GAME_OVER_SCREEN
+                    self.predator_eat_player_collision()
         for shark in self.sharks:
             if self.player.star_power == Player.SHARK_SHRINKER_POWERUP:
                 shark.mini_shark = True
@@ -449,7 +465,7 @@ class GameState:
             else:
                 shark.mini_shark = False
                 if collide_mask_to_mask(self.player, "body_mask", shark, "mask", False):
-                    self.current_state = GameState.GAME_OVER_SCREEN
+                    self.predator_eat_player_collision()
             if pygame.sprite.collide_mask(shark, self.bright_blue_fish):
                 shark.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
@@ -511,9 +527,7 @@ class GameState:
                 sounds_list = list(SOUNDS.keys()) # Returns list of keys in sounds
                 SOUNDS[sounds_list[i]].stop() # Stops all sounds
             SOUNDS["snd_powerup_timer"].play()
-        if collide_mask_to_mask(self.bright_blue_fish, "mask", self.player, "body_mask"):
-            if self.player.star_power != Player.INVINCIBLE_POWERUP:
-                self.current_state = GameState.GAME_OVER_SCREEN
+
                 
     def handle_input(self, pause_button_rect):
         for event in pygame.event.get():
@@ -669,15 +683,7 @@ class GameState:
         if self.bright_blue_fish.try_activate(self.score, self.last_bbf_activation_score):
             self.last_bbf_activation_score = self.score
 
-    def activate_bright_blue_fish(self):
-        self.bright_blue_fish.direction = random.choice([0, 1])
-        self.bright_blue_fish.activate = True  # Assuming 'activate' is a boolean
-        if self.bright_blue_fish.direction == 1:  # Moving right
-            self.bright_blue_fish.rect.topright = (-500, random.randrange(50, SCREEN_HEIGHT - 200))
-        elif self.bright_blue_fish.direction == 0:  # Moving left
-            self.bright_blue_fish.rect.topleft = (SCREEN_WIDTH + 500, random.randrange(50, SCREEN_HEIGHT - 200))
-        self.last_bbf_activation_score = self.score  # Update last activation score
-    
+
     def draw(self, screen):
         # Draw game entities
         self.allsprites.draw(screen)

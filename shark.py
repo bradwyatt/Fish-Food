@@ -3,7 +3,7 @@ import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py with constants
 
 class Shark(pygame.sprite.Sprite):
-    TURN_TIME_MS = 100
+    TURN_TIME_MS = 50
     SHARKS_SCORES_TO_SPAWN = [5]
     # SHARKS_SCORES_TO_SPAWN = [5, 20, 45, 75]
     MOVE_SPEED = 3
