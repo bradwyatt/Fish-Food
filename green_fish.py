@@ -32,6 +32,8 @@ class GreenFish(pygame.sprite.Sprite):
         
         self.body_mask = None
         self.face_mask = None
+        
+        self.init_fade_in()
 
 
     def update(self):
@@ -49,6 +51,25 @@ class GreenFish(pygame.sprite.Sprite):
         if self.change_dir_timer > random.randrange(*self.CHANGE_DIR_RANGE):
             self.change_direction()
             self.change_dir_timer = 0
+            
+        # Fade in logic
+        if self.fading_in:
+            if self.alpha < self.max_alpha:
+                self.alpha += self.fade_rate
+                self.alpha_surface.set_alpha(self.alpha)
+            else:
+                self.fading_in = False
+    
+        # Use alpha surface as the sprite's image for rendering
+        self.image = self.alpha_surface
+            
+    def init_fade_in(self):
+        self.alpha = 0
+        self.fading_in = True
+        self.max_alpha = 255
+        self.fade_rate = 2
+        self.alpha_surface = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
+        self.alpha_surface.blit(self.image, (0, 0))
 
     def update_image(self):
         if self.is_big:
@@ -67,6 +88,10 @@ class GreenFish(pygame.sprite.Sprite):
             else:  # Moving right
                 self.image = self.images["spr_green_fish_right"]
                 self.body_mask = pygame.mask.from_surface(self.images["spr_green_fish_right"])
+                
+        self.alpha_surface = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
+        self.alpha_surface.blit(self.image, (0, 0))
+        self.alpha_surface.set_alpha(self.alpha)
 
 
     def change_direction(self):
@@ -106,6 +131,8 @@ class GreenFish(pygame.sprite.Sprite):
         self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
                              random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING))
         self.big_green_fish_score = 0
+        self.init_fade_in()  # Re-initialize fade-in effect when position is reset
+
 
     def collide_with_player(self):
         self.reset_position()
