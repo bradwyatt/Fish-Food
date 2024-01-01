@@ -20,6 +20,14 @@ class RedFish(pygame.sprite.Sprite):
         allsprites.add(self)
         self.direction = (random.choice(self.SPEED_CHOICES), random.choice(self.SPEED_CHOICES))
         self.change_dir_timer = 0
+
+        # Initialize the alpha surface here, before calling reset_position
+        self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
+        self.alpha_surface.blit(self.original_image, (0, 0))
+        self.alpha = 0
+        self.alpha_surface.set_alpha(self.alpha)
+
+        # Now it's safe to call reset_position
         self.reset_position()
         self.init_fade_in()
 
@@ -42,19 +50,17 @@ class RedFish(pygame.sprite.Sprite):
 
         
     def init_fade_in(self):
-        self.alpha = 0
         self.fading_in = True
         self.max_alpha = 255
         self.fade_rate = 2
-        self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
-        self.alpha_surface.blit(self.original_image, (0, 0))
 
     def update_image_direction(self):
+        # Update the original_image based on the current direction
         if self.direction[0] == -2:
             self.original_image = pygame.transform.flip(self.images["spr_red_fish"], True, False)
         elif self.direction[0] == 2:
             self.original_image = self.images["spr_red_fish"]
-        
+
         # Update the alpha surface with the new image direction
         self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
         self.alpha_surface.blit(self.original_image, (0, 0))
@@ -84,9 +90,16 @@ class RedFish(pygame.sprite.Sprite):
             self.direction = (random.choice(self.SPEED_CHOICES), self.MOVE_SPEED)
 
     def reset_position(self):
+        # Set the sprite to be fully transparent (invisible)
+        self.alpha = 0
+        self.alpha_surface.set_alpha(self.alpha)
+
+        # Reposition the sprite
         self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
                              random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING))
-        self.init_fade_in()  # Re-initialize fade-in effect
+
+        # Initialize the fade-in process
+        self.fading_in = True
 
     def collide_with_player(self):
         self.reset_position()
