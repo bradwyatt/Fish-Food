@@ -101,9 +101,11 @@ def load_all_assets():
     load_image("sprites/starfish_1.png", "spr_star_1", True)
     load_image("sprites/starfish_2.png", "spr_star_2", True)
     load_image("sprites/starfish_3.png", "spr_star_3", True)
-    load_image("sprites/arrow_warning_red.png", "arrow_warning_red", True)
-    load_image("sprites/arrow_warning_silver.png", "arrow_warning_silver", True)
-    load_image("sprites/arrow_warning_blue.png", "arrow_warning_blue", True)
+    load_image("sprites/arrow_warning_red.png", "arrow_warning_red_top", True)
+    load_image("sprites/arrow_warning_silver.png", "arrow_warning_silver_top", True)
+    load_image("sprites/arrow_warning_blue_left.png", "arrow_warning_blue_left", True)
+    load_image("sprites/arrow_warning_blue_right.png", "arrow_warning_blue_right", True)
+
     load_image("sprites/seaweed_middle.png", "spr_seaweed", True)
     load_image("sprites/seaweed_left.png", "spr_seaweed_left", True)
     load_image("sprites/seaweed_right.png", "spr_seaweed_right", True)
@@ -269,18 +271,35 @@ class Seaweed(pygame.sprite.Sprite):
         self.kill()
 
 class ArrowWarning(pygame.sprite.Sprite):
-    def __init__(self, arrow_warning_sprites, arrow_type, target_sprite):
+    def __init__(self, arrow_warning_sprites, arrow_type, target_sprite, side='top'):
         pygame.sprite.Sprite.__init__(self)
         self.arrow_type = arrow_type
-        self.image = IMAGES[f"arrow_warning_{arrow_type}"]  # e.g., "arrow_warning_red"
+        self.image = IMAGES[f"arrow_warning_{arrow_type}_{side}"]  # e.g., "arrow_warning_red"
         self.rect = self.image.get_rect()
         self.target_sprite = target_sprite
-        self.rect.y = 40  # Fixed Y position
+        self.side = side
+
+        # Adjust the position based on the side
+        if side == 'top':
+            self.rect.y = 40  # Fixed Y position for top
+            self.rect.x = self.target_sprite.rect.left
+        elif side == 'left':
+            self.rect.x = SCREEN_WIDTH-100
+            self.rect.y = self.target_sprite.rect.centery
+        elif side == 'right':
+            self.rect.x = 50
+            self.rect.y = self.target_sprite.rect.centery
+
         arrow_warning_sprites.add(self)
         self.visible = False
+
     def update(self):
-        # Update the arrow's X position to match the target sprite's X position
-        self.rect.x = self.target_sprite.rect.left  # Align with the center of the target
+        if self.side == 'top':
+            self.rect.x = self.target_sprite.rect.left
+        elif self.side == 'left':
+            self.rect.y = self.target_sprite.rect.centery
+        elif self.side == 'right':
+            self.rect.y = self.target_sprite.rect.centery
         
 class GameState:
     START_SCREEN = 0
@@ -310,7 +329,6 @@ class GameState:
         self.joystick = joystick
         self.dead_fish_position = ()
         self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
-        self.red_arrow = None
 
     def initialize_entities(self):
         # Initialize all your entities here
@@ -347,11 +365,13 @@ class GameState:
         for s in range(len(Shark.SHARKS_SCORES_TO_SPAWN)):
             self.sharks.append(Shark(self.allsprites, IMAGES))
             self.silver_arrow_warnings.append(ArrowWarning(self.arrow_warning_sprites, "silver", self.sharks[s]))
-        self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
         self.star = StarPowerup(self.allsprites, IMAGES)
         self.rainbow_fish = RainbowFish(self.allsprites, IMAGES)
         self.red_arrow_warning = ArrowWarning(self.arrow_warning_sprites, "red", self.rainbow_fish)
-        #self.blue_arrow_warning = ArrowWarning(self.arrow_warning_sprites, IMAGES, "blue")
+        self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
+        self.blue_arrow_warning_left = ArrowWarning(self.arrow_warning_sprites, "blue", self.bright_blue_fish, "left")
+        self.blue_arrow_warning_right = ArrowWarning(self.arrow_warning_sprites, "blue", self.bright_blue_fish, "right")
+
         
     def reset_game(self, images):
         self.allsprites.empty()
@@ -366,19 +386,11 @@ class GameState:
             pygame.K_DOWN: False,
             pygame.K_RIGHT: False
         }
+        self.last_bbf_activation_score = 0
     
     def change_state(self, new_state):
         self.current_state = new_state
 
-    def activate_bright_blue_fish(self):
-        self.bright_blue_fish.direction = random.choice([self.bright_blue_fish.DIR_LEFT,
-                                                         self.bright_blue_fish.DIR_RIGHT])
-        self.bright_blue_fish.activate = True  # Assuming 'activate' is a boolean
-        if self.bright_blue_fish.direction == self.bright_blue_fish.DIR_RIGHT:  # Moving right
-            self.bright_blue_fish.rect.topright = (-500, random.randrange(50, SCREEN_HEIGHT - 200))
-        elif self.bright_blue_fish.direction == self.bright_blue_fish.DIR_LEFT:  # Moving left
-            self.bright_blue_fish.rect.topleft = (SCREEN_WIDTH + 500, random.randrange(50, SCREEN_HEIGHT - 200))
-        self.last_bbf_activation_score = self.score  # Update last activation score
 
     def activate_game_objects(self, zoomed_surface):
         # Rainbow Fish activation logic
@@ -399,17 +411,16 @@ class GameState:
                 else:
                     self.silver_arrow_warnings[s].visible = False
         # Bright Blue Fish
-        # Starts moving when you have a certain score
-        # Arrow Warning for Bright Blue Fish
-        if self.bright_blue_fish.arrow_warning == True:
-            if self.bright_blue_fish.direction == BrightBlueFish.DIR_RIGHT and self.bright_blue_fish.rect.topleft[0] < 0: # MOVING RIGHT
-                screen.blit(IMAGES["arrow_warning_blue"], (20, self.bright_blue_fish.rect.midright[1]+40))
-                SOUNDS["snd_siren"].play()
-            elif self.bright_blue_fish.direction == BrightBlueFish.DIR_LEFT and self.bright_blue_fish.rect.topleft[0] > SCREEN_WIDTH: # MOVING LEFT
-                screen.blit(pygame.transform.flip(IMAGES["arrow_warning_blue"], 1, 0),
-                            (SCREEN_WIDTH-70, self.bright_blue_fish.rect.midright[1]+40))
-                SOUNDS["snd_shark_incoming"].stop()
-                SOUNDS["snd_siren"].play()
+        if self.bright_blue_fish.activate and not self.bright_blue_fish.lateral_entry_complete:
+            if self.bright_blue_fish.direction == BrightBlueFish.DIR_RIGHT:
+                # Position the blue arrow on the left side of the screen
+                self.blue_arrow_warning_right.visible = True
+            elif self.bright_blue_fish.direction == BrightBlueFish.DIR_LEFT:
+                # Position the blue arrow on the right side of the screen
+                self.blue_arrow_warning_left.visible = True
+        else:
+            self.blue_arrow_warning_right.visible = False
+            self.blue_arrow_warning_left.visible = False
         # Jellyfish
         for j in range(len(Jellyfish.JELLYFISHES_SCORE_TO_SPAWN)):
             if self.score >= Jellyfish.JELLYFISHES_SCORE_TO_SPAWN[j]:
@@ -698,7 +709,7 @@ class GameState:
         if not any(self.key_states.values()):
             self.player.stop_movement()
             
-        # Activate Bright Blue Fish every time the score increases by increments of at least 50
+        # Activate Bright Blue Fish every time the score increases by increments
         if self.bright_blue_fish.try_activate(self.score, self.last_bbf_activation_score):
             self.last_bbf_activation_score = self.score
 
