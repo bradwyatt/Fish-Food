@@ -319,7 +319,7 @@ class GameState:
             pygame.K_DOWN: False,
             pygame.K_RIGHT: False
         }
-        self.current_state = GameState.PLAY_SCREEN
+        self.current_state = GameState.START_SCREEN
         self.one_powerup_sound = 0
         self.score_disappear_timer = 0
         self.initialize_entities()
@@ -658,7 +658,7 @@ class GameState:
             screen.fill((0, 0, 0))
 
         # Draw the "Click to Start" button
-        start_button_rect = pygame.Rect(500, 250, 200, 50)  # Adjust position and size as needed
+        start_button_rect = pygame.Rect(400, 250, 200, 50)  # Adjust position and size as needed
         if draw_text_button(screen, "Click to Start", pygame.font.SysFont(None, 36), (255, 255, 255), start_button_rect):
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -878,7 +878,7 @@ def main():
         elif game_state_manager.current_state == GameState.START_SCREEN:
             game_state_manager.show_start_screen(screen)
             # Draw the info button and check for hover
-            info_button_rect = pygame.Rect(500, 400, 200, 50)  # Adjust as needed
+            info_button_rect = pygame.Rect(400, 400, 200, 50)  # Adjust as needed
             if draw_text_button(screen, "Info", pygame.font.SysFont(None, 36), (255, 255, 255), info_button_rect):
                 for event in pygame.event.get():
                     if event.type == pygame.MOUSEBUTTONDOWN:
