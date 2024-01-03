@@ -488,7 +488,7 @@ class GameState:
         for shark in self.sharks:
             if self.player.star_power == Player.SHARK_SHRINKER_POWERUP:
                 shark.mini_shark = True
-                if collide_rect_to_mask(shark, self.player, "face_mask"):
+                if collide_mask_to_mask(self.player, "face_mask", shark, "mask", False):
                     self.player_eat_prey_collision(shark, "snd_eat_shark")
             elif self.player.star_power == Player.INVINCIBLE_POWERUP:
                 pass
