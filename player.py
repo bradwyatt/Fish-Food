@@ -15,8 +15,7 @@ class Player(pygame.sprite.Sprite):
     SURGE_MOVE_SPEED = 9
     REDUCER_MOVE_SPEED = 2
     REGULAR_MOVE_SPEED = 6
-    STAR_POWER_SELECTED = SHARK_SHRINKER_POWERUP
-    # STAR_POWER_SELECTED = random.choice([self.INVINCIBLE_POWERUP, self.SHARK_SHRINKER_POWERUP])
+    STAR_POWER_SELECTED = random.choice([INVINCIBLE_POWERUP, SHARK_SHRINKER_POWERUP])
     
     def __init__(self, allsprites, images):
         pygame.sprite.Sprite.__init__(self)

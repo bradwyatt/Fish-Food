@@ -28,7 +28,7 @@ pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 DEBUG = False
-ZOOM_FACTOR = 1 # Recommended to be 1.5
+ZOOM_FACTOR = 1.5 # Recommended to be 1.5
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -397,8 +397,10 @@ class GameState:
         if self.rainbow_fish.rainbow_timer >= RainbowFish.NUM_OF_TICKS_FOR_ENTRANCE:
             self.rainbow_fish.is_active = True
         if self.rainbow_fish.is_active and not self.rainbow_fish.initial_descent_complete:
+            if self.red_arrow_warning.visible == False:
+                # Only play the sound right before the arrow shows up
+                SOUNDS["snd_shark_incoming"].play()
             self.red_arrow_warning.visible = True
-            SOUNDS["snd_shark_incoming"].play()
         else:
             self.red_arrow_warning.visible = False
         # Sharks
@@ -406,12 +408,14 @@ class GameState:
             if self.score >= Shark.SHARKS_SCORES_TO_SPAWN[s]:
                 self.sharks[s].activate = True
                 if self.sharks[s].activate and not self.sharks[s].initial_descent_complete:
+                    if self.silver_arrow_warnings[s].visible == False and self.sharks[s].mini_shark == False:
+                        SOUNDS["snd_shark_incoming"].play()
                     self.silver_arrow_warnings[s].visible = True
-                    SOUNDS["snd_shark_incoming"].play()
                 else:
                     self.silver_arrow_warnings[s].visible = False
         # Bright Blue Fish
         if self.bright_blue_fish.activate and not self.bright_blue_fish.lateral_entry_complete:
+            SOUNDS["snd_siren"].play()
             if self.bright_blue_fish.direction == BrightBlueFish.DIR_RIGHT:
                 # Position the blue arrow on the left side of the screen
                 self.blue_arrow_warning_right.visible = True
