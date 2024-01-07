@@ -43,8 +43,11 @@ class GreenFish(pygame.sprite.Sprite):
         self.init_fade_in()
         self.reset_position()
 
-
+        self.game_over = False
     def update(self):
+        if self.game_over:
+            return
+        
         current_time = pygame.time.get_ticks()
 
         if self.stop_timer > current_time and self.is_big:

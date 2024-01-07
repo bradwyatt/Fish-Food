@@ -27,8 +27,11 @@ class BrightBlueFish(pygame.sprite.Sprite):
             y_position = random.randrange(*self.SPAWN_Y_RANGE)
             self.rect.topright = (x_position, y_position)
         self.lateral_entry_complete = False
+        self.game_over = False
         
     def update(self):
+        if self.game_over:
+            return
         if self.activate:
             self.update_movement_and_images()
             self.update_mask()

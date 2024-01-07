@@ -34,7 +34,11 @@ class Shark(pygame.sprite.Sprite):
         self.stop_timer = 0  # Timer for stopping the shark
         self.initial_descent_complete = False
         self.mask = pygame.mask.from_surface(self.face_image)  # Create a mask from the shark image
+        
+        self.game_over = False
     def update(self):
+        if self.game_over:
+            return
         if self.activate and not self.initial_descent_complete:
             if self.rect.top < self.Y_POSITION_TO_START_PLAYING:
                 self.rect.y += self.DESCEND_SPEED # Move the shark downwards until it is fully visible

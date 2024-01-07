@@ -87,9 +87,16 @@ class Player(pygame.sprite.Sprite):
         self.last_pressed = 0
         self.face_mask = self.face_masks[self.current_direction]  # Initialize face mask
         self.body_mask = self.body_masks[self.current_direction]  # Initialize body mask
+        
+        self.game_over = False
+        self.alpha = 255  # Full opacity
 
 
     def update(self):
+        if self.game_over:
+            self.alpha = max(0, self.alpha - 4)  # Reduce alpha, minimum 0
+            self.image.set_alpha(self.alpha)
+            return  # Stop further updates if game over
         # Update the position of the player
         self.rect = self.image.get_rect()
         newpos = (self.pos[0], self.pos[1])
