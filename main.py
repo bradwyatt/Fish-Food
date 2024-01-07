@@ -27,7 +27,8 @@ gameicon = pygame.image.load("sprites/red_fish_ico.png")
 pygame.display.set_icon(gameicon)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
-DEBUG = True
+DEBUG = False
+ZOOM_FACTOR = 1.5 # Recommended to be 1.5
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -39,6 +40,16 @@ def load_all_assets():
     load_image("sprites/player_up_right.png", "player_up_right", True)
     load_image("sprites/player_up.png", "player_up", True)
     load_image("sprites/player_up_left.png", "player_up_left", True)
+    
+    load_image("sprites/player_left_face.png", "player_left_face", True)
+    load_image("sprites/player_down_left_face.png", "player_down_left_face", True)
+    load_image("sprites/player_down_face.png", "player_down_face", True)
+    load_image("sprites/player_down_right_face.png", "player_down_right_face", True)
+    load_image("sprites/player_right_face.png", "player_right_face", True)
+    load_image("sprites/player_up_right_face.png", "player_up_right_face", True)
+    load_image("sprites/player_up_face.png", "player_up_face", True)
+    load_image("sprites/player_up_left_face.png", "player_up_left_face", True)
+    
     load_image("sprites/player_left_gold.png", "player_left_gold", True)
     load_image("sprites/player_down_left_gold.png", "player_down_left_gold", True)
     load_image("sprites/player_down_gold.png", "player_down_gold", True)
@@ -47,38 +58,64 @@ def load_all_assets():
     load_image("sprites/player_up_right_gold.png", "player_up_right_gold", True)
     load_image("sprites/player_up_gold.png", "player_up_gold", True)
     load_image("sprites/player_up_left_gold.png", "player_up_left_gold", True)
+    
     load_image("sprites/red_fish.png", "spr_red_fish", True)
-    load_image("sprites/green_fish.png", "spr_green_fish", True)
-    IMAGES["spr_green_fish_left"] = pygame.transform.flip(IMAGES["spr_green_fish"], 1, 0)
-    load_image("sprites/big_green_fish.png", "spr_big_green_fish", True)
+    load_image("sprites/green_fish.png", "spr_green_fish_right", True)
+    IMAGES["spr_green_fish_left"] = pygame.transform.flip(IMAGES["spr_green_fish_right"], 1, 0)
+    
+    load_image("sprites/big_green_fish_left.png", "spr_big_green_fish_left", True)
+    load_image("sprites/big_green_fish_left_face.png", "spr_big_green_fish_left_face", True)
+    load_image("sprites/big_green_fish_right.png", "spr_big_green_fish_right", True)
+    load_image("sprites/big_green_fish_right_face.png", "spr_big_green_fish_right_face", True)
+    load_image("sprites/big_green_fish_turning.png", "spr_big_green_fish_turning", True)
+
+    
     load_image("sprites/silver_fish.png", "spr_silver_fish", True)
-    load_image("sprites/snake_1.png", "spr_snake", True)
+    load_image("sprites/snake_1.png", "spr_snake_1", True)
     load_image("sprites/snake_2.png", "spr_snake_2", True)
     load_image("sprites/snake_3.png", "spr_snake_3", True)
     load_image("sprites/snake_4.png", "spr_snake_4", True)
     load_image("sprites/seahorse.png", "spr_seahorse", True)
-    load_image("sprites/jellyfish_1.png", "spr_jellyfish", True)
+    load_image("sprites/jellyfish_1.png", "spr_jellyfish_1", True)
     load_image("sprites/jellyfish_2.png", "spr_jellyfish_2", True)
     load_image("sprites/jellyfish_3.png", "spr_jellyfish_3", True)
     load_image("sprites/jellyfish_4.png", "spr_jellyfish_4", True)
     load_image("sprites/jellyfish_5.png", "spr_jellyfish_5", True)
     load_image("sprites/jellyfish_6.png", "spr_jellyfish_6", True)
     load_image("sprites/jellyfish_7.png", "spr_jellyfish_7", True)
-    load_image("sprites/shark.png", "spr_shark", True)
-    load_image("sprites/shark_face.png", "spr_shark_face", True)
-    load_image("sprites/bright_blue_fish.png", "spr_bright_blue_fish", True)
-    IMAGES["big_bright_blue_fish"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish"], (300, 200))
-    IMAGES["big_bright_blue_fish_left"] = pygame.transform.flip(IMAGES["big_bright_blue_fish"], 1, 0)
-    load_image("sprites/starfish_1.png", "spr_star", True)
+    load_image("sprites/shark_left.png", "spr_shark_left", True)
+    load_image("sprites/shark_face_left.png", "spr_shark_face_left", True)
+    load_image("sprites/shark_face_right.png", "spr_shark_face_right", True)
+    load_image("sprites/shark_right.png", "spr_shark_right", True)
+    load_image("sprites/shark_turning.png", "spr_shark_turning", True)
+    
+    load_image("sprites/bright_blue_fish_right.png", "spr_bright_blue_fish_right", True)
+    IMAGES["spr_bright_blue_fish_right"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right"], (300, 200))
+    load_image("sprites/bright_blue_fish_right_face.png", "spr_bright_blue_fish_right_face", True)
+    IMAGES["spr_bright_blue_fish_right_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right_face"], (300, 200))
+    load_image("sprites/bright_blue_fish_left.png", "spr_bright_blue_fish_left", True)
+    IMAGES["spr_bright_blue_fish_left"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left"], (300, 200))
+    load_image("sprites/bright_blue_fish_left_face.png", "spr_bright_blue_fish_left_face", True)
+    IMAGES["spr_bright_blue_fish_left_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left_face"], (300, 200))
+    
+    load_image("sprites/starfish_1.png", "spr_star_1", True)
     load_image("sprites/starfish_2.png", "spr_star_2", True)
     load_image("sprites/starfish_3.png", "spr_star_3", True)
-    load_image("sprites/arrow_warning_red.png", "arrow_warning_red", True)
-    load_image("sprites/arrow_warning_silver.png", "arrow_warning_silver", True)
-    load_image("sprites/arrow_warning_blue.png", "arrow_warning_blue", True)
+    load_image("sprites/arrow_warning_red.png", "arrow_warning_red_top", True)
+    load_image("sprites/arrow_warning_silver.png", "arrow_warning_silver_top", True)
+    load_image("sprites/arrow_warning_blue_left.png", "arrow_warning_blue_left", True)
+    load_image("sprites/arrow_warning_blue_right.png", "arrow_warning_blue_right", True)
+
     load_image("sprites/seaweed_middle.png", "spr_seaweed", True)
     load_image("sprites/seaweed_left.png", "spr_seaweed_left", True)
     load_image("sprites/seaweed_right.png", "spr_seaweed_right", True)
-    load_image("sprites/rainbow_fish.png", "spr_rainbow_fish", True)
+    
+    load_image("sprites/rainbow_fish_left.png", "spr_rainbow_fish_left", True)
+    load_image("sprites/rainbow_fish_left_face.png", "spr_rainbow_fish_left_face", True)
+    load_image("sprites/rainbow_fish_turning.png", "spr_rainbow_fish_turning", True)
+    load_image("sprites/rainbow_fish_right.png", "spr_rainbow_fish_right", True)
+    load_image("sprites/rainbow_fish_right_face.png", "spr_rainbow_fish_right_face", True)
+
     # arrow keys
     load_image("sprites/unpressed_arrow_up.png", "spr_unpressed_arrow_up", True, 128)
     load_image("sprites/pressed_arrow_up.png", "spr_pressed_arrow_up", True, 128)
@@ -137,19 +174,75 @@ def draw_text_button(screen, text, font, color, rect):
     screen.blit(text_surf, text_rect)
     return rect.collidepoint(pygame.mouse.get_pos())
 
+def collide_rect_to_mask(sprite1, sprite2, mask_name='mask'):
+    """
+    Check for collision between sprite1's rect and a specified mask of sprite2.
+
+    :param sprite1: The first sprite (uses its rect for collision).
+    :param sprite2: The second sprite (whose specified mask is used for collision).
+    :param mask_name: The name of the mask attribute in sprite2 to use for collision.
+    :return: True if there is a collision, False otherwise.
+    """
+    # First, check if the rectangles collide. If not, there can't be a mask collision.
+    if not pygame.sprite.collide_rect(sprite1, sprite2):
+        return False
+
+    # Create a temporary mask for sprite1's rect
+    mask1 = pygame.mask.Mask((sprite1.rect.width, sprite1.rect.height))
+    mask1.fill()  # Fill the mask (all pixels set to 1)
+
+    # Get the specified mask from sprite2
+    mask2 = getattr(sprite2, mask_name, None)
+    if mask2 is None:
+        raise ValueError(f"Mask '{mask_name}' not found in sprite2")
+
+    # Get the offset between the two sprites
+    offset_x = sprite2.rect.left - sprite1.rect.left
+    offset_y = sprite2.rect.top - sprite1.rect.top
+
+    # Use the offset to check if the masks overlap
+    return mask1.overlap(mask2, (offset_x, offset_y)) is not None
+
+
+def collide_mask_to_mask(sprite1, mask1_name, sprite2, mask2_name, use_rect_check=True):
+    """
+    Check for collision between two masks of two different sprites, with an optional
+    rectangle collision check for optimization.
+
+    :param sprite1: The first sprite.
+    :param mask1_name: The name of the mask attribute in the first sprite.
+    :param sprite2: The second sprite.
+    :param mask2_name: The name of the mask attribute in the second sprite.
+    :param use_rect_check: Whether to perform an initial rectangle collision check.
+    :return: True if there is a collision, False otherwise.
+    """
+    # Retrieve the actual mask objects from the sprites
+    mask1 = getattr(sprite1, mask1_name, None)
+    mask2 = getattr(sprite2, mask2_name, None)
+
+    # Ensure both masks are present
+    if not mask1 or not mask2:
+        return False
+
+    # First, check if the rectangles collide if use_rect_check is True.
+    if use_rect_check and not sprite1.rect.colliderect(sprite2.rect):
+        return False
+
+    # Calculate the offset between the two sprites
+    offset_x = sprite2.rect.left - sprite1.rect.left
+    offset_y = sprite2.rect.top - sprite1.rect.top
+
+    # Check if the masks overlap
+    return mask1.overlap(mask2, (offset_x, offset_y)) is not None
+
+
 class Wall(pygame.sprite.Sprite):
-    # def __init__(self, allsprites):
-    #     pygame.sprite.Sprite.__init__(self)
-    #     self.image = IMAGES["spr_wall"]
-    #     self.rect = self.image.get_rect()
-    #     allsprites.add(self)
     def __init__(self, allsprites):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((32, 32))
         self.image.fill((0, 0, 0, 0))  # Black color, can be changed to (0, 0, 0, 0) for invisible
         self.image.set_colorkey((0, 0, 0))  # Make black color transparent
         self.rect = self.image.get_rect()
-        #self.rect.topleft = (x, y)
     def remove_sprite(self):
         self.kill()
 
@@ -176,15 +269,48 @@ class Seaweed(pygame.sprite.Sprite):
             self.image = seaweed_images[0]
     def remove_sprite(self):
         self.kill()
+
+class ArrowWarning(pygame.sprite.Sprite):
+    def __init__(self, arrow_warning_sprites, arrow_type, target_sprite, side='top'):
+        pygame.sprite.Sprite.__init__(self)
+        self.arrow_type = arrow_type
+        self.image = IMAGES[f"arrow_warning_{arrow_type}_{side}"]  # e.g., "arrow_warning_red"
+        self.rect = self.image.get_rect()
+        self.target_sprite = target_sprite
+        self.side = side
+
+        # Adjust the position based on the side
+        if side == 'top':
+            self.rect.y = 40  # Fixed Y position for top
+            self.rect.x = self.target_sprite.rect.left
+        elif side == 'left':
+            self.rect.x = SCREEN_WIDTH-100
+            self.rect.y = self.target_sprite.rect.centery
+        elif side == 'right':
+            self.rect.x = 50
+            self.rect.y = self.target_sprite.rect.centery
+
+        arrow_warning_sprites.add(self)
+        self.visible = False
+
+    def update(self):
+        if self.side == 'top':
+            self.rect.x = self.target_sprite.rect.left
+        elif self.side == 'left':
+            self.rect.y = self.target_sprite.rect.centery
+        elif self.side == 'right':
+            self.rect.y = self.target_sprite.rect.centery
         
 class GameState:
     START_SCREEN = 0
     PLAY_SCREEN = 1
     GAME_OVER_SCREEN = 2
     INFO_SCREEN = 3
+    SCORE_BLIT_TICKS_TO_DISAPPEAR = 30
 
     def __init__(self, images, start_screen_bg=None, info_screen_bg=None, joystick=None):
         self.allsprites = pygame.sprite.Group()
+        self.arrow_warning_sprites = pygame.sprite.Group()
         self.score = 0
         self.score_blit = 0
         self.key_states = {
@@ -193,7 +319,7 @@ class GameState:
             pygame.K_DOWN: False,
             pygame.K_RIGHT: False
         }
-        self.current_state = GameState.PLAY_SCREEN
+        self.current_state = GameState.START_SCREEN
         self.one_powerup_sound = 0
         self.score_disappear_timer = 0
         self.initialize_entities()
@@ -202,6 +328,7 @@ class GameState:
         self.is_paused = False
         self.joystick = joystick
         self.dead_fish_position = ()
+        self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
 
     def initialize_entities(self):
         # Initialize all your entities here
@@ -232,14 +359,23 @@ class GameState:
         self.silver_fish = SilverFish(self.allsprites, IMAGES)
         self.snake = Snake(self.allsprites, IMAGES)
         self.seahorse = Seahorse(self.allsprites, IMAGES)
-        self.jellyfishes = [Jellyfish(self.allsprites, IMAGES) for i in range(3)]
-        self.sharks = [Shark(self.allsprites, IMAGES) for i in range(4)]
-        self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
+        self.jellyfishes = [Jellyfish(self.allsprites, IMAGES) for i in range(len(Jellyfish.JELLYFISHES_SCORE_TO_SPAWN))]
+        self.sharks = []
+        self.silver_arrow_warnings = []
+        for s in range(len(Shark.SHARKS_SCORES_TO_SPAWN)):
+            self.sharks.append(Shark(self.allsprites, IMAGES))
+            self.silver_arrow_warnings.append(ArrowWarning(self.arrow_warning_sprites, "silver", self.sharks[s]))
         self.star = StarPowerup(self.allsprites, IMAGES)
         self.rainbow_fish = RainbowFish(self.allsprites, IMAGES)
+        self.red_arrow_warning = ArrowWarning(self.arrow_warning_sprites, "red", self.rainbow_fish)
+        self.bright_blue_fish = BrightBlueFish(self.allsprites, IMAGES)
+        self.blue_arrow_warning_left = ArrowWarning(self.arrow_warning_sprites, "blue", self.bright_blue_fish, "left")
+        self.blue_arrow_warning_right = ArrowWarning(self.arrow_warning_sprites, "blue", self.bright_blue_fish, "right")
+
         
     def reset_game(self, images):
         self.allsprites.empty()
+        self.arrow_warning_sprites.empty()
         self.current_state = GameState.PLAY_SCREEN
         self.score = 0
         self.initialize_entities()
@@ -250,79 +386,73 @@ class GameState:
             pygame.K_DOWN: False,
             pygame.K_RIGHT: False
         }
+        self.last_bbf_activation_score = 0
     
     def change_state(self, new_state):
         self.current_state = new_state
-        
-    def activate_game_objects(self):
+
+
+    def activate_game_objects(self, zoomed_surface):
         # Rainbow Fish activation logic
-        if self.rainbow_fish.rainbow_timer >= 200:
-            self.rainbow_fish.is_active = 1
-        if self.rainbow_fish.is_active == 1 and self.rainbow_fish.is_exiting == 0:
-            if self.rainbow_fish.arrow_warning_shown == 1 and self.rainbow_fish.rect.top < 0:
-                screen.blit(IMAGES["arrow_warning_red"], (self.rainbow_fish.rect.topleft[0], 40))
+        if self.rainbow_fish.rainbow_timer >= RainbowFish.NUM_OF_TICKS_FOR_ENTRANCE:
+            self.rainbow_fish.is_active = True
+        if self.rainbow_fish.is_active and not self.rainbow_fish.initial_descent_complete:
+            if self.red_arrow_warning.visible == False:
+                # Only play the sound right before the arrow shows up
                 SOUNDS["snd_shark_incoming"].play()
+            self.red_arrow_warning.visible = True
+        else:
+            self.red_arrow_warning.visible = False
         # Sharks
-        if self.score >= 5:
-            self.sharks[0].activate = 1
-            if self.sharks[0].arrow_warning == 1:
-                screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[0].rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
-        if self.score >= 20:
-            self.sharks[1].activate = 1
-            if self.sharks[1].arrow_warning == 1:
-                screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[1].rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
-        if self.score >= 45:
-            self.sharks[2].activate = 1
-            if self.sharks[2].arrow_warning == 1:
-                screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[2].rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
-        if self.score >= 75:
-            self.sharks[3].activate = 1
-            if self.sharks[3].arrow_warning == 1:
-                screen.blit(IMAGES["arrow_warning_silver"], (self.sharks[3].rect.topleft[0], 40))
-                SOUNDS["snd_shark_incoming"].play()
+        for s in range(len(Shark.SHARKS_SCORES_TO_SPAWN)):
+            if self.score >= Shark.SHARKS_SCORES_TO_SPAWN[s]:
+                self.sharks[s].activate = True
+                if self.sharks[s].activate and not self.sharks[s].initial_descent_complete:
+                    if self.silver_arrow_warnings[s].visible == False and self.sharks[s].mini_shark == False:
+                        SOUNDS["snd_shark_incoming"].play()
+                    self.silver_arrow_warnings[s].visible = True
+                else:
+                    self.silver_arrow_warnings[s].visible = False
         # Bright Blue Fish
-        # Starts moving when you have a certain score
-        if(self.bright_blue_fish.activate == 0 and (self.score % 50 >= 0 and self.score % 50 <= 2) and self.score >= 50):
-            self.bright_blue_fish.direction = random.choice([0, 1])
-            self.bright_blue_fish.activate = 1
-            if self.bright_blue_fish.direction == 1: # MOVING RIGHT
-                self.bright_blue_fish.rect.topright = (-500, random.randrange(50, SCREEN_HEIGHT-200))
-            elif self.bright_blue_fish.direction == 0: # MOVING LEFT
-                self.bright_blue_fish.rect.topleft = (SCREEN_WIDTH+500, random.randrange(50, SCREEN_HEIGHT-200))
-        # Arrow Warning for Bright Blue Fish
-        if self.bright_blue_fish.arrow_warning == 1:
-            if self.bright_blue_fish.direction == 1 and self.bright_blue_fish.rect.topleft[0] < 0: # MOVING RIGHT
-                screen.blit(IMAGES["arrow_warning_blue"], (20, self.bright_blue_fish.rect.midright[1]+40))
-                SOUNDS["snd_siren"].play()
-            elif self.bright_blue_fish.direction == 0 and self.bright_blue_fish.rect.topleft[0] > SCREEN_WIDTH: # MOVING LEFT
-                screen.blit(pygame.transform.flip(IMAGES["arrow_warning_blue"], 1, 0),
-                            (SCREEN_WIDTH-70, self.bright_blue_fish.rect.midright[1]+40))
-                SOUNDS["snd_shark_incoming"].stop()
-                SOUNDS["snd_siren"].play()
+        if self.bright_blue_fish.activate and not self.bright_blue_fish.lateral_entry_complete:
+            SOUNDS["snd_siren"].play()
+            if self.bright_blue_fish.direction == BrightBlueFish.DIR_RIGHT:
+                # Position the blue arrow on the left side of the screen
+                self.blue_arrow_warning_right.visible = True
+            elif self.bright_blue_fish.direction == BrightBlueFish.DIR_LEFT:
+                # Position the blue arrow on the right side of the screen
+                self.blue_arrow_warning_left.visible = True
+        else:
+            self.blue_arrow_warning_right.visible = False
+            self.blue_arrow_warning_left.visible = False
         # Jellyfish
-        if self.score >= 0:
-            self.jellyfishes[0].activate = 1
-        if self.score >= 30:
-            self.jellyfishes[1].activate = 1    
-        if self.score == 60:
-            self.jellyfishes[2].activate = 1
+        for j in range(len(Jellyfish.JELLYFISHES_SCORE_TO_SPAWN)):
+            if self.score >= Jellyfish.JELLYFISHES_SCORE_TO_SPAWN[j]:
+                self.jellyfishes[j].activate = True
+                
+    def player_eat_prey_collision(self, prey, snd="snd_eat"):
+        SOUNDS[snd].play()
+        self.dead_fish_position = prey.rect.topleft
+        fish_score = prey.get_score_value()
+        self.score += fish_score
+        self.score_blit = fish_score
+        self.player.size_score += fish_score
+        prey.collide_with_player()
+        
+    def predator_eat_player_collision(self):
+        self.current_state = self.GAME_OVER_SCREEN
+
     def handle_collisions(self):
         ##################
         # COLLISIONS
         ##################
         for red_fish in self.red_fishes:
-            if pygame.sprite.collide_mask(red_fish, self.player):
-                self.dead_fish_position = red_fish.rect.topleft
-                red_fish.collide_with_player()
-                self.score, self.score_blit = self.player.collide_with_red_fish(self.score, self.score_blit)
-                SOUNDS["snd_eat"].play()
+            if collide_rect_to_mask(red_fish, self.player, "face_mask"):
+                self.player_eat_prey_collision(red_fish)
             for green_fish in self.green_fishes:
                 if red_fish.rect.colliderect(green_fish):
-                    green_fish.collision_with_redfish()
-                    if green_fish.image != IMAGES["spr_big_green_fish"]:
+                    green_fish.collision_with_red_fish()
+                    if green_fish.is_big == False:
                         red_fish.collide_with_green_fish()
             if pygame.sprite.collide_mask(red_fish, self.bright_blue_fish):
                 red_fish.collide_with_bright_blue_fish()
@@ -330,76 +460,65 @@ class GameState:
                 if red_fish.rect.colliderect(wall.rect):
                     red_fish.collision_with_wall(wall.rect)
         for green_fish in self.green_fishes:
-            if pygame.sprite.collide_mask(green_fish, self.player):
-                if(green_fish.image == IMAGES["spr_green_fish"] or 
-                   green_fish.image == IMAGES["spr_green_fish_left"] or 
-                   self.player.size_score >= 40 or 
-                   self.player.star_power == 1):
-                    SOUNDS["snd_eat"].play()
-                    self.dead_fish_position = green_fish.rect.topleft  # Update the position here
-                    self.score, self.score_blit = self.player.collide_with_green_fish(self.score, self.score_blit)
-                    green_fish.small_collision_with_player()
-                    green_fish.big_green_fish_score = 0
-                else: # When it transforms to big green fish, player dies
-                    self.current_state = GameState.GAME_OVER_SCREEN
+            if(green_fish.is_big == False or 
+               self.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH or 
+               self.player.star_power == Player.INVINCIBLE_POWERUP):
+                if collide_mask_to_mask(green_fish, "body_mask", self.player, "face_mask", False):
+                    # Green fish is small or player is bigger than green fish or player has star power
+                    self.player_eat_prey_collision(green_fish)
+            else: 
+                if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask", False):
+                    if green_fish.is_big:
+                        # Green fish is bigger than player
+                        self.predator_eat_player_collision()
             if pygame.sprite.collide_mask(green_fish, self.bright_blue_fish):
-                green_fish.big_green_fish_score = 0
-                green_fish.image = IMAGES["spr_green_fish"]
-                green_fish.rect.topleft = (random.randrange(100, SCREEN_WIDTH-100), random.randrange(100, SCREEN_HEIGHT-100))
+                green_fish.reset_position()
             for wall in self.walls:
                 if green_fish.rect.colliderect(wall.rect):
                     green_fish.collision_with_wall(wall.rect)
-        if pygame.sprite.collide_mask(self.silver_fish, self.player):
-            SOUNDS["snd_eat"].play()
-            self.dead_fish_position = self.silver_fish.rect.topleft
-            self.score, self.score_blit = self.player.collide_with_silver_fish(self.score, self.score_blit)
-            self.silver_fish.collide_with_player()
-        if pygame.sprite.collide_mask(self.silver_fish, self.bright_blue_fish):
-            SOUNDS["snd_eat"].play()
-            self.silver_fish.collide_with_bright_blue_fish()
+        if collide_rect_to_mask(self.silver_fish, self.player, "face_mask"):
+            self.player_eat_prey_collision(self.silver_fish)
+        if collide_mask_to_mask(self.bright_blue_fish, "mask", self.player, "body_mask"):
+            if self.player.star_power != Player.INVINCIBLE_POWERUP:
+                self.predator_eat_player_collision()
+        if pygame.sprite.collide_mask(self.rainbow_fish, self.player):
+            # Player eats rainbow_fish only when appears bigger (arbitrary)
+            if (self.rainbow_fish.size_score <= self.player.size_score or 
+                self.player.star_power == self.player.INVINCIBLE_POWERUP):
+                self.player_eat_prey_collision(self.rainbow_fish)
+            else:
+                if self.player.star_power != Player.INVINCIBLE_POWERUP:
+                    self.predator_eat_player_collision()
         for shark in self.sharks:
-            if pygame.sprite.collide_mask(shark, self.player):
-                self.is_paused = True
-                return
-                self.dead_fish_position = shark.rect.topleft
-                self.score, self.score_blit = self.player.collide_with_shark(self.score, self.score_blit)
-                shark.collide_with_player()
-                if self.player.star_power != 0:
-                    SOUNDS["snd_eat_shark"].play()
-                else:
-                    self.current_state = GameState.GAME_OVER_SCREEN
+            if self.player.star_power == Player.SHARK_SHRINKER_POWERUP:
+                shark.mini_shark = True
+                if collide_mask_to_mask(self.player, "face_mask", shark, "mask", False):
+                    self.player_eat_prey_collision(shark, "snd_eat_shark")
+            elif self.player.star_power == Player.INVINCIBLE_POWERUP:
+                pass
+            else:
+                shark.mini_shark = False
+                if collide_mask_to_mask(self.player, "body_mask", shark, "mask", False):
+                    self.predator_eat_player_collision()
             if pygame.sprite.collide_mask(shark, self.bright_blue_fish):
                 shark.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
             for wall in self.walls:
                 if shark.rect.colliderect(wall.rect):
                     shark.collision_with_wall(wall.rect)
-            if self.player.star_power == 2:
-                shark.mini_shark = 1
-            else:
-                shark.mini_shark = 0
-        if pygame.sprite.collide_mask(self.rainbow_fish, self.player):
-            # Player eats rainbow_fish only when appears bigger (arbitrary)
-            if (self.rainbow_fish.size[0]-45 <= self.player.size_score) or (self.player.star_power == 1):
-                SOUNDS["snd_eat"].play()
-                self.dead_fish_position = self.rainbow_fish.rect.topleft
-                self.score_blit = 2
-                self.score += 2
-                self.player.size_score += 2
-                self.rainbow_fish.collide_with_player()
-            else:
-                if self.player.star_power != 1:
-                    self.current_state = GameState.GAME_OVER_SCREEN
         if pygame.sprite.collide_mask(self.rainbow_fish, self.bright_blue_fish):
             SOUNDS["snd_eat"].play()
             self.rainbow_fish.collide_with_bright_blue_fish()
         if pygame.sprite.collide_mask(self.snake, self.player):
             self.snake.collide_with_player()
-            if self.player.star_power != 1:
+            if self.player.star_power != Player.INVINCIBLE_POWERUP:
                 self.player.collide_with_snake()
                 SOUNDS["snd_size_down"].play()
             else:
                 SOUNDS["snd_eat"].play()
+        if pygame.sprite.collide_mask(self.silver_fish, self.bright_blue_fish):
+            SOUNDS["snd_eat"].play()
+            self.silver_fish.collide_with_bright_blue_fish()
         if pygame.sprite.collide_mask(self.snake, self.bright_blue_fish):
             self.snake.collide_with_bright_blue_fish()
         if pygame.sprite.collide_mask(self.seahorse, self.player):
@@ -416,7 +535,7 @@ class GameState:
         for jellyfish in self.jellyfishes:
             if pygame.sprite.collide_mask(jellyfish, self.player):
                 jellyfish.collide_with_player()
-                if self.player.star_power == 1:
+                if self.player.star_power == Player.INVINCIBLE_POWERUP:
                     SOUNDS["snd_eat"].play()
                 else:
                     self.player.collide_with_jellyfish()
@@ -442,9 +561,7 @@ class GameState:
                 sounds_list = list(SOUNDS.keys()) # Returns list of keys in sounds
                 SOUNDS[sounds_list[i]].stop() # Stops all sounds
             SOUNDS["snd_powerup_timer"].play()
-        if pygame.sprite.collide_mask(self.bright_blue_fish, self.player):
-            if self.player.star_power != 1:
-                self.current_state = GameState.GAME_OVER_SCREEN
+
                 
     def handle_input(self, pause_button_rect):
         for event in pygame.event.get():
@@ -541,7 +658,7 @@ class GameState:
             screen.fill((0, 0, 0))
 
         # Draw the "Click to Start" button
-        start_button_rect = pygame.Rect(500, 250, 200, 50)  # Adjust position and size as needed
+        start_button_rect = pygame.Rect(400, 250, 200, 50)  # Adjust position and size as needed
         if draw_text_button(screen, "Click to Start", pygame.font.SysFont(None, 36), (255, 255, 255), start_button_rect):
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -560,16 +677,18 @@ class GameState:
     def show_game_over_screen(self, screen):
         screen.fill((0, 0, 0))
         font = pygame.font.SysFont(None, 36)
-        text = font.render("Game Over. Click to restart", True, (255, 255, 255))
-        
+        game_over_text = font.render("Game Over. Click to restart", True, (255, 255, 255))
+        points_on_game_over_screen = font.render("Points: " + str(self.score), True, (255, 255, 255))
         # Center the text
-        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-        
-        screen.blit(text, text_rect)
+        text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+        points_on_game_over_screen_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, (SCREEN_HEIGHT // 2)+30))
+        screen.blit(game_over_text, text_rect)
+        screen.blit(points_on_game_over_screen, points_on_game_over_screen_rect)
 
-    def update(self):
+
+    def update(self, zoomed_surface):
         self.handle_collisions()
-        self.activate_game_objects()
+        self.activate_game_objects(zoomed_surface)
         # Diagonal Movements
         if self.key_states[pygame.K_UP] and self.key_states[pygame.K_RIGHT]:
             self.player.move_up_right()
@@ -593,10 +712,11 @@ class GameState:
         # Stop movement if no arrow keys are pressed
         if not any(self.key_states.values()):
             self.player.stop_movement()
-    
-    def draw(self, screen):
-        # Draw game entities
-        self.allsprites.draw(screen)
+            
+        # Activate Bright Blue Fish every time the score increases by increments
+        if self.bright_blue_fish.try_activate(self.score, self.last_bbf_activation_score):
+            self.last_bbf_activation_score = self.score
+
 
 class Joystick:
     def __init__(self, images, screen):
@@ -691,7 +811,7 @@ class Joystick:
                             return direction
         return None
 
-def zoom_in_on_player(screen, player, zoom_factor):
+def zoom_in_on_player(screen, player, ZOOM_FACTOR):
     # Define the area around the player to zoom in on
     zoom_width, zoom_height = 100, 100  # Adjust size as needed
     zoom_rect = pygame.Rect(
@@ -710,15 +830,16 @@ def zoom_in_on_player(screen, player, zoom_factor):
     # Scale up the captured area
     zoomed_surface = pygame.transform.scale(
         subsurface,
-        (zoom_rect.width * zoom_factor, zoom_rect.height * zoom_factor)
+        (zoom_rect.width * ZOOM_FACTOR, zoom_rect.height * ZOOM_FACTOR)
     )
 
     return zoomed_surface
 
 def draw_mask(surface, mask, x, y, color=(255, 0, 0)):
     # Create a surface from the mask
-    mask_surface = mask.to_surface(setcolor=color, unsetcolor=(0, 0, 0, 0))
-    surface.blit(mask_surface, (x, y))
+    if mask:
+        mask_surface = mask.to_surface(setcolor=color, unsetcolor=(0, 0, 0, 0))
+        surface.blit(mask_surface, (x, y))
 
 # Main game loop
 def main():
@@ -732,8 +853,6 @@ def main():
     pause_text_x = pause_button_rect.x + (pause_button_rect.width - pause_text_surface.get_width()) // 2
     pause_text_y = pause_button_rect.y + (pause_button_rect.height - pause_text_surface.get_height()) // 2
     
-    debug_message = 0
-    
     (x_first, y_first) = (0, 0)
     (x_second, y_second) = (0, -SCREEN_HEIGHT)
     load_all_assets()
@@ -743,8 +862,8 @@ def main():
     game_state_manager = GameState(IMAGES, IMAGES['start_menu_bg'], IMAGES['info_screen_bg'], joystick)
     
     # Ensure the zoomed surface is large enough to handle the maximum offset
-    zoom_factor = 1.5
-    zoomed_surface = pygame.Surface((SCREEN_WIDTH // zoom_factor, SCREEN_HEIGHT // zoom_factor), pygame.SRCALPHA)
+    
+    zoomed_surface = pygame.Surface((SCREEN_WIDTH // ZOOM_FACTOR, SCREEN_HEIGHT // ZOOM_FACTOR), pygame.SRCALPHA)
 
     world_width = SCREEN_WIDTH
     world_height = SCREEN_HEIGHT
@@ -759,7 +878,7 @@ def main():
         elif game_state_manager.current_state == GameState.START_SCREEN:
             game_state_manager.show_start_screen(screen)
             # Draw the info button and check for hover
-            info_button_rect = pygame.Rect(500, 400, 200, 50)  # Adjust as needed
+            info_button_rect = pygame.Rect(400, 400, 200, 50)  # Adjust as needed
             if draw_text_button(screen, "Info", pygame.font.SysFont(None, 36), (255, 255, 255), info_button_rect):
                 for event in pygame.event.get():
                     if event.type == pygame.MOUSEBUTTONDOWN:
@@ -785,30 +904,14 @@ def main():
             if y_second >= SCREEN_HEIGHT:
                 y_second = -SCREEN_HEIGHT
             
-
-            # Update game state only if the game is not paused
-            if not game_state_manager.is_paused:
-                game_state_manager.allsprites.update()
-                game_state_manager.update()
-                if game_state_manager.rainbow_fish.is_active:
-                    game_state_manager.rainbow_fish.decide_chase_or_avoid(
-                        game_state_manager.player.size_score,
-                        game_state_manager.player.star_power,
-                        game_state_manager.player.pos
-                        )
-            
             # Calculate camera position with boundary limits
-            camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * zoom_factor),
-                              world_width - SCREEN_WIDTH // zoom_factor))
-            camera_y = max(0, min(game_state_manager.player.rect.centery - SCREEN_HEIGHT // (2 * zoom_factor),
-                                  world_height - SCREEN_HEIGHT // zoom_factor))
+            camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * ZOOM_FACTOR),
+                              world_width - SCREEN_WIDTH // ZOOM_FACTOR))
+            camera_y = max(0, min(game_state_manager.player.rect.centery - SCREEN_HEIGHT // (2 * ZOOM_FACTOR),
+                                  world_height - SCREEN_HEIGHT // ZOOM_FACTOR))
 
             # Clear the zoomed surface
             zoomed_surface.fill((0, 0, 0))
-    
-            # Draw game elements relative to the camera position
-            # background_position_x = -camera_x
-            # background_position_y = y_first - camera_y
     
             # Draw the background on zoomed_surface
             zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_first - camera_y))
@@ -817,7 +920,26 @@ def main():
             # Draw the ground only if the camera is near the bottom of the world
             if camera_y > world_height - SCREEN_HEIGHT - 100:
                 zoomed_surface.blit(IMAGES['ground'], (-camera_x, world_height - 100 - camera_y))
-
+                
+            # Update game state only if the game is not paused
+            if not game_state_manager.is_paused:
+                # Update RainbowFish with player's current state
+                game_state_manager.rainbow_fish.player_size_score = game_state_manager.player.size_score
+                game_state_manager.rainbow_fish.player_star_power = game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP
+                game_state_manager.rainbow_fish.player_position = game_state_manager.player.rect.center
+    
+                # Update all sprites
+                game_state_manager.allsprites.update()
+                game_state_manager.arrow_warning_sprites.update()
+                game_state_manager.update(zoomed_surface)
+    
+                # Decide chase or avoid behavior for the RainbowFish
+                if game_state_manager.rainbow_fish.is_active:
+                    game_state_manager.rainbow_fish.decide_chase_or_avoid(
+                        game_state_manager.player.size_score,
+                        game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP,
+                        game_state_manager.player.rect.center
+                    )
     
             # Adjust sprite positions and draw on zoomed_surface
             for sprite in game_state_manager.allsprites:
@@ -826,12 +948,31 @@ def main():
                 sprite.rect.y -= camera_y
                 zoomed_surface.blit(sprite.image, sprite.rect)
                 sprite.rect.x, sprite.rect.y = original_position
+            # Update and draw arrow warning sprites on zoomed_surface
+            for arrow_sprite in game_state_manager.arrow_warning_sprites:
+                arrow_sprite.update()
+                if arrow_sprite.visible:
+                    zoomed_surface.blit(arrow_sprite.image, (arrow_sprite.rect.x - camera_x, arrow_sprite.rect.y - camera_y))
             
+            
+            #%% Debug
             if DEBUG:
-                draw_mask(zoomed_surface, game_state_manager.player.mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
-                for shark in game_state_manager.sharks:
-                    draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
-                
+                draw_mask(zoomed_surface, game_state_manager.player.body_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y, (63, 26, 186))
+                draw_mask(zoomed_surface, game_state_manager.player.face_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
+                draw_mask(zoomed_surface, game_state_manager.rainbow_fish.body_mask, game_state_manager.rainbow_fish.rect.x - camera_x, game_state_manager.rainbow_fish.rect.y - camera_y, (0, 128, 0))
+                draw_mask(zoomed_surface, game_state_manager.rainbow_fish.face_mask, game_state_manager.rainbow_fish.rect.x - camera_x, game_state_manager.rainbow_fish.rect.y - camera_y)
+
+                # for shark in game_state_manager.sharks:
+                #     draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
+                # draw_mask(zoomed_surface, 
+                #           game_state_manager.bright_blue_fish.mask, 
+                #           game_state_manager.bright_blue_fish.rect.x - camera_x, 
+                #           game_state_manager.bright_blue_fish.rect.y - camera_y)
+                # for green_fish in game_state_manager.green_fishes:
+                #     draw_mask(zoomed_surface, green_fish.body_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y, (0, 128, 0))
+                #     draw_mask(zoomed_surface, green_fish.face_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y)
+
+
             # Check if there is a score to blit
             if game_state_manager.score_blit > 0:
                 # Calculate the relative position of the score text on the zoomed surface
@@ -848,7 +989,7 @@ def main():
                 game_state_manager.score_disappear_timer += 1
             
                 # Reset the score blit and timer after a certain duration
-                if game_state_manager.score_disappear_timer > 30:
+                if game_state_manager.score_disappear_timer > GameState.SCORE_BLIT_TICKS_TO_DISAPPEAR:
                     game_state_manager.score_blit = 0
                     game_state_manager.score_disappear_timer = 0
     
@@ -879,7 +1020,7 @@ def main():
             icon_buffer = 10  # Space between icons
         
             # Standard icons
-            standard_icons = ['spr_red_fish', 'spr_green_fish', 'spr_silver_fish']
+            standard_icons = ['spr_red_fish', 'spr_green_fish_left', 'spr_silver_fish']
             max_height_standard = max(IMAGES[key].get_height() for key in standard_icons)
         
             for icon_key in standard_icons:
@@ -893,14 +1034,14 @@ def main():
             scaled_icon_size = (24, 15)  # Adjust the size as needed
             scaled_icons = []
         
-            if game_state_manager.rainbow_fish.size[0] - 45 <= game_state_manager.player.size_score:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish"], scaled_icon_size))
+            if game_state_manager.rainbow_fish.size_score <= game_state_manager.player.size_score:
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish_left"], scaled_icon_size))
         
-            if game_state_manager.player.size_score >= 40:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish"], scaled_icon_size))
+            if game_state_manager.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH:
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish_left"], scaled_icon_size))
         
-            if game_state_manager.player.star_power == 2:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark"], scaled_icon_size))
+            if game_state_manager.player.star_power == Player.SHARK_SHRINKER_POWERUP:
+                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark_left"], scaled_icon_size))
         
             for icon in scaled_icons:
                 # Calculate the vertical offset for the scaled icon
@@ -925,7 +1066,7 @@ def main():
             ##################
             # Sound Checks
             ##################
-            if game_state_manager.player.star_power == 0: # Powerup is over on the player
+            if game_state_manager.player.star_power == Player.NO_STAR_POWER: # Powerup is over on the player
                 game_state_manager.one_powerup_sound -= 1
                 SOUNDS["snd_powerup_timer"].stop()
             if game_state_manager.player.speed_time_left < 0:
