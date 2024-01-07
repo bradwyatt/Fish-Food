@@ -451,7 +451,10 @@ class GameState:
         fish_score = prey.get_score_value()
         self.score += fish_score
         self.score_blit = fish_score
-        self.player.size_score += fish_score
+        if self.player.size_score >= self.player.MAX_SIZE_SCORE:
+            self.player.size_score = self.player.MAX_SIZE_SCORE
+        else:
+            self.player.size_score += fish_score
         prey.collide_with_player()
         
     def predator_eat_player_collision(self, enemy_object):

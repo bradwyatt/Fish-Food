@@ -19,7 +19,7 @@ class Player(pygame.sprite.Sprite):
     MUNCH_EFFECT_DURATION = 30
     MUNCH_ANIMATION_SPEED = 15  # Adjust this value for slower/faster animation
     INVINCIBILITY_ANIMATION_SPEED = 10  # Speed of toggle between images
-
+    MAX_SIZE_SCORE = 50
 
     
     def __init__(self, allsprites, images):
