@@ -340,6 +340,9 @@ class GameState:
         self.dead_fish_position = ()
         self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
         self.game_over_timer = 0
+        # Define button rectangles
+        self.start_button_rect = pygame.Rect(400, 250, 200, 50)
+        self.info_button_rect = pygame.Rect(400, 400, 200, 50)
     def initialize_entities(self):
         # Initialize all your entities here
         self.player = Player(self.allsprites, IMAGES)
@@ -608,11 +611,9 @@ class GameState:
                     self.reset_game(IMAGES)
             elif self.current_state == GameState.START_SCREEN:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    info_button_rect = pygame.Rect(500, 400, 200, 50)
-                    start_button_rect = pygame.Rect(500, 250, 200, 50)
-                    if info_button_rect.collidepoint(event.pos):
+                    if self.info_button_rect.collidepoint(event.pos):
                         self.change_state(GameState.INFO_SCREEN)
-                    elif start_button_rect.collidepoint(event.pos):
+                    elif self.start_button_rect.collidepoint(event.pos):
                         self.change_state(GameState.PLAY_SCREEN)
             elif self.current_state == GameState.INFO_SCREEN:
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -683,16 +684,12 @@ class GameState:
             # Fallback to a black screen if no image is provided
             screen.fill((0, 0, 0))
 
-        # Draw the "Click to Start" button
-        start_button_rect = pygame.Rect(400, 250, 200, 50)  # Adjust position and size as needed
-        if draw_text_button(screen, "Click to Start", pygame.font.SysFont(None, 36), (255, 255, 255), start_button_rect):
+        # Check for hover and click on Start button
+        if draw_text_button(screen, "Click to Start", pygame.font.SysFont(None, 36), (255, 255, 255), self.start_button_rect):
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if start_button_rect.collidepoint(event.pos):
+                    if self.start_button_rect.collidepoint(event.pos):
                         self.change_state(GameState.PLAY_SCREEN)
-                elif event.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
 
     def show_info_screen(self, screen):
         if self.info_screen_bg:
