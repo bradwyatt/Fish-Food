@@ -17,6 +17,7 @@ from seahorse import Seahorse
 from jellyfish import Jellyfish
 from star_powerup import StarPowerup
 from player import Player
+import math
 
 
 # Initialize Pygame
@@ -343,6 +344,9 @@ class GameState:
         # Define button rectangles
         self.start_button_rect = pygame.Rect(400, 260, 200, 50)
         self.info_button_rect = pygame.Rect(400, 415, 200, 50)
+        self.touch_position = None  # Position where the user touches the screen
+        self.joystick_visible = False  # Whether the joystick is currently visible
+
     def initialize_entities(self):
         # Initialize all your entities here
         self.player = Player(self.allsprites, IMAGES)
@@ -624,18 +628,8 @@ class GameState:
                     self.change_state(GameState.START_SCREEN)
             elif self.current_state == GameState.PLAY_SCREEN:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if pause_button_rect.collidepoint(event.pos):
-                        self.is_paused = not self.is_paused
-                    direction = self.joystick.handle_click(event.pos)
-                    # Handle neutral area click
-                    if direction == "neutral":
-                        for key in self.key_states:
-                            self.key_states[key] = False
-                    else:
-                        for key in self.key_states:
-                            self.key_states[key] = False
-                        for key in self.map_direction_to_key(direction):
-                            self.key_states[key] = True
+                    # Call the joystick's handle_click method
+                    self.joystick.handle_click(event.pos)
         
                 if event.type == pygame.MOUSEMOTION:
                     if self.joystick.mouse_is_pressed:
@@ -651,18 +645,8 @@ class GameState:
                                     self.key_states[key] = True
 
                 if event.type == pygame.MOUSEBUTTONUP:
-                    last_direction = self.joystick.handle_mouse_up()  # This should return the last pressed_direction
-                    if last_direction == "neutral":
-                        # If the last direction was the neutral zone, stop the player's movement
-                        for key in self.key_states:
-                            self.key_states[key] = False
-                    else:
-                        # If another direction was the last one before mouse up, you can choose to keep moving in that direction
-                        # Or stop the movement, depending on your game's design
-                        # This code snippet will stop the movement
-                        for key in self.key_states:
-                            self.key_states[key] = False
-                    self.joystick.pressed_direction = None  # Reset the pressed direction
+                    # Call the joystick's handle_mouse_up method
+                    self.joystick.handle_mouse_up()
                         
     def map_direction_to_key(self, direction):
         mapping = {
@@ -786,28 +770,48 @@ class Joystick:
              (pygame.K_DOWN, pygame.K_LEFT): "down_left",
          }
         self.mouse_is_pressed = False
+        self.activation_distance = 30  # The distance in pixels to activate direction change
+        self.center_position = None  # Initialize the center position
+
 
     
-    def draw(self, key_states):
-        diagonals_active = set()
+    def draw(self, key_states, center_position):
+        if center_position is None:
+            return  # Don't draw if there's no center position
 
-        # Check and draw diagonals first
-        for keys, direction in self.key_to_direction.items():
-            if len(keys) > 1:  # Diagonal direction
-                is_pressed = all(key_states.get(key, False) for key in keys)
-                if is_pressed:
-                    diagonals_active.add(direction)
-                self.blit_arrow(direction, is_pressed)
+        # Calculate the top-left position for the neutral zone
+        neutral_zone_size = self.images['spr_neutral_zone'].get_size()
+        neutral_zone_top_left = (center_position[0] - neutral_zone_size[0] // 2,
+                                 center_position[1] - neutral_zone_size[1] // 2)
 
-        # Draw individual directions
-        for keys, direction in self.key_to_direction.items():
-            if len(keys) == 1:  # Individual direction
-                # Check if diagonal is active
-                diagonal_active = any(direction in diag for diag in diagonals_active)
-                is_pressed = key_states.get(keys[0], False) and not diagonal_active
-                self.blit_arrow(direction, is_pressed)
-        
-        self.screen.blit(IMAGES['spr_neutral_zone'], self.neutral_zone_rect.topleft)
+        # Draw neutral zone centered at the mouse click position
+        self.screen.blit(self.images['spr_neutral_zone'], neutral_zone_top_left)
+
+        # Calculate and draw arrows around the neutral zone
+        arrow_offsets = {
+            "up": (0, -neutral_zone_size[1]),
+            "down": (0, neutral_zone_size[1]),
+            "left": (-neutral_zone_size[0], 0),
+            "right": (neutral_zone_size[0], 0),
+            # Add other directions (diagonals) here with appropriate offsets
+        }
+        for direction, offset in arrow_offsets.items():
+            arrow_image_key = f"spr_{'pressed' if key_states.get(self.map_direction_to_key(direction), False) else 'unpressed'}_arrow_{direction}"
+            arrow_image = self.images[arrow_image_key]
+            arrow_rect = arrow_image.get_rect(center=(center_position[0] + offset[0], center_position[1] + offset[1]))
+            self.screen.blit(arrow_image, arrow_rect.topleft)
+            
+    @staticmethod
+    def map_direction_to_key(direction):
+        direction_to_key = {
+            "up": pygame.K_UP,
+            "down": pygame.K_DOWN,
+            "left": pygame.K_LEFT,
+            "right": pygame.K_RIGHT,
+            # Add mappings for other directions (diagonals) here
+        }
+        return direction_to_key.get(direction, None)
+
 
     def blit_arrow(self, direction, is_pressed):
         image_key = "spr_pressed_arrow_" if is_pressed else "spr_unpressed_arrow_"
@@ -816,38 +820,50 @@ class Joystick:
         self.screen.blit(self.images[image_key], rect.topleft)
 
     def handle_click(self, mouse_pos):
+        # Check if the click is within any of the joystick areas
+        self.center_position = mouse_pos  # Set the center position when mouse is pressed
+
         if self.neutral_zone_rect.collidepoint(mouse_pos):
-            # Middle area clicked, set to neutral state
-            self.mouse_is_pressed = True
             self.pressed_direction = "neutral"
-            return "neutral"
-        for direction, rect in self.arrows.items():
-            if rect.collidepoint(mouse_pos):
-                self.pressed_direction = direction
-                self.mouse_is_pressed = True
-                return direction
-        return None
+        else:
+            for direction, rect in self.arrows.items():
+                if rect.collidepoint(mouse_pos):
+                    self.pressed_direction = direction
+                    break
+
+        self.mouse_is_pressed = True  # Set the flag when the mouse is pressed
+        return self.pressed_direction
     
     def handle_mouse_up(self):
+        self.center_position = None  # Reset the center position when mouse is released
         # Return the last pressed direction when the mouse button is released
         last_direction = self.pressed_direction
-        self.mouse_is_pressed = False
+        self.mouse_is_pressed = False  # Reset the flag when the mouse is released
         self.pressed_direction = None  # Reset the pressed direction
         return last_direction
         
     def handle_mouse_move(self, mouse_pos):
-        if self.mouse_is_pressed:
-            if self.neutral_zone_rect.collidepoint(mouse_pos):
-                if self.pressed_direction != "neutral":
-                    self.pressed_direction = "neutral"
-                    return "neutral"
+        if not self.mouse_is_pressed or self.center_position is None:
+            return None
+
+        # Calculate distance and angle from the joystick center
+        dx = mouse_pos[0] - self.center_position[0]
+        dy = mouse_pos[1] - self.center_position[1]
+        distance = math.sqrt(dx**2 + dy**2)
+        angle = math.degrees(math.atan2(-dy, dx)) % 360  # Negative dy because screen coordinates are inverted on y-axis
+
+        # Determine the direction based on the angle
+        if distance > self.activation_distance:  # Only change direction if the mouse is dragged far enough
+            if 45 <= angle < 135:
+                return "up"
+            elif 135 <= angle < 225:
+                return "left"
+            elif 225 <= angle < 315:
+                return "down"
             else:
-                for direction, rect in self.arrows.items():
-                    if rect.collidepoint(mouse_pos):
-                        if self.pressed_direction != direction:
-                            self.pressed_direction = direction
-                            return direction
-        return None
+                return "right"
+        else:
+            return "neutral"
 
 def zoom_in_on_player(screen, player, ZOOM_FACTOR):
     # Define the area around the player to zoom in on
@@ -1031,7 +1047,9 @@ def main():
             screen.blit(scaled_zoomed_area, (0, 0))
     
             # Draw joystick and other UI elements on top
-            joystick.draw(game_state_manager.key_states)
+            if game_state_manager.joystick_visible:
+                joystick.draw(game_state_manager.key_states, game_state_manager.touch_position)
+                pygame.draw.circle(screen, (255, 0, 0), game_state_manager.touch_position, 5)  # Draw a small red circle at the center position
 
             # Menu Design
             screen.blit(IMAGES['available_prey_layer'], (0, 0))
