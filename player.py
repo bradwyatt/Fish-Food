@@ -15,9 +15,10 @@ class Player(pygame.sprite.Sprite):
     SURGE_MOVE_SPEED = 9
     REDUCER_MOVE_SPEED = 2
     REGULAR_MOVE_SPEED = 6
-    STAR_POWER_SELECTED = random.choice([INVINCIBLE_POWERUP, SHARK_SHRINKER_POWERUP])
+    #STAR_POWER_SELECTED = random.choice([INVINCIBLE_POWERUP, SHARK_SHRINKER_POWERUP])
     MUNCH_EFFECT_DURATION = 60
     MUNCH_ANIMATION_SPEED = 20  # Adjust this value for slower/faster animation
+    STAR_POWER_SELECTED = INVINCIBLE_POWERUP
 
     
     def __init__(self, allsprites, images):
@@ -166,7 +167,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def update_player_image(self):
-        if self.munching:
+        if self.munching and self.star_power != self.INVINCIBLE_POWERUP:
             # Alternate between munching and original image based on munching timer
             if self.munching_timer % self.MUNCH_ANIMATION_SPEED < self.MUNCH_ANIMATION_SPEED // 2:
                 self.image = self.munching_images[self.current_direction]
