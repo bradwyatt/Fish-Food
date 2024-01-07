@@ -461,8 +461,12 @@ class GameState:
         # COLLISIONS
         ##################
         for red_fish in self.red_fishes:
-            if collide_rect_to_mask(red_fish, self.player, "face_mask"):
-                self.player_eat_prey_collision(red_fish)
+            if self.player.star_power == self.player.INVINCIBLE_POWERUP:
+                if collide_rect_to_mask(red_fish, self.player, "body_mask"):
+                    self.player_eat_prey_collision(red_fish)
+            else:
+                if collide_rect_to_mask(red_fish, self.player, "face_mask"):
+                    self.player_eat_prey_collision(red_fish)
             for green_fish in self.green_fishes:
                 if red_fish.rect.colliderect(green_fish):
                     green_fish.collision_with_red_fish()
@@ -477,9 +481,13 @@ class GameState:
             if(green_fish.is_big == False or 
                self.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH or 
                self.player.star_power == Player.INVINCIBLE_POWERUP):
-                if collide_mask_to_mask(green_fish, "body_mask", self.player, "face_mask", False):
-                    # Green fish is small or player is bigger than green fish or player has star power
-                    self.player_eat_prey_collision(green_fish)
+                if self.player.star_power == self.player.INVINCIBLE_POWERUP:
+                    if collide_mask_to_mask(green_fish, "body_mask", self.player, "body_mask", False):
+                        self.player_eat_prey_collision(green_fish)
+                else:
+                    if collide_mask_to_mask(green_fish, "body_mask", self.player, "face_mask", False):
+                        # Green fish is small or player is bigger than green fish or player has star power
+                        self.player_eat_prey_collision(green_fish)
             else: 
                 if collide_mask_to_mask(green_fish, "face_mask", self.player, "body_mask", False):
                     if green_fish.is_big:
@@ -490,8 +498,12 @@ class GameState:
             for wall in self.walls:
                 if green_fish.rect.colliderect(wall.rect):
                     green_fish.collision_with_wall(wall.rect)
-        if collide_rect_to_mask(self.silver_fish, self.player, "face_mask"):
-            self.player_eat_prey_collision(self.silver_fish)
+        if self.player.star_power == self.player.INVINCIBLE_POWERUP:
+            if collide_rect_to_mask(self.silver_fish, self.player, "body_mask"):
+                self.player_eat_prey_collision(self.silver_fish)
+        else:
+            if collide_rect_to_mask(self.silver_fish, self.player, "face_mask"):
+                self.player_eat_prey_collision(self.silver_fish)
         if collide_mask_to_mask(self.bright_blue_fish, "mask", self.player, "body_mask"):
             if self.player.star_power != Player.INVINCIBLE_POWERUP:
                 self.predator_eat_player_collision(self.bright_blue_fish)
