@@ -693,6 +693,12 @@ class GameState:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.start_button_rect.collidepoint(event.pos):
                         self.change_state(GameState.PLAY_SCREEN)
+        # Draw the info button and check for hover
+        if draw_text_button(screen, "Info", pygame.font.SysFont(None, 36), (255, 255, 255), self.info_button_rect):
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.info_button_rect.collidepoint(event.pos):
+                        self.change_state(GameState.INFO_SCREEN)
 
     def show_info_screen(self, screen):
         if self.info_screen_bg:
@@ -909,15 +915,9 @@ def main():
             game_state_manager.show_info_screen(screen)
         elif game_state_manager.current_state == GameState.START_SCREEN:
             game_state_manager.show_start_screen(screen)
-            # Draw the info button and check for hover
-            if draw_text_button(screen, "Info", pygame.font.SysFont(None, 36), (255, 255, 255), game_state_manager.info_button_rect):
-                for event in pygame.event.get():
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if game_state_manager.info_button_rect.collidepoint(event.pos):
-                            game_state_manager.change_state(GameState.INFO_SCREEN)
-                    elif event.type == pygame.QUIT:
-                        pygame.quit()
-                        exit()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
         elif game_state_manager.current_state == GameState.GAME_OVER_SCREEN:
             game_state_manager.show_game_over_screen(screen)
         elif game_state_manager.current_state == GameState.PLAY_SCREEN:
