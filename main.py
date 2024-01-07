@@ -628,8 +628,11 @@ class GameState:
                     self.change_state(GameState.START_SCREEN)
             elif self.current_state == GameState.PLAY_SCREEN:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    # Call the joystick's handle_click method
-                    self.joystick.handle_click(event.pos)
+                    if pause_button_rect.collidepoint(event.pos):
+                        self.is_paused = not self.is_paused
+                    else:
+                        # Call the joystick's handle_click method
+                        self.joystick.handle_click(event.pos)
         
                 if event.type == pygame.MOUSEMOTION:
                     if self.joystick.mouse_is_pressed:
