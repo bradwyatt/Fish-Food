@@ -41,6 +41,15 @@ def load_all_assets():
     load_image("sprites/player_up.png", "player_up", True)
     load_image("sprites/player_up_left.png", "player_up_left", True)
     
+    load_image("sprites/player_left_munch.png", "player_left_munch", True)
+    load_image("sprites/player_down_left_munch.png", "player_down_left_munch", True)
+    load_image("sprites/player_down_munch.png", "player_down_munch", True)
+    load_image("sprites/player_down_right_munch.png", "player_down_right_munch", True)
+    load_image("sprites/player_right_munch.png", "player_right_munch", True)
+    load_image("sprites/player_up_right_munch.png", "player_up_right_munch", True)
+    load_image("sprites/player_up_munch.png", "player_up_munch", True)
+    load_image("sprites/player_up_left_munch.png", "player_up_left_munch", True)
+    
     load_image("sprites/player_left_face.png", "player_left_face", True)
     load_image("sprites/player_down_left_face.png", "player_down_left_face", True)
     load_image("sprites/player_down_face.png", "player_down_face", True)
@@ -433,6 +442,7 @@ class GameState:
                 self.jellyfishes[j].activate = True
                 
     def player_eat_prey_collision(self, prey, snd="snd_eat"):
+        self.player.collide_with_prey()
         SOUNDS[snd].play()
         self.dead_fish_position = prey.rect.topleft
         fish_score = prey.get_score_value()
