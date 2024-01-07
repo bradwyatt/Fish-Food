@@ -341,8 +341,8 @@ class GameState:
         self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
         self.game_over_timer = 0
         # Define button rectangles
-        self.start_button_rect = pygame.Rect(400, 250, 200, 50)
-        self.info_button_rect = pygame.Rect(400, 400, 200, 50)
+        self.start_button_rect = pygame.Rect(400, 260, 200, 50)
+        self.info_button_rect = pygame.Rect(400, 415, 200, 50)
     def initialize_entities(self):
         # Initialize all your entities here
         self.player = Player(self.allsprites, IMAGES)
@@ -910,11 +910,10 @@ def main():
         elif game_state_manager.current_state == GameState.START_SCREEN:
             game_state_manager.show_start_screen(screen)
             # Draw the info button and check for hover
-            info_button_rect = pygame.Rect(400, 400, 200, 50)  # Adjust as needed
-            if draw_text_button(screen, "Info", pygame.font.SysFont(None, 36), (255, 255, 255), info_button_rect):
+            if draw_text_button(screen, "Info", pygame.font.SysFont(None, 36), (255, 255, 255), game_state_manager.info_button_rect):
                 for event in pygame.event.get():
                     if event.type == pygame.MOUSEBUTTONDOWN:
-                        if info_button_rect.collidepoint(event.pos):
+                        if game_state_manager.info_button_rect.collidepoint(event.pos):
                             game_state_manager.change_state(GameState.INFO_SCREEN)
                     elif event.type == pygame.QUIT:
                         pygame.quit()
