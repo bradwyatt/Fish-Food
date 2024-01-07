@@ -15,12 +15,9 @@ class Player(pygame.sprite.Sprite):
     SURGE_MOVE_SPEED = 9
     REDUCER_MOVE_SPEED = 2
     REGULAR_MOVE_SPEED = 6
-    #STAR_POWER_SELECTED = random.choice([INVINCIBLE_POWERUP, SHARK_SHRINKER_POWERUP])
+    STAR_POWER_SELECTED = random.choice([INVINCIBLE_POWERUP, SHARK_SHRINKER_POWERUP])
     MUNCH_EFFECT_DURATION = 60
     MUNCH_ANIMATION_SPEED = 20  # Adjust this value for slower/faster animation
-    STAR_POWER_SELECTED = INVINCIBLE_POWERUP
-    # Constants for animation speeds
-    
     INVINCIBILITY_ANIMATION_SPEED = 10  # Speed of toggle between images
 
 
