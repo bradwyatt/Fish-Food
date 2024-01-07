@@ -16,6 +16,11 @@ class Player(pygame.sprite.Sprite):
     REDUCER_MOVE_SPEED = 2
     REGULAR_MOVE_SPEED = 6
     STAR_POWER_SELECTED = random.choice([INVINCIBLE_POWERUP, SHARK_SHRINKER_POWERUP])
+    MUNCH_EFFECT_DURATION = 30
+    MUNCH_ANIMATION_SPEED = 15  # Adjust this value for slower/faster animation
+    INVINCIBILITY_ANIMATION_SPEED = 10  # Speed of toggle between images
+    MAX_SIZE_SCORE = 50
+
     
     def __init__(self, allsprites, images):
         pygame.sprite.Sprite.__init__(self)
@@ -31,6 +36,19 @@ class Player(pygame.sprite.Sprite):
             "up_right": self.images["player_up_right"],
             "down_left": self.images["player_down_left"],
             "down_right": self.images["player_down_right"],
+        }
+        
+                
+        # Load munching images
+        self.munching_images = {
+            "left": self.images["player_left_munch"],
+            "right": self.images["player_right_munch"],
+            "up": self.images["player_up_munch"],
+            "down": self.images["player_down_munch"],
+            "up_left": self.images["player_up_left_munch"],
+            "up_right": self.images["player_up_right_munch"],
+            "down_left": self.images["player_down_left_munch"],
+            "down_right": self.images["player_down_right_munch"],
         }
         
         # Load and store mask images
@@ -87,53 +105,42 @@ class Player(pygame.sprite.Sprite):
         self.last_pressed = 0
         self.face_mask = self.face_masks[self.current_direction]  # Initialize face mask
         self.body_mask = self.body_masks[self.current_direction]  # Initialize body mask
+        
+        self.game_over = False
+        self.alpha = 255  # Full opacity
+        
+        self.munching = False
+        self.munching_timer = 0
 
 
     def update(self):
+        if self.game_over:
+            self.alpha = max(0, self.alpha - 4)  # Reduce alpha, minimum 0
+            self.image.set_alpha(self.alpha)
+            return  # Stop further updates if game over
+
         # Update the position of the player
         self.rect = self.image.get_rect()
         newpos = (self.pos[0], self.pos[1])
         self.rect.topleft = newpos
     
-        # Update the player's size and masks first, using the current image
+        # Update the player's size and masks using the current image
         self.resize_player_image_and_masks(self.image)
-    
-        # Handle star power animation for invincibility
-        if self.star_power == self.INVINCIBLE_POWERUP:
-            self.player_animate_timer += 1
-    
-            # Toggle between gold and normal image based on the animate timer
-            if self.player_animate_timer % 10 < 5:
-                gold_image_key = "player_" + self.current_direction + "_gold"
-                if gold_image_key in self.images:
-                    self.image = self.images[gold_image_key]
-                else:
-                    self.image = self.original_images[self.current_direction]
-            else:
-                self.image = self.original_images[self.current_direction]
-    
-            self.resize_player_image_and_masks(self.image)
-    
-            # Reset the animation timer if it reaches a certain threshold
-            if self.player_animate_timer >= 20:  # Adjust the value for animation speed
-                self.player_animate_timer = 0
-        else:
-            # Use the normal image and update image and mask
-            self.image = self.original_images[self.current_direction]
-            self.resize_player_image_and_masks(self.image)
-    
-        # Decrement powerup timer and reset if over for both star_power 1 and 2
+
+        # Decrement powerup timers and reset if over
         if self.star_power > self.NO_STAR_POWER:
             self.powerup_time_left -= 1
-            if self.powerup_time_left < 0:  # Powerup is over
+            if self.powerup_time_left < 0:
                 self.star_power = self.NO_STAR_POWER
-    
-        # Handle speed powerups/defects
+
         if self.speed_power > self.NO_SPEED_POWER:
             self.speed_time_left -= 1
-            if self.speed_time_left < 0:  # Speed change is over
+            if self.speed_time_left < 0:
                 self.speed_power = self.NO_SPEED_POWER
-                self.speed_x, self.speed_y = self.REGULAR_MOVE_SPEED, self.REGULAR_MOVE_SPEED  # Reset to default speed
+                self.speed_x, self.speed_y = self.REGULAR_MOVE_SPEED, self.REGULAR_MOVE_SPEED
+        
+        # Always update the player image to handle animations and resizing
+        self.update_player_image()  # Update the player image regularly
 
 
     def resize_player_image_and_masks(self, base_image):
@@ -161,29 +168,50 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def update_player_image(self):
-        # Handle star power animation for invincibility
-        if self.star_power == self.INVINCIBLE_POWERUP:
-            self.player_animate_timer += 1
-    
-            # Toggle between gold and normal image based on the animate timer
-            if self.player_animate_timer % 10 < 5:
-                gold_image_key = "player_" + self.current_direction + "_gold"
-                if gold_image_key in self.images:
-                    self.image = self.images[gold_image_key]
-                else:
-                    self.image = self.original_images[self.current_direction]
-            else:
-                self.image = self.original_images[self.current_direction]
-    
-            # Reset the animation timer if it reaches a certain threshold
-            if self.player_animate_timer >= 20:  # Adjust for animation speed
-                self.player_animate_timer = 0
+        if self.munching and self.star_power != self.INVINCIBLE_POWERUP:
+            self.handle_munching_animation()
         else:
-            # Use the normal image for non-invincible state
-            self.image = self.original_images[self.current_direction]
-    
+            self.handle_normal_and_invincible_animation()
+
         # Resize the player image and update masks
         self.resize_player_image_and_masks(self.image)
+
+    def handle_munching_animation(self):
+        # Alternate between munching and original image based on munching timer
+        if self.munching_timer % self.MUNCH_ANIMATION_SPEED < self.MUNCH_ANIMATION_SPEED // 2:
+            self.image = self.munching_images[self.current_direction]
+        else:
+            self.image = self.original_images[self.current_direction]
+
+        # Decrement the munching timer
+        self.munching_timer -= 1
+        if self.munching_timer <= 0:
+            self.munching = False
+
+    def handle_normal_and_invincible_animation(self):
+        if self.star_power == self.INVINCIBLE_POWERUP:
+            # Toggle between gold and normal image based on the animate timer
+            if (self.player_animate_timer // self.INVINCIBILITY_ANIMATION_SPEED) % 2 == 0:
+                self.image = self.get_gold_image()
+            else:
+                self.image = self.original_images[self.current_direction]
+
+            self.player_animate_timer += 1
+            if self.player_animate_timer >= self.INVINCIBILITY_ANIMATION_SPEED * 2:
+                self.player_animate_timer = 0
+        else:
+            self.image = self.original_images[self.current_direction]
+
+
+    def get_gold_image(self):
+         gold_image_key = "player_" + self.current_direction + "_gold"
+         return self.images[gold_image_key] if gold_image_key in self.images else self.original_images[self.current_direction]
+
+        
+    def collide_with_prey(self):
+        self.munching = True
+        self.munching_timer = self.MUNCH_EFFECT_DURATION  # Set duration of munching effect
+        self.update_player_image()
 
     def stop_movement(self):
         if self.speed_power == self.INVINCIBLE_POWERUP:  # Seahorse speed powerup
@@ -247,6 +275,7 @@ class Player(pygame.sprite.Sprite):
             self.pos[1] += self.speed_y
         self.update_player_image()
     def collide_with_seahorse(self):
+        self.collide_with_prey()
         self.speed_power = self.SPEED_SURGE
         self.speed_x, self.speed_y = self.SURGE_MOVE_SPEED, self.SURGE_MOVE_SPEED
         self.speed_time_left = self.SPEED_POWERUP_TIMER_IN_TICKS
@@ -258,6 +287,7 @@ class Player(pygame.sprite.Sprite):
     def collide_with_snake(self):
         self.size_score = 0
     def collide_with_star(self):
+        self.collide_with_prey()
         self.star_power = self.STAR_POWER_SELECTED
         self.powerup_time_left = self.STAR_POWERUP_TIMER_IN_TICKS
     def get_powerup_timer_text(self, font):

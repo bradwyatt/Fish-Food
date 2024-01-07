@@ -11,7 +11,7 @@ class RainbowFish(pygame.sprite.Sprite):
     NUM_OF_TICKS_FOR_EXIT = 1400
     INITIAL_SIZE_SCORE = 10
     INCREMENTAL_SIZE_SCORE = 10
-    MAX_SIZE_SCORE = 60
+    MAX_SIZE_SCORE = 50
     MOVE_CHASE_SPEED = 1
     MOVE_AVOID_SPEED = 2
     ASCEND_SPEED = 4
@@ -50,11 +50,15 @@ class RainbowFish(pygame.sprite.Sprite):
         self.face_mask = self.face_masks[self.current_direction]
         self.body_mask = self.body_masks[self.current_direction]
         
+        self.game_over = False
+        
     def update_player_position(self, player_pos):
         """Update the player's position for the Rainbow Fish."""
         self.player_position = player_pos
 
     def update(self):
+        if self.game_over:
+            return
         self.rainbow_timer += 1
         # Scale the image
         self.image = pygame.transform.smoothscale(self.image, (self.size[0], self.size[1]))
