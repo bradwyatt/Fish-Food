@@ -19,6 +19,10 @@ class Player(pygame.sprite.Sprite):
     MUNCH_EFFECT_DURATION = 60
     MUNCH_ANIMATION_SPEED = 20  # Adjust this value for slower/faster animation
     STAR_POWER_SELECTED = INVINCIBLE_POWERUP
+    # Constants for animation speeds
+    
+    INVINCIBILITY_ANIMATION_SPEED = 10  # Speed of toggle between images
+
 
     
     def __init__(self, allsprites, images):
@@ -168,32 +172,44 @@ class Player(pygame.sprite.Sprite):
 
     def update_player_image(self):
         if self.munching and self.star_power != self.INVINCIBLE_POWERUP:
-            # Alternate between munching and original image based on munching timer
-            if self.munching_timer % self.MUNCH_ANIMATION_SPEED < self.MUNCH_ANIMATION_SPEED // 2:
-                self.image = self.munching_images[self.current_direction]
-            else:
-                self.image = self.original_images[self.current_direction]
-
-            # Decrement the munching timer
-            self.munching_timer -= 1
-            if self.munching_timer <= 0:
-                self.munching = False
+            self.handle_munching_animation()
         else:
-            # Normal and invincible powerup image logic
-            if self.star_power == self.INVINCIBLE_POWERUP:
-                self.player_animate_timer += 1
-                if self.player_animate_timer % 10 < 5:
-                    gold_image_key = "player_" + self.current_direction + "_gold"
-                    self.image = self.images[gold_image_key] if gold_image_key in self.images else self.original_images[self.current_direction]
-                else:
-                    self.image = self.original_images[self.current_direction]
-                if self.player_animate_timer >= 20:
-                    self.player_animate_timer = 0
-            else:
-                self.image = self.original_images[self.current_direction]
+            self.handle_normal_and_invincible_animation()
 
         # Resize the player image and update masks
         self.resize_player_image_and_masks(self.image)
+
+    def handle_munching_animation(self):
+        # Alternate between munching and original image based on munching timer
+        if self.munching_timer % self.MUNCH_ANIMATION_SPEED < self.MUNCH_ANIMATION_SPEED // 2:
+            self.image = self.munching_images[self.current_direction]
+        else:
+            self.image = self.original_images[self.current_direction]
+
+        # Decrement the munching timer
+        self.munching_timer -= 1
+        if self.munching_timer <= 0:
+            self.munching = False
+
+    def handle_normal_and_invincible_animation(self):
+        if self.star_power == self.INVINCIBLE_POWERUP:
+            # Toggle between gold and normal image based on the animate timer
+            if (self.player_animate_timer // self.INVINCIBILITY_ANIMATION_SPEED) % 2 == 0:
+                self.image = self.get_gold_image()
+            else:
+                self.image = self.original_images[self.current_direction]
+
+            self.player_animate_timer += 1
+            if self.player_animate_timer >= self.INVINCIBILITY_ANIMATION_SPEED * 2:
+                self.player_animate_timer = 0
+        else:
+            self.image = self.original_images[self.current_direction]
+
+
+    def get_gold_image(self):
+         gold_image_key = "player_" + self.current_direction + "_gold"
+         return self.images[gold_image_key] if gold_image_key in self.images else self.original_images[self.current_direction]
+
         
     def collide_with_prey(self):
         self.munching = True
