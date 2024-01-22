@@ -1116,10 +1116,10 @@ def main():
             screen.blit(score_text, ((SCREEN_WIDTH/2)-32, 5))
             game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16'])
             game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16'])
-            screen_width_percentage = 0.75  # 75% of screen width
+            screen_width_percentage = 0.68  # 75% of screen width
             x_position_powerup_timer = SCREEN_WIDTH * screen_width_percentage
             screen.blit(game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16']), (x_position_powerup_timer, 5))
-            screen_width_percentage = 0.6  # 60% of screen width
+            screen_width_percentage = 0.56  # 60% of screen width
             x_position_speed_timer = SCREEN_WIDTH * screen_width_percentage
             screen.blit(game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16']), (x_position_speed_timer, 5))
             
