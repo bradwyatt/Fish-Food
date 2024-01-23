@@ -4,6 +4,7 @@ import os
 # Constants
 SCREEN_WIDTH, SCREEN_HEIGHT = 1024, 600
 FPS = 60
+TOP_UI_LAYER_HEIGHT = 60
 
 IMAGES = {}
 SOUNDS = {}
