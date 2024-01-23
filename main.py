@@ -5,7 +5,7 @@ import random
 import sys
 from pygame.constants import RLEACCEL
 import datetime
-from utils import IMAGES, SOUNDS, FONTS, load_sound, load_image, load_font, SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from utils import IMAGES, SOUNDS, FONTS, load_sound, load_image, load_font, SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TOP_UI_LAYER_HEIGHT
 from shark import Shark
 from red_fish import RedFish
 from green_fish import GreenFish
@@ -147,6 +147,7 @@ def load_all_assets():
     
     #font and texts
     load_font("fonts/ocean_font.ttf", 16, False)
+    load_font("fonts/ocean_font.ttf", 22)
     load_font("fonts/ocean_font.ttf", 48)
     load_font("fonts/ocean_font.ttf", 76)
     load_font("Arial", 32, is_system_font=True)
@@ -154,8 +155,8 @@ def load_all_assets():
     load_image("sprites/ground.jpg", "ground", False)
     load_image("sprites/play_background.jpg", "play_background", False)
     #bgwater = pygame.transform.scale(bgwater, (SCREEN_WIDTH, SCREEN_HEIGHT))
-    available_prey_layer = load_image("sprites/available_prey_layer.jpg", "available_prey_layer", False)
-    IMAGES['available_prey_layer'] = pygame.transform.scale(available_prey_layer, (SCREEN_WIDTH, 30))
+    top_ui_layer = load_image("sprites/top_ui_layer.jpg", "top_ui_layer", False)
+    IMAGES['top_ui_layer'] = pygame.transform.scale(top_ui_layer, (SCREEN_WIDTH, TOP_UI_LAYER_HEIGHT))
     start_menu_bg = load_image("sprites/start_menu.png", "start_menu_bg", False)
     load_image("sprites/info_screen.jpg", "info_screen_bg", False)
     pygame.mouse.set_visible(True)
@@ -345,7 +346,7 @@ class GameState:
         self.start_button_rect = pygame.Rect(400, 340, 200, 50)
         self.touch_position = None  # Position where the user touches the screen
         self.joystick_visible = False  # Whether the joystick is currently visible
-        self.info_button_play_rect = pygame.Rect(SCREEN_WIDTH - 80, 3, 75, 25)  # Adjust position and size as needed
+        self.info_button_play_rect = pygame.Rect(SCREEN_WIDTH - 80, 3, 75, TOP_UI_LAYER_HEIGHT-5)  # Adjust position and size as needed
 
 
     def initialize_entities(self):
@@ -897,7 +898,7 @@ def draw_mask(surface, mask, x, y, color=(255, 0, 0)):
 # Main game loop
 def main():
     # Define Pause and Info Button Properties
-    pause_button_size = (75, 25)
+    pause_button_size = (75, TOP_UI_LAYER_HEIGHT-5)
     button_color = (255, 255, 255)  # White color
     pause_button_position = (SCREEN_WIDTH - 160, 3)
 
@@ -1050,9 +1051,9 @@ def main():
                 pygame.draw.circle(screen, (255, 0, 0), game_state_manager.touch_position, 5)  # Draw a small red circle at the center position
 
             # Menu Design
-            screen.blit(IMAGES['available_prey_layer'], (0, 0))
-            available_prey_text = FONTS['ocean_font_16'].render("Available Prey:", True, (255, 255, 255))
-            text_rect = available_prey_text.get_rect(topleft=(10, 5))
+            screen.blit(IMAGES['top_ui_layer'], (0, 0))
+            available_prey_text = FONTS['ocean_font_22'].render("Available Prey:", True, (255, 255, 255))
+            text_rect = available_prey_text.get_rect(topleft=(10, TOP_UI_LAYER_HEIGHT/2-10))
             screen.blit(available_prey_text, text_rect)
             
                         
@@ -1074,7 +1075,7 @@ def main():
             
             # Starting position for the first icon
             icon_x = text_rect.right + 10  # 10 is a buffer; adjust as needed
-            base_icon_y = 10  # Base Y position for icons
+            base_icon_y = TOP_UI_LAYER_HEIGHT/2-3  # Base Y position for icons
         
             # Blit each icon with a buffer space in between
             icon_buffer = 10  # Space between icons
@@ -1112,8 +1113,8 @@ def main():
 
 
             # Font On Top of Playing Screen
-            score_text = FONTS['ocean_font_16'].render("Score: " + str(game_state_manager.score), 1, (255, 255, 255))
-            screen.blit(score_text, ((SCREEN_WIDTH/2)-32, 5))
+            score_text = FONTS['ocean_font_22'].render("Score: " + str(game_state_manager.score), 1, (255, 255, 255))
+            screen.blit(score_text, ((SCREEN_WIDTH/2)-50, TOP_UI_LAYER_HEIGHT/2-10))
             game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16'])
             game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16'])
             screen_width_percentage = 0.68  # 75% of screen width
