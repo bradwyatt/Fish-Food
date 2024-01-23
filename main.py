@@ -181,7 +181,7 @@ def load_all_assets():
 def draw_text_button(screen, text, font, color, rect):
     text_surf = font.render(text, True, color)
     text_rect = text_surf.get_rect(center=rect.center)
-    pygame.draw.rect(screen, (0, 0, 0), rect)  # Draw button rectangle
+    pygame.draw.rect(screen, (255, 127, 80), rect)  # Draw button rectangle
     screen.blit(text_surf, text_rect)
     return rect.collidepoint(pygame.mouse.get_pos())
 
@@ -343,7 +343,7 @@ class GameState:
         self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
         self.game_over_timer = 0
         # Define button rectangles
-        self.start_button_rect = pygame.Rect(400, 340, 200, 50)
+        self.start_button_rect = pygame.Rect(400, 305, 200, 125)
         self.touch_position = None  # Position where the user touches the screen
         self.joystick_visible = False  # Whether the joystick is currently visible
         self.info_button_play_rect = pygame.Rect(SCREEN_WIDTH - 80, 3, 75, TOP_UI_LAYER_HEIGHT-5)  # Adjust position and size as needed
