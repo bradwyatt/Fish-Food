@@ -1119,10 +1119,10 @@ def main():
             game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16'])
             screen_width_percentage = 0.68  # 75% of screen width
             x_position_powerup_timer = SCREEN_WIDTH * screen_width_percentage
-            screen.blit(game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16']), (x_position_powerup_timer, 5))
+            screen.blit(game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16']), (x_position_powerup_timer, TOP_UI_LAYER_HEIGHT/2-7))
             screen_width_percentage = 0.56  # 60% of screen width
             x_position_speed_timer = SCREEN_WIDTH * screen_width_percentage
-            screen.blit(game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16']), (x_position_speed_timer, 5))
+            screen.blit(game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16']), (x_position_speed_timer, TOP_UI_LAYER_HEIGHT/2-7))
             
             ##################
             # Sound Checks
