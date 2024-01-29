@@ -1,10 +1,10 @@
 # FishFood Game
 
-Welcome to FishFood, an exciting underwater adventure game where you navigate the depths of the ocean as a fish.
+Welcome to FishFood, a thrilling arcade-style game where your objective is to survive, grow, and score high in an underwater world.
 
 ## Game Description
 
-In FishFood, you play as a fish striving to survive in a dynamic underwater world. Your goal is to eat smaller fish to gain points and grow in size, while avoiding larger predators.
+In FishFood, you are a small fish navigating the perils of a vast ocean. Your aim is to eat smaller fish to score points and grow, while strategically avoiding larger predators that threaten your survival.
 
 ### Key Features:
 
@@ -59,7 +59,7 @@ FishFood is easily accessible online! Just follow these simple steps to start pl
 If you instead want to run FishFood on your local machine, follow these steps:
 
 #### Prerequisites
-Ensure you have Python installed on your PC. FishFood is compatible with Python [specify versions, e.g., 3.7 and above]. You can download Python from [python.org](https://www.python.org/downloads/).
+Ensure you have Python installed on your PC. FishFood is compatible with Python 3.12.1. You can download Python from [python.org](https://www.python.org/downloads/).
 
 #### Clone the Repository
 Clone the FishFood repository from GitHub to your local machine:
@@ -100,4 +100,4 @@ Your ideas, skills, and enthusiasm are all greatly appreciated, and I look forwa
 
 ---
 
-Enjoy playing FishFood and dive into the underwater adventure!
+Get ready to dive into the competitive world of FishFood!
