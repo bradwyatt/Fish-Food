@@ -47,7 +47,42 @@ In FishFood, you play as a fish striving to survive in a dynamic underwater worl
 
 ## Installation and Running the Game
 
-Provide instructions here on how to install and run the game, if applicable.
+### Playing Online on itch.io
+
+FishFood is easily accessible online! Just follow these simple steps to start playing:
+
+1. Visit the game's page on itch.io: [FishFood on itch.io](https://bradwyatt.itch.io/fishfood)
+2. Wait for the page and the application to fully load. Then, follow the provided instructions to start playing the game.
+
+### Running Locally on Your PC
+
+If you instead want to run FishFood on your local machine, follow these steps:
+
+#### Prerequisites
+Ensure you have Python installed on your PC. FishFood is compatible with Python [specify versions, e.g., 3.7 and above]. You can download Python from [python.org](https://www.python.org/downloads/).
+
+#### Clone the Repository
+Clone the FishFood repository from GitHub to your local machine:
+```git clone https://github.com/bradwyatt/FishFood.git```
+
+#### Install Dependencies
+Navigate to the cloned repository directory and install the required dependencies:
+```
+cd FishFood
+pip install -r requirements.txt
+```
+This will install all the necessary Python packages listed in `requirements.txt`.
+
+#### Run the Game
+Finally, run the game using Python:
+```
+python FishFood.py
+```
+
+Replace `FishFood.py` with the actual name of the main game script.
+
+Now you're all set to enjoy FishFood on your PC!
+
 
 ## Collaboration and Contributions
 
