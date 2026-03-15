@@ -185,6 +185,42 @@ def draw_text_button(screen, text, font, color, rect):
     screen.blit(text_surf, text_rect)
     return rect.collidepoint(pygame.mouse.get_pos())
 
+def draw_hud_button(screen, rect, label, font, hovered=False, active=False, accent="blue"):
+    shadow_rect = rect.move(0, 2)
+    shadow_color = (3, 16, 24)
+    if accent == "coral":
+        base_color = (196, 103, 77) if not hovered else (225, 125, 96)
+        if active:
+            base_color = (206, 137, 60)
+        border_color = (255, 230, 194) if hovered else (255, 206, 166)
+    else:
+        base_color = (24, 95, 122) if not hovered else (36, 126, 157)
+        if active:
+            base_color = (19, 129, 102)
+        border_color = (168, 233, 241) if hovered else (120, 199, 214)
+    highlight_color = (255, 255, 255)
+
+    shadow_surface = pygame.Surface((shadow_rect.width, shadow_rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(shadow_surface, shadow_color, shadow_surface.get_rect(), border_radius=14)
+    screen.blit(shadow_surface, shadow_rect.topleft)
+
+    button_surface = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+    pygame.draw.rect(button_surface, base_color, button_surface.get_rect(), border_radius=14)
+    pygame.draw.rect(button_surface, border_color, button_surface.get_rect(), width=2, border_radius=14)
+
+    gloss_rect = pygame.Rect(4, 4, rect.width - 8, max(8, rect.height // 4))
+    gloss_surface = pygame.Surface((gloss_rect.width, gloss_rect.height), pygame.SRCALPHA)
+    gloss_surface.fill(base_color)
+    gloss_surface.set_alpha(18)
+    pygame.draw.rect(gloss_surface, highlight_color, gloss_surface.get_rect(), border_radius=10)
+    button_surface.blit(gloss_surface, gloss_rect.topleft)
+
+    text_color = (232, 249, 252)
+    text_surface = font.render(label, True, text_color)
+    text_rect = text_surface.get_rect(center=(rect.width // 2, rect.height // 2 - 1))
+    button_surface.blit(text_surface, text_rect)
+    screen.blit(button_surface, rect.topleft)
+
 def collide_rect_to_mask(sprite1, sprite2, mask_name='mask'):
     """
     Check for collision between sprite1's rect and a specified mask of sprite2.
@@ -343,10 +379,10 @@ class GameState:
         self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
         self.game_over_timer = 0
         # Define button rectangles
-        self.start_button_rect = pygame.Rect(400, 305, 200, 125)
+        self.start_button_rect = pygame.Rect(390, 300, 230, 96)
         self.touch_position = None  # Position where the user touches the screen
         self.joystick_visible = False  # Whether the joystick is currently visible
-        self.info_button_play_rect = pygame.Rect(SCREEN_WIDTH - 80, 3, 75, TOP_UI_LAYER_HEIGHT-5)  # Adjust position and size as needed
+        self.info_button_play_rect = pygame.Rect(SCREEN_WIDTH - 96, 7, 88, TOP_UI_LAYER_HEIGHT - 14)
 
 
     def initialize_entities(self):
@@ -677,12 +713,15 @@ class GameState:
             # Fallback to a black screen if no image is provided
             screen.fill((0, 0, 0))
 
-        # Draw only the "Click to Start" button
-        if draw_text_button(screen, "Click to Start", pygame.font.SysFont(None, 36), (255, 255, 255), self.start_button_rect):
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.start_button_rect.collidepoint(event.pos):
-                        self.change_state(GameState.INFO_SCREEN)
+        mouse_position = pygame.mouse.get_pos()
+        draw_hud_button(
+            screen,
+            self.start_button_rect,
+            "Click to Start",
+            FONTS['ocean_font_22'],
+            hovered=self.start_button_rect.collidepoint(mouse_position),
+            accent="coral"
+        )
 
     def show_info_screen(self, screen):
         if self.info_screen_bg:
@@ -898,9 +937,8 @@ def draw_mask(surface, mask, x, y, color=(255, 0, 0)):
 # Main game loop
 def main():
     # Define Pause and Info Button Properties
-    pause_button_size = (75, TOP_UI_LAYER_HEIGHT-5)
-    button_color = (255, 255, 255)  # White color
-    pause_button_position = (SCREEN_WIDTH - 160, 3)
+    pause_button_size = (88, TOP_UI_LAYER_HEIGHT - 14)
+    pause_button_position = (SCREEN_WIDTH - 190, 7)
 
     pause_button_rect = pygame.Rect(pause_button_position, pause_button_size)
 
@@ -1057,20 +1095,27 @@ def main():
             screen.blit(available_prey_text, text_rect)
             
                         
+            mouse_position = pygame.mouse.get_pos()
+
             # Draw Pause Button
             pause_or_resume_text = "Resume" if game_state_manager.is_paused else "Pause"
-            pause_text_surface = pygame.font.SysFont('Arial', 16).render(pause_or_resume_text, True, (0, 0, 0))
-            pause_text_x = pause_button_rect.x + (pause_button_rect.width - pause_text_surface.get_width()) // 2
-            pause_text_y = pause_button_rect.y + (pause_button_rect.height - pause_text_surface.get_height()) // 2
-            pygame.draw.rect(screen, button_color, pause_button_rect)
-            screen.blit(pause_text_surface, (pause_text_x, pause_text_y))
+            draw_hud_button(
+                screen,
+                pause_button_rect,
+                pause_or_resume_text,
+                FONTS['ocean_font_16'],
+                hovered=pause_button_rect.collidepoint(mouse_position),
+                active=game_state_manager.is_paused
+            )
             
             # Draw Info Button (only in play screen)
-            info_text_surface = pygame.font.SysFont('Arial', 16).render("Info", True, (0, 0, 0))
-            info_text_x = game_state_manager.info_button_play_rect.x + (game_state_manager.info_button_play_rect.width - info_text_surface.get_width()) // 2
-            info_text_y = game_state_manager.info_button_play_rect.y + (game_state_manager.info_button_play_rect.height - info_text_surface.get_height()) // 2
-            pygame.draw.rect(screen, button_color, game_state_manager.info_button_play_rect)
-            screen.blit(info_text_surface, (info_text_x, info_text_y))
+            draw_hud_button(
+                screen,
+                game_state_manager.info_button_play_rect,
+                "Info",
+                FONTS['ocean_font_16'],
+                hovered=game_state_manager.info_button_play_rect.collidepoint(mouse_position)
+            )
 
             
             # Starting position for the first icon

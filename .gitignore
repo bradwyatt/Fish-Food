@@ -59,3 +59,4 @@ Test/
 __pycache__/
 high_score.txt
 Archive/
+/.venv

@@ -59,16 +59,18 @@ FishFood is easily accessible online! Just follow these simple steps to start pl
 If you instead want to run FishFood on your local machine, follow these steps:
 
 #### Prerequisites
-Ensure you have Python installed on your PC. FishFood is compatible with Python 3.12.1. You can download Python from [python.org](https://www.python.org/downloads/).
+Ensure you have Python installed on your PC. FishFood has been tested with Python 3.11+ and should also work on Python 3.12. You can download Python from [python.org](https://www.python.org/downloads/).
 
 #### Clone the Repository
 Clone the FishFood repository from GitHub to your local machine:
 ```git clone https://github.com/bradwyatt/FishFood.git```
 
 #### Install Dependencies
-Navigate to the cloned repository directory and install the required dependencies:
+Navigate to the cloned repository directory, create a virtual environment, and install the required dependencies:
 ```
 cd FishFood
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 This will install all the necessary Python packages listed in `requirements.txt`.
@@ -76,10 +78,8 @@ This will install all the necessary Python packages listed in `requirements.txt`
 #### Run the Game
 Finally, run the game using Python:
 ```
-python FishFood.py
+python main.py
 ```
-
-Replace `FishFood.py` with the actual name of the main game script.
 
 Now you're all set to enjoy FishFood on your PC!
 
