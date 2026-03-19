@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fishfood"
+version = "0.1.0"
+description = "Fish Food arcade game built with pygame and pygbag."
+readme = {text = "Fish Food is a pygame project packaged for the web with pygbag.", content-type = "text/plain"}
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "pygame-ce>=2.5,<3",
+  "pygbag==0.9.3",
+]
+
+[tool.setuptools]
+py-modules = [
+  "bright_blue_fish",
+  "green_fish",
+  "jellyfish",
+  "main",
+  "player",
+  "rainbow_fish",
+  "red_fish",
+  "seahorse",
+  "shark",
+  "silver_fish",
+  "snake",
+  "star_powerup",
+  "utils",
+]

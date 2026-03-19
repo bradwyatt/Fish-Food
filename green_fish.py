@@ -12,6 +12,7 @@ class GreenFish(pygame.sprite.Sprite):
     BIG_FISH_SCORE_THRESHOLD = 40
     CHANGE_DIR_RANGE = (300, 400)
     TURN_TIME_MS = 50  # Duration in milliseconds for the turning animation
+    FADE_IN_DELAY_MS = 100
     PLAYER_SCORE_VALUE = 2
 
 
@@ -28,6 +29,7 @@ class GreenFish(pygame.sprite.Sprite):
         self.big_green_fish_score = 0
         self.is_big = False
         self.stop_timer = 0  # Timer for turning animation
+        self.fade_in_start_time = 0
 
         allsprites.add(self)
         
@@ -64,6 +66,9 @@ class GreenFish(pygame.sprite.Sprite):
             self.change_dir_timer = 0
             
         # Fade in logic
+        if not self.fading_in and current_time >= self.fade_in_start_time:
+            self.fading_in = True
+
         if self.fading_in:
             self.visible = True  # Make sprite visible when fade-in starts
             if self.alpha < self.max_alpha:
@@ -77,12 +82,12 @@ class GreenFish(pygame.sprite.Sprite):
             
     def init_fade_in(self):
         self.alpha = 0
-        self.fading_in = True
+        self.fading_in = False
         self.max_alpha = 255
         self.fade_rate = 2
         self.alpha_surface = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
         self.alpha_surface.blit(self.image, (0, 0))
-        pygame.time.set_timer(pygame.USEREVENT + 1, 100)  # Delay in milliseconds
+        self.fade_in_start_time = pygame.time.get_ticks() + self.FADE_IN_DELAY_MS
 
 
     def update_image(self):
@@ -150,13 +155,9 @@ class GreenFish(pygame.sprite.Sprite):
         self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
                              random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING))
 
-        # Initialize the fade-in process
-        self.fading_in = True
-        
-    def handle_user_event(self, event):
-        if event.type == pygame.USEREVENT + 1:
-            pygame.time.set_timer(pygame.USEREVENT + 1, 0)  # Stop the timer
-            self.fading_in = True  # Start the fade-in process
+        # Initialize the fade-in process after a brief delay
+        self.fading_in = False
+        self.fade_in_start_time = pygame.time.get_ticks() + self.FADE_IN_DELAY_MS
 
 
     def collide_with_player(self):

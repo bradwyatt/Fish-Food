@@ -10,6 +10,19 @@ IMAGES = {}
 SOUNDS = {}
 FONTS = {}
 
+
+class SilentSound:
+    """No-op sound used when an asset can't be decoded in the current runtime."""
+
+    def play(self, *args, **kwargs):
+        return None
+
+    def stop(self):
+        return None
+
+    def set_volume(self, *args, **kwargs):
+        return None
+
 def load_image(file, name, alpha=False, global_alpha=None, colorkey=None):
     """
     Loads an image, prepares it for play, and stores it in the IMAGES dictionary.
@@ -56,9 +69,9 @@ def load_sound(file, name):
         # Store the sound in the global SOUNDS dictionary
         SOUNDS[name] = sound
     except pygame.error as message:
-        print('Cannot load sound:', file)
-        raise SystemExit(message)
-        
+        print('Cannot load sound:', file, message)
+        SOUNDS[name] = SilentSound()
+
 def load_font(name, size, is_system_font=False):
     """
     Loads a font and stores it in the FONTS dictionary.

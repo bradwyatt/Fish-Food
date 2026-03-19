@@ -5,6 +5,7 @@ import random
 import sys
 from pygame.constants import RLEACCEL
 import datetime
+import traceback
 from utils import IMAGES, SOUNDS, FONTS, load_sound, load_image, load_font, SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TOP_UI_LAYER_HEIGHT
 from shark import Shark
 from red_fish import RedFish
@@ -379,10 +380,10 @@ class GameState:
         self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
         self.game_over_timer = 0
         # Define button rectangles
-        self.start_button_rect = pygame.Rect(390, 300, 230, 96)
+        self.start_button_rect = pygame.Rect(400, 305, 200, 125)
         self.touch_position = None  # Position where the user touches the screen
         self.joystick_visible = False  # Whether the joystick is currently visible
-        self.info_button_play_rect = pygame.Rect(SCREEN_WIDTH - 96, 7, 88, TOP_UI_LAYER_HEIGHT - 14)
+        self.info_button_play_rect = pygame.Rect(SCREEN_WIDTH - 80, 3, 75, TOP_UI_LAYER_HEIGHT-5)  # Adjust position and size as needed
 
 
     def initialize_entities(self):
@@ -935,254 +936,242 @@ def draw_mask(surface, mask, x, y, color=(255, 0, 0)):
         surface.blit(mask_surface, (x, y))
 
 # Main game loop
-def main():
-    # Define Pause and Info Button Properties
-    pause_button_size = (88, TOP_UI_LAYER_HEIGHT - 14)
-    pause_button_position = (SCREEN_WIDTH - 190, 7)
+async def main():
+    try:
+        pause_button_size = (75, TOP_UI_LAYER_HEIGHT-5)
+        button_color = (255, 255, 255)
+        pause_button_position = (SCREEN_WIDTH - 160, 3)
+        pause_button_rect = pygame.Rect(pause_button_position, pause_button_size)
 
-    pause_button_rect = pygame.Rect(pause_button_position, pause_button_size)
+        (x_first, y_first) = (0, 0)
+        (x_second, y_second) = (0, -SCREEN_HEIGHT)
+        load_all_assets()
 
-    (x_first, y_first) = (0, 0)
-    (x_second, y_second) = (0, -SCREEN_HEIGHT)
-    load_all_assets()
+        running = True
+        joystick = Joystick(IMAGES, screen)
+        game_state_manager = GameState(IMAGES, IMAGES['start_menu_bg'], IMAGES['info_screen_bg'], joystick)
+        zoomed_surface = pygame.Surface((SCREEN_WIDTH // ZOOM_FACTOR, SCREEN_HEIGHT // ZOOM_FACTOR), pygame.SRCALPHA)
 
-    running = True
-    joystick = Joystick(IMAGES, screen)
-    game_state_manager = GameState(IMAGES, IMAGES['start_menu_bg'], IMAGES['info_screen_bg'], joystick)
-    
-    # Ensure the zoomed surface is large enough to handle the maximum offset
-    
-    zoomed_surface = pygame.Surface((SCREEN_WIDTH // ZOOM_FACTOR, SCREEN_HEIGHT // ZOOM_FACTOR), pygame.SRCALPHA)
+        world_width = SCREEN_WIDTH
+        world_height = SCREEN_HEIGHT
 
-    world_width = SCREEN_WIDTH
-    world_height = SCREEN_HEIGHT
+        while running:
+            clock.tick(FPS)
+            game_state_manager.handle_input(pause_button_rect)
+            screen.fill((0, 0, 0))
 
-    while running:
-        clock.tick(FPS)
-        game_state_manager.handle_input(pause_button_rect)
-        # Clear the screen (fill with a background color or image)
-        screen.fill((0, 0, 0))
-        if game_state_manager.current_state == GameState.INFO_SCREEN:
-            game_state_manager.show_info_screen(screen)
-        elif game_state_manager.current_state == GameState.START_SCREEN:
-            game_state_manager.show_start_screen(screen)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-        elif game_state_manager.current_state == GameState.GAME_OVER_SCREEN:
-            game_state_manager.show_game_over_screen(screen)
-        elif game_state_manager.current_state == GameState.PLAY_SCREEN:
+            if game_state_manager.current_state == GameState.INFO_SCREEN:
+                game_state_manager.show_info_screen(screen)
+            elif game_state_manager.current_state == GameState.START_SCREEN:
+                game_state_manager.show_start_screen(screen)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+            elif game_state_manager.current_state == GameState.GAME_OVER_SCREEN:
+                game_state_manager.show_game_over_screen(screen)
+            elif game_state_manager.current_state == GameState.PLAY_SCREEN:
+                y_first += 10
+                y_second += 10
 
+                if y_first >= SCREEN_HEIGHT:
+                    y_first = -SCREEN_HEIGHT
+                if y_second >= SCREEN_HEIGHT:
+                    y_second = -SCREEN_HEIGHT
 
-            
-            ##################
-            # Draw menus for in-game
-            ##################
-            # Water background movement
-            y_first += 10
-            y_second += 10
+                camera_x = max(
+                    0,
+                    min(
+                        game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * ZOOM_FACTOR),
+                        world_width - SCREEN_WIDTH // ZOOM_FACTOR,
+                    ),
+                )
+                camera_y = max(
+                    0,
+                    min(
+                        game_state_manager.player.rect.centery - SCREEN_HEIGHT // (2 * ZOOM_FACTOR),
+                        world_height - SCREEN_HEIGHT // ZOOM_FACTOR,
+                    ),
+                )
 
-            if y_first >= SCREEN_HEIGHT:
-                y_first = -SCREEN_HEIGHT
-            if y_second >= SCREEN_HEIGHT:
-                y_second = -SCREEN_HEIGHT
-            
-            # Calculate camera position with boundary limits
-            camera_x = max(0, min(game_state_manager.player.rect.centerx - SCREEN_WIDTH // (2 * ZOOM_FACTOR),
-                              world_width - SCREEN_WIDTH // ZOOM_FACTOR))
-            camera_y = max(0, min(game_state_manager.player.rect.centery - SCREEN_HEIGHT // (2 * ZOOM_FACTOR),
-                                  world_height - SCREEN_HEIGHT // ZOOM_FACTOR))
+                zoomed_surface.fill((0, 0, 0))
+                zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_first - camera_y))
+                zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_second - camera_y))
 
-            # Clear the zoomed surface
-            zoomed_surface.fill((0, 0, 0))
-    
-            # Draw the background on zoomed_surface
-            zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_first - camera_y))
-            zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_second - camera_y))
-            
-            # Draw the ground only if the camera is near the bottom of the world
-            if camera_y > world_height - SCREEN_HEIGHT - 100:
-                zoomed_surface.blit(IMAGES['ground'], (-camera_x, world_height - 100 - camera_y))
-                
-            # Update game state only if the game is not paused
-            if not game_state_manager.is_paused:
-                # Update RainbowFish with player's current state
-                game_state_manager.rainbow_fish.player_size_score = game_state_manager.player.size_score
-                game_state_manager.rainbow_fish.player_star_power = game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP
-                game_state_manager.rainbow_fish.player_position = game_state_manager.player.rect.center
-    
-                # Update all sprites
-                game_state_manager.allsprites.update()
-                game_state_manager.arrow_warning_sprites.update()
-                game_state_manager.update(zoomed_surface)
-    
-                # Decide chase or avoid behavior for the RainbowFish
-                if game_state_manager.rainbow_fish.is_active:
-                    game_state_manager.rainbow_fish.decide_chase_or_avoid(
-                        game_state_manager.player.size_score,
-                        game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP,
-                        game_state_manager.player.rect.center
+                if camera_y > world_height - SCREEN_HEIGHT - 100:
+                    zoomed_surface.blit(IMAGES['ground'], (-camera_x, world_height - 100 - camera_y))
+
+                if not game_state_manager.is_paused:
+                    game_state_manager.rainbow_fish.player_size_score = game_state_manager.player.size_score
+                    game_state_manager.rainbow_fish.player_star_power = (
+                        game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP
                     )
-    
-            # Adjust sprite positions and draw on zoomed_surface
-            for sprite in game_state_manager.allsprites:
-                original_position = (sprite.rect.x, sprite.rect.y)
-                sprite.rect.x -= camera_x
-                sprite.rect.y -= camera_y
-                zoomed_surface.blit(sprite.image, sprite.rect)
-                sprite.rect.x, sprite.rect.y = original_position
-            # Update and draw arrow warning sprites on zoomed_surface
-            for arrow_sprite in game_state_manager.arrow_warning_sprites:
-                arrow_sprite.update()
-                if arrow_sprite.visible:
-                    zoomed_surface.blit(arrow_sprite.image, (arrow_sprite.rect.x - camera_x, arrow_sprite.rect.y - camera_y))
-            
-            
-            #%% Debug
-            if DEBUG:
-                draw_mask(zoomed_surface, game_state_manager.player.body_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y, (63, 26, 186))
-                draw_mask(zoomed_surface, game_state_manager.player.face_mask, game_state_manager.player.rect.x - camera_x, game_state_manager.player.rect.y - camera_y)
-                draw_mask(zoomed_surface, game_state_manager.rainbow_fish.body_mask, game_state_manager.rainbow_fish.rect.x - camera_x, game_state_manager.rainbow_fish.rect.y - camera_y, (0, 128, 0))
-                draw_mask(zoomed_surface, game_state_manager.rainbow_fish.face_mask, game_state_manager.rainbow_fish.rect.x - camera_x, game_state_manager.rainbow_fish.rect.y - camera_y)
+                    game_state_manager.rainbow_fish.player_position = game_state_manager.player.rect.center
 
-                # for shark in game_state_manager.sharks:
-                #     draw_mask(zoomed_surface, shark.mask, shark.rect.x - camera_x, shark.rect.y - camera_y)
-                # draw_mask(zoomed_surface, 
-                #           game_state_manager.bright_blue_fish.mask, 
-                #           game_state_manager.bright_blue_fish.rect.x - camera_x, 
-                #           game_state_manager.bright_blue_fish.rect.y - camera_y)
-                # for green_fish in game_state_manager.green_fishes:
-                #     draw_mask(zoomed_surface, green_fish.body_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y, (0, 128, 0))
-                #     draw_mask(zoomed_surface, green_fish.face_mask, green_fish.rect.x - camera_x, green_fish.rect.y - camera_y)
+                    game_state_manager.allsprites.update()
+                    game_state_manager.arrow_warning_sprites.update()
+                    game_state_manager.update(zoomed_surface)
 
+                    if game_state_manager.rainbow_fish.is_active:
+                        game_state_manager.rainbow_fish.decide_chase_or_avoid(
+                            game_state_manager.player.size_score,
+                            game_state_manager.player.star_power == game_state_manager.player.INVINCIBLE_POWERUP,
+                            game_state_manager.player.rect.center,
+                        )
 
-            # Check if there is a score to blit
-            if game_state_manager.score_blit > 0:
-                # Calculate the relative position of the score text on the zoomed surface
-                relative_x = game_state_manager.dead_fish_position[0] - camera_x
-                relative_y = game_state_manager.dead_fish_position[1] - camera_y
-            
-                # Render the score text
-                SCORE_BLIT_TEXT = FONTS['ocean_font_16'].render("+" + str(game_state_manager.score_blit), True, (255, 255, 255))
-            
-                # Blit the score text at the adjusted position on the zoomed surface
-                zoomed_surface.blit(SCORE_BLIT_TEXT, (relative_x, relative_y))
-            
-                # Increment the disappear timer
-                game_state_manager.score_disappear_timer += 1
-            
-                # Reset the score blit and timer after a certain duration
-                if game_state_manager.score_disappear_timer > GameState.SCORE_BLIT_TICKS_TO_DISAPPEAR:
-                    game_state_manager.score_blit = 0
-                    game_state_manager.score_disappear_timer = 0
-    
-            # Scale the zoomed surface to fill the entire screen
-            scaled_zoomed_area = pygame.transform.scale(zoomed_surface, (SCREEN_WIDTH, SCREEN_HEIGHT))
+                for sprite in game_state_manager.allsprites:
+                    original_position = (sprite.rect.x, sprite.rect.y)
+                    sprite.rect.x -= camera_x
+                    sprite.rect.y -= camera_y
+                    zoomed_surface.blit(sprite.image, sprite.rect)
+                    sprite.rect.x, sprite.rect.y = original_position
 
-    
-            # Draw the scaled zoomed view to the main screen
-            screen.blit(scaled_zoomed_area, (0, 0))
-    
-            # Draw joystick and other UI elements on top
-            if game_state_manager.joystick_visible:
-                joystick.draw(game_state_manager.key_states, game_state_manager.touch_position)
-                pygame.draw.circle(screen, (255, 0, 0), game_state_manager.touch_position, 5)  # Draw a small red circle at the center position
+                for arrow_sprite in game_state_manager.arrow_warning_sprites:
+                    arrow_sprite.update()
+                    if arrow_sprite.visible:
+                        zoomed_surface.blit(
+                            arrow_sprite.image,
+                            (arrow_sprite.rect.x - camera_x, arrow_sprite.rect.y - camera_y),
+                        )
 
-            # Menu Design
-            screen.blit(IMAGES['top_ui_layer'], (0, 0))
-            available_prey_text = FONTS['ocean_font_22'].render("Available Prey:", True, (255, 255, 255))
-            text_rect = available_prey_text.get_rect(topleft=(10, TOP_UI_LAYER_HEIGHT/2-10))
-            screen.blit(available_prey_text, text_rect)
-            
-                        
-            mouse_position = pygame.mouse.get_pos()
+                if DEBUG:
+                    draw_mask(
+                        zoomed_surface,
+                        game_state_manager.player.body_mask,
+                        game_state_manager.player.rect.x - camera_x,
+                        game_state_manager.player.rect.y - camera_y,
+                        (63, 26, 186),
+                    )
+                    draw_mask(
+                        zoomed_surface,
+                        game_state_manager.player.face_mask,
+                        game_state_manager.player.rect.x - camera_x,
+                        game_state_manager.player.rect.y - camera_y,
+                    )
+                    draw_mask(
+                        zoomed_surface,
+                        game_state_manager.rainbow_fish.body_mask,
+                        game_state_manager.rainbow_fish.rect.x - camera_x,
+                        game_state_manager.rainbow_fish.rect.y - camera_y,
+                        (0, 128, 0),
+                    )
+                    draw_mask(
+                        zoomed_surface,
+                        game_state_manager.rainbow_fish.face_mask,
+                        game_state_manager.rainbow_fish.rect.x - camera_x,
+                        game_state_manager.rainbow_fish.rect.y - camera_y,
+                    )
 
-            # Draw Pause Button
-            pause_or_resume_text = "Resume" if game_state_manager.is_paused else "Pause"
-            draw_hud_button(
-                screen,
-                pause_button_rect,
-                pause_or_resume_text,
-                FONTS['ocean_font_16'],
-                hovered=pause_button_rect.collidepoint(mouse_position),
-                active=game_state_manager.is_paused
-            )
-            
-            # Draw Info Button (only in play screen)
-            draw_hud_button(
-                screen,
-                game_state_manager.info_button_play_rect,
-                "Info",
-                FONTS['ocean_font_16'],
-                hovered=game_state_manager.info_button_play_rect.collidepoint(mouse_position)
-            )
+                if game_state_manager.score_blit > 0:
+                    relative_x = game_state_manager.dead_fish_position[0] - camera_x
+                    relative_y = game_state_manager.dead_fish_position[1] - camera_y
+                    score_blit_text = FONTS['ocean_font_16'].render(
+                        "+" + str(game_state_manager.score_blit), True, (255, 255, 255)
+                    )
+                    zoomed_surface.blit(score_blit_text, (relative_x, relative_y))
+                    game_state_manager.score_disappear_timer += 1
 
-            
-            # Starting position for the first icon
-            icon_x = text_rect.right + 10  # 10 is a buffer; adjust as needed
-            base_icon_y = TOP_UI_LAYER_HEIGHT/2-3  # Base Y position for icons
-        
-            # Blit each icon with a buffer space in between
-            icon_buffer = 10  # Space between icons
-        
-            # Standard icons
-            standard_icons = ['spr_red_fish', 'spr_green_fish_left', 'spr_silver_fish']
-            max_height_standard = max(IMAGES[key].get_height() for key in standard_icons)
-        
-            for icon_key in standard_icons:
-                icon = IMAGES[icon_key]
-                # Center align standard icons based on their original size
-                icon_y = base_icon_y + (max_height_standard - icon.get_height()) // 2
-                screen.blit(icon, (icon_x, icon_y))
-                icon_x += icon.get_width() + icon_buffer
-        
-            # Scaled icons
-            scaled_icon_size = (24, 15)  # Adjust the size as needed
-            scaled_icons = []
-        
-            if game_state_manager.rainbow_fish.size_score <= game_state_manager.player.size_score:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish_left"], scaled_icon_size))
-        
-            if game_state_manager.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish_left"], scaled_icon_size))
-        
-            if game_state_manager.player.star_power == Player.SHARK_SHRINKER_POWERUP:
-                scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark_left"], scaled_icon_size))
-        
-            for icon in scaled_icons:
-                # Calculate the vertical offset for the scaled icon
-                vertical_offset = (max_height_standard - icon.get_height()) // 2
-                icon_y = base_icon_y + vertical_offset
-                screen.blit(icon, (icon_x, icon_y))
-                icon_x += icon.get_width() + icon_buffer
+                    if game_state_manager.score_disappear_timer > GameState.SCORE_BLIT_TICKS_TO_DISAPPEAR:
+                        game_state_manager.score_blit = 0
+                        game_state_manager.score_disappear_timer = 0
 
+                scaled_zoomed_area = pygame.transform.scale(zoomed_surface, (SCREEN_WIDTH, SCREEN_HEIGHT))
+                screen.blit(scaled_zoomed_area, (0, 0))
 
-            # Font On Top of Playing Screen
-            score_text = FONTS['ocean_font_22'].render("Score: " + str(game_state_manager.score), 1, (255, 255, 255))
-            screen.blit(score_text, ((SCREEN_WIDTH/2)-50, TOP_UI_LAYER_HEIGHT/2-10))
-            game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16'])
-            game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16'])
-            screen_width_percentage = 0.68  # 75% of screen width
-            x_position_powerup_timer = SCREEN_WIDTH * screen_width_percentage
-            screen.blit(game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16']), (x_position_powerup_timer, TOP_UI_LAYER_HEIGHT/2-7))
-            screen_width_percentage = 0.56  # 60% of screen width
-            x_position_speed_timer = SCREEN_WIDTH * screen_width_percentage
-            screen.blit(game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16']), (x_position_speed_timer, TOP_UI_LAYER_HEIGHT/2-7))
-            
-            ##################
-            # Sound Checks
-            ##################
-            if game_state_manager.player.star_power == Player.NO_STAR_POWER: # Powerup is over on the player
-                game_state_manager.one_powerup_sound -= 1
-                SOUNDS["snd_powerup_timer"].stop()
-            if game_state_manager.player.speed_time_left < 0:
-                game_state_manager.one_powerup_sound -= 1
-                SOUNDS["snd_powerup_timer"].stop()
+                if game_state_manager.joystick_visible:
+                    joystick.draw(game_state_manager.key_states, game_state_manager.touch_position)
+                    pygame.draw.circle(screen, (255, 0, 0), game_state_manager.touch_position, 5)
 
-        # Update the display
-        pygame.display.update()
+                screen.blit(IMAGES['top_ui_layer'], (0, 0))
+                available_prey_text = FONTS['ocean_font_22'].render("Available Prey:", True, (255, 255, 255))
+                text_rect = available_prey_text.get_rect(topleft=(10, TOP_UI_LAYER_HEIGHT/2-10))
+                screen.blit(available_prey_text, text_rect)
 
-    pygame.quit()
+                mouse_position = pygame.mouse.get_pos()
+                pause_or_resume_text = "Resume" if game_state_manager.is_paused else "Pause"
+                draw_hud_button(
+                    screen,
+                    pause_button_rect,
+                    pause_or_resume_text,
+                    FONTS['ocean_font_16'],
+                    hovered=pause_button_rect.collidepoint(mouse_position),
+                    active=game_state_manager.is_paused,
+                )
+
+                draw_hud_button(
+                    screen,
+                    game_state_manager.info_button_play_rect,
+                    "Info",
+                    FONTS['ocean_font_16'],
+                    hovered=game_state_manager.info_button_play_rect.collidepoint(mouse_position),
+                )
+
+                icon_x = text_rect.right + 10
+                base_icon_y = TOP_UI_LAYER_HEIGHT/2-3
+                icon_buffer = 10
+                standard_icons = ['spr_red_fish', 'spr_green_fish_left', 'spr_silver_fish']
+                max_height_standard = max(IMAGES[key].get_height() for key in standard_icons)
+
+                for icon_key in standard_icons:
+                    icon = IMAGES[icon_key]
+                    icon_y = base_icon_y + (max_height_standard - icon.get_height()) // 2
+                    screen.blit(icon, (icon_x, icon_y))
+                    icon_x += icon.get_width() + icon_buffer
+
+                scaled_icon_size = (24, 15)
+                scaled_icons = []
+
+                if game_state_manager.rainbow_fish.size_score <= game_state_manager.player.size_score:
+                    scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish_left"], scaled_icon_size))
+                if game_state_manager.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH:
+                    scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish_left"], scaled_icon_size))
+                if game_state_manager.player.star_power == Player.SHARK_SHRINKER_POWERUP:
+                    scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark_left"], scaled_icon_size))
+
+                for icon in scaled_icons:
+                    vertical_offset = (max_height_standard - icon.get_height()) // 2
+                    icon_y = base_icon_y + vertical_offset
+                    screen.blit(icon, (icon_x, icon_y))
+                    icon_x += icon.get_width() + icon_buffer
+
+                score_text = FONTS['ocean_font_22'].render("Score: " + str(game_state_manager.score), 1, (255, 255, 255))
+                screen.blit(score_text, ((SCREEN_WIDTH/2)-50, TOP_UI_LAYER_HEIGHT/2-10))
+                game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16'])
+                game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16'])
+                x_position_powerup_timer = SCREEN_WIDTH * 0.68
+                screen.blit(
+                    game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16']),
+                    (x_position_powerup_timer, TOP_UI_LAYER_HEIGHT/2-7),
+                )
+                x_position_speed_timer = SCREEN_WIDTH * 0.56
+                screen.blit(
+                    game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16']),
+                    (x_position_speed_timer, TOP_UI_LAYER_HEIGHT/2-7),
+                )
+
+                if game_state_manager.player.star_power == Player.NO_STAR_POWER:
+                    game_state_manager.one_powerup_sound -= 1
+                    SOUNDS["snd_powerup_timer"].stop()
+                if game_state_manager.player.speed_time_left < 0:
+                    game_state_manager.one_powerup_sound -= 1
+                    SOUNDS["snd_powerup_timer"].stop()
+
+            pygame.display.update()
+            await asyncio.sleep(0)
+    except Exception:
+        traceback.print_exc()
+        error_lines = traceback.format_exc().splitlines()[-8:]
+        error_font = pygame.font.SysFont("Courier", 18)
+        while True:
+            screen.fill((20, 0, 0))
+            y = 20
+            for line in ["Runtime error:"] + error_lines:
+                text = error_font.render(line[:110], True, (255, 255, 255))
+                screen.blit(text, (20, y))
+                y += 24
+            pygame.display.update()
+            await asyncio.sleep(0)
+    finally:
+        pygame.quit()
 
 # Run the game
-main()
+asyncio.run(main())
