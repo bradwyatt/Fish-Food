@@ -17,6 +17,7 @@ dependencies = [
 py-modules = [
   "bright_blue_fish",
   "green_fish",
+  "high_score",
   "jellyfish",
   "main",
   "player",

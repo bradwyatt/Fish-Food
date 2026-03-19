@@ -8,6 +8,7 @@ import datetime
 import traceback
 from utils import IMAGES, SOUNDS, FONTS, load_sound, load_image, load_font, SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TOP_UI_LAYER_HEIGHT
 from runtime import ITCH_MODE
+from high_score import HighScoreStore
 from shark import Shark
 from red_fish import RedFish
 from green_fish import GreenFish
@@ -358,11 +359,15 @@ class GameState:
     SCORE_BLIT_TICKS_TO_DISAPPEAR = 30
     TIMER_UNTIL_GAME_OVER_SCREEN = 100
 
-    def __init__(self, images, start_screen_bg=None, info_screen_bg=None, joystick=None):
+    def __init__(self, images, start_screen_bg=None, info_screen_bg=None, joystick=None, high_score_store=None):
         self.allsprites = pygame.sprite.Group()
         self.arrow_warning_sprites = pygame.sprite.Group()
         self.score = 0
         self.score_blit = 0
+        self.high_score_store = high_score_store or HighScoreStore(enabled=not ITCH_MODE)
+        self.high_score_enabled = self.high_score_store.enabled
+        self.high_score = self.high_score_store.load() if self.high_score_enabled else 0
+        self.is_new_high_score = False
         self.key_states = {
             pygame.K_UP: False,
             pygame.K_LEFT: False,
@@ -380,6 +385,7 @@ class GameState:
         self.dead_fish_position = ()
         self.last_bbf_activation_score = 0  # Initialize last activation score for Bright Blue Fish
         self.game_over_timer = 0
+        self.game_over_processed = False
         # Define button rectangles
         self.start_button_rect = pygame.Rect(400, 305, 200, 125)
         self.touch_position = None  # Position where the user touches the screen
@@ -445,9 +451,22 @@ class GameState:
         }
         self.last_bbf_activation_score = 0
         self.game_over_timer = 0
+        self.game_over_processed = False
+        self.is_new_high_score = False
     
     def change_state(self, new_state):
         self.current_state = new_state
+
+    def finalize_high_score(self):
+        if not self.high_score_enabled:
+            return False
+
+        if self.score > self.high_score:
+            self.high_score = self.score
+            self.high_score_store.save(self.high_score)
+            return True
+
+        return False
 
 
     def activate_game_objects(self, zoomed_surface):
@@ -725,6 +744,13 @@ class GameState:
             accent="coral"
         )
 
+        if self.high_score_enabled:
+            high_score_text = FONTS['ocean_font_22'].render(
+                "High Score: " + str(self.high_score), True, (255, 255, 255)
+            )
+            high_score_rect = high_score_text.get_rect(center=((SCREEN_WIDTH // 2) - 14, 250))
+            screen.blit(high_score_text, high_score_rect)
+
     def show_info_screen(self, screen):
         if self.info_screen_bg:
             screen.blit(self.info_screen_bg, (0, 0))
@@ -733,21 +759,39 @@ class GameState:
 
     def show_game_over_screen(self, screen):
         screen.fill((0, 0, 0))
-        font = pygame.font.SysFont(None, 36)
-        game_over_text = font.render("Game Over. Click to restart", True, (255, 255, 255))
-        points_on_game_over_screen = font.render("Points: " + str(self.score), True, (255, 255, 255))
+        title_text = FONTS['ocean_font_48'].render("Game Over", True, (255, 255, 255))
+        restart_text = FONTS['ocean_font_22'].render("Click to restart", True, (255, 255, 255))
+        points_on_game_over_screen = FONTS['ocean_font_22'].render("Points: " + str(self.score), True, (255, 255, 255))
         # Center the text
-        text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-        points_on_game_over_screen_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, (SCREEN_HEIGHT // 2)+30))
-        screen.blit(game_over_text, text_rect)
+        text_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30))
+        restart_text_rect = restart_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
+        points_on_game_over_screen_rect = points_on_game_over_screen.get_rect(
+            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
+        )
+        screen.blit(title_text, text_rect)
+        screen.blit(restart_text, restart_text_rect)
         screen.blit(points_on_game_over_screen, points_on_game_over_screen_rect)
+
+        if self.high_score_enabled:
+            high_score_text = FONTS['ocean_font_22'].render(
+                "High Score: " + str(self.high_score), True, (255, 255, 255)
+            )
+            high_score_rect = high_score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 90))
+            screen.blit(high_score_text, high_score_rect)
+
+            if self.is_new_high_score:
+                new_record_text = FONTS['ocean_font_22'].render("New High Score!", True, (255, 214, 140))
+                new_record_rect = new_record_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 130))
+                screen.blit(new_record_text, new_record_rect)
 
 
     def update(self, zoomed_surface):
         if self.player.game_over == True:
             # Fades player when predator eats it
             self.game_over_timer += 1
-            if self.game_over_timer >= self.TIMER_UNTIL_GAME_OVER_SCREEN:
+            if self.game_over_timer >= self.TIMER_UNTIL_GAME_OVER_SCREEN and not self.game_over_processed:
+                self.is_new_high_score = self.finalize_high_score()
+                self.game_over_processed = True
                 self.current_state = self.GAME_OVER_SCREEN
         elif self.current_state == GameState.PLAY_SCREEN and not self.is_paused:
             self.handle_collisions()
@@ -950,7 +994,14 @@ async def main():
 
         running = True
         joystick = Joystick(IMAGES, screen)
-        game_state_manager = GameState(IMAGES, IMAGES['start_menu_bg'], IMAGES['info_screen_bg'], joystick)
+        high_score_store = HighScoreStore(enabled=not ITCH_MODE)
+        game_state_manager = GameState(
+            IMAGES,
+            IMAGES['start_menu_bg'],
+            IMAGES['info_screen_bg'],
+            joystick,
+            high_score_store,
+        )
         zoomed_surface = pygame.Surface((SCREEN_WIDTH // ZOOM_FACTOR, SCREEN_HEIGHT // ZOOM_FACTOR), pygame.SRCALPHA)
 
         world_width = SCREEN_WIDTH

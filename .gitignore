@@ -161,6 +161,8 @@ cython_debug/
 
 fishfood/Archive
 .DS_Store
-clickball/.DS_Store
 fishfood/.DS_Store
 fishfood.apk
+README.local.md
+.fishfood_save.dat
+/.history
