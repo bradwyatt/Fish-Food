@@ -7,6 +7,7 @@ from pygame.constants import RLEACCEL
 import datetime
 import traceback
 from utils import IMAGES, SOUNDS, FONTS, load_sound, load_image, load_font, SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TOP_UI_LAYER_HEIGHT
+from runtime import ITCH_MODE
 from shark import Shark
 from red_fish import RedFish
 from green_fish import GreenFish
@@ -641,8 +642,7 @@ class GameState:
     def handle_input(self, pause_button_rect):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                return False
     
             if event.type == pygame.KEYDOWN:
                 if event.key in self.key_states:
@@ -690,6 +690,7 @@ class GameState:
                 if event.type == pygame.MOUSEBUTTONUP:
                     # Call the joystick's handle_mouse_up method
                     self.joystick.handle_mouse_up()
+        return True
                         
     def map_direction_to_key(self, direction):
         mapping = {
@@ -957,7 +958,9 @@ async def main():
 
         while running:
             clock.tick(FPS)
-            game_state_manager.handle_input(pause_button_rect)
+            running = game_state_manager.handle_input(pause_button_rect)
+            if not running:
+                break
             screen.fill((0, 0, 0))
 
             if game_state_manager.current_state == GameState.INFO_SCREEN:
@@ -966,7 +969,8 @@ async def main():
                 game_state_manager.show_start_screen(screen)
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        pygame.quit()
+                        running = False
+                        break
             elif game_state_manager.current_state == GameState.GAME_OVER_SCREEN:
                 game_state_manager.show_game_over_screen(screen)
             elif game_state_manager.current_state == GameState.PLAY_SCREEN:
@@ -1172,6 +1176,8 @@ async def main():
             await asyncio.sleep(0)
     finally:
         pygame.quit()
+        if not ITCH_MODE:
+            sys.exit()
 
 # Run the game
 asyncio.run(main())
