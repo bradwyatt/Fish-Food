@@ -11,6 +11,32 @@ SOUNDS = {}
 FONTS = {}
 
 
+def resolve_asset_path(file, preferred_extensions=None):
+    """
+    Resolve an asset path by trying a preferred extension order when the exact file
+    is not available. This keeps call sites stable across web/native-friendly formats.
+    """
+    if os.path.exists(file):
+        return file
+
+    preferred_extensions = preferred_extensions or []
+    root, ext = os.path.splitext(file)
+
+    if ext:
+        candidate_extensions = list(preferred_extensions)
+        if ext not in candidate_extensions:
+            candidate_extensions.append(ext)
+    else:
+        candidate_extensions = list(preferred_extensions)
+
+    for candidate_ext in candidate_extensions:
+        candidate = f"{root}{candidate_ext}"
+        if os.path.exists(candidate):
+            return candidate
+
+    return file
+
+
 class SilentSound:
     """No-op sound used when an asset can't be decoded in the current runtime."""
 
@@ -65,6 +91,7 @@ def load_sound(file, name):
     :param name: Name/key to store the sound in the SOUNDS dictionary.
     """
     try:
+        file = resolve_asset_path(file, preferred_extensions=[".ogg", ".wav", ".mp3"])
         sound = pygame.mixer.Sound(file)
         # Store the sound in the global SOUNDS dictionary
         SOUNDS[name] = sound

@@ -6,7 +6,7 @@ import sys
 from pygame.constants import RLEACCEL
 import datetime
 import traceback
-from utils import IMAGES, SOUNDS, FONTS, load_sound, load_image, load_font, SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TOP_UI_LAYER_HEIGHT
+from utils import IMAGES, SOUNDS, FONTS, load_sound, load_image, load_font, resolve_asset_path, SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TOP_UI_LAYER_HEIGHT
 from runtime import ITCH_MODE
 from high_score import HighScoreStore
 from shark import Shark
@@ -163,23 +163,26 @@ def load_all_assets():
     start_menu_bg = load_image("sprites/start_menu.png", "start_menu_bg", False)
     load_image("sprites/info_screen.jpg", "info_screen_bg", False)
     pygame.mouse.set_visible(True)
-    load_sound("sounds/snd_eat.wav", "snd_eat")
+    load_sound("sounds/snd_eat.ogg", "snd_eat")
     SOUNDS["snd_eat"].set_volume(.2)
-    load_sound("sounds/eat_shark.wav", "snd_eat_shark")
+    load_sound("sounds/eat_shark.ogg", "snd_eat_shark")
     SOUNDS["snd_eat_shark"].set_volume(.2)
-    load_sound("sounds/size_down.wav", "snd_size_down")
-    load_sound("sounds/player_die.wav", "snd_player_die")
+    load_sound("sounds/size_down.ogg", "snd_size_down")
+    load_sound("sounds/player_die.ogg", "snd_player_die")
     SOUNDS["snd_player_die"].set_volume(.3)
-    load_sound("sounds/powerup_timer.wav", "snd_powerup_timer")
+    load_sound("sounds/powerup_timer.ogg", "snd_powerup_timer")
     SOUNDS["snd_powerup_timer"].set_volume(.3)
-    load_sound("sounds/siren.wav", "snd_siren")
+    load_sound("sounds/siren.ogg", "snd_siren")
     SOUNDS["snd_siren"].set_volume(.05)
-    load_sound("sounds/shark_incoming.wav", "snd_shark_incoming")
+    load_sound("sounds/shark_incoming.ogg", "snd_shark_incoming")
     SOUNDS["snd_shark_incoming"].set_volume(.03)
     # Music loop
-    #pygame.mixer.music.load("sounds/game_music.mp3")
-    #pygame.mixer.music.set_volume(.1)
-    #pygame.mixer.music.play(-1)
+    try:
+        pygame.mixer.music.load(resolve_asset_path("sounds/game_music.ogg", [".ogg", ".mp3", ".wav"]))
+        pygame.mixer.music.set_volume(.1)
+        pygame.mixer.music.play(-1)
+    except pygame.error as message:
+        print("Cannot load music:", message)
 
 def draw_text_button(screen, text, font, color, rect):
     text_surf = font.render(text, True, color)
