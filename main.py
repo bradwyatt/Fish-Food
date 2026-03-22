@@ -559,6 +559,14 @@ class GameState:
         pygame.mixer.stop()
         SOUNDS["snd_powerup_timer"].play()
 
+    def _handle_powerup_collision(self, powerup_sprite, collected_sound_key, on_collect, restart_timer_sound=True):
+        on_collect()
+        powerup_sprite.collide_with_player()
+        SOUNDS[collected_sound_key].play()
+        self.one_powerup_sound += 1
+        if restart_timer_sound:
+            self._restart_powerup_timer_sound()
+
     def handle_collisions(self):
         ##################
         # COLLISIONS
@@ -645,30 +653,23 @@ class GameState:
         if pygame.sprite.collide_mask(self.snake, self.bright_blue_fish):
             self.snake.collide_with_bright_blue_fish()
         if pygame.sprite.collide_mask(self.seahorse, self.player):
-            self.player.collide_with_seahorse()
-            self.seahorse.collide_with_player()
-            SOUNDS["snd_eat"].play()
-            self.one_powerup_sound += 1
-            self._restart_powerup_timer_sound()
+            self._handle_powerup_collision(self.seahorse, "snd_eat", self.player.collide_with_seahorse)
         for jellyfish in self.jellyfishes:
             if pygame.sprite.collide_mask(jellyfish, self.player):
-                jellyfish.collide_with_player()
                 if self.player.star_power == Player.INVINCIBLE_POWERUP:
+                    jellyfish.collide_with_player()
                     SOUNDS["snd_eat"].play()
                 else:
-                    self.player.collide_with_jellyfish()
-                    SOUNDS["snd_size_down"].play()
-                    self.one_powerup_sound += 1
-                    self._restart_powerup_timer_sound()
+                    self._handle_powerup_collision(
+                        jellyfish,
+                        "snd_size_down",
+                        self.player.collide_with_jellyfish,
+                    )
             if pygame.sprite.collide_mask(jellyfish, self.bright_blue_fish):
                 jellyfish.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
         if self.player.rect.colliderect(self.star):
-            self.player.collide_with_star()
-            self.star.collide_with_player()
-            SOUNDS["snd_eat"].play()
-            self.one_powerup_sound += 1
-            self._restart_powerup_timer_sound()
+            self._handle_powerup_collision(self.star, "snd_eat", self.player.collide_with_star)
 
                 
     def handle_input(self, pause_button_rect):
@@ -809,25 +810,26 @@ class GameState:
         elif self.current_state == GameState.PLAY_SCREEN and not self.is_paused:
             self.handle_collisions()
             self.activate_game_objects(zoomed_surface)
-            # Diagonal Movements
+            move_direction = None
             if self.key_states[pygame.K_UP] and self.key_states[pygame.K_RIGHT]:
-                self.player.move_up_right()
+                move_direction = "up_right"
             elif self.key_states[pygame.K_UP] and self.key_states[pygame.K_LEFT]:
-                self.player.move_up_left()
+                move_direction = "up_left"
             elif self.key_states[pygame.K_DOWN] and self.key_states[pygame.K_RIGHT]:
-                self.player.move_down_right()
+                move_direction = "down_right"
             elif self.key_states[pygame.K_DOWN] and self.key_states[pygame.K_LEFT]:
-                self.player.move_down_left()
-        
-            # Single direction movements
+                move_direction = "down_left"
             elif self.key_states[pygame.K_UP]:
-                self.player.move_up()
+                move_direction = "up"
             elif self.key_states[pygame.K_DOWN]:
-                self.player.move_down()
+                move_direction = "down"
             elif self.key_states[pygame.K_LEFT]:
-                self.player.move_left()
+                move_direction = "left"
             elif self.key_states[pygame.K_RIGHT]:
-                self.player.move_right()
+                move_direction = "right"
+
+            if move_direction:
+                self.player.move(move_direction)
         
             # Stop movement if no arrow keys are pressed
             if not any(self.key_states.values()):

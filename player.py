@@ -20,6 +20,20 @@ class Player(pygame.sprite.Sprite):
     MUNCH_ANIMATION_SPEED = 15  # Adjust this value for slower/faster animation
     INVINCIBILITY_ANIMATION_SPEED = 10  # Speed of toggle between images
     MAX_SIZE_SCORE = 50
+    DIRECTION_VECTORS = {
+        "up": (0, -1),
+        "down": (0, 1),
+        "left": (-1, 0),
+        "right": (1, 0),
+        "up_left": (-1, -1),
+        "up_right": (1, -1),
+        "down_left": (-1, 1),
+        "down_right": (1, 1),
+    }
+    MIN_X = 32
+    MAX_X = SCREEN_WIDTH - 75
+    MIN_Y = 50
+    MAX_Y = SCREEN_HEIGHT - 75
 
     
     def __init__(self, allsprites, images):
@@ -219,68 +233,29 @@ class Player(pygame.sprite.Sprite):
             self.speed_x, self.speed_y = self.REDUCER_MOVE_SPEED, self.REDUCER_MOVE_SPEED
         else:
             self.speed_x, self.speed_y = self.REGULAR_MOVE_SPEED, self.REGULAR_MOVE_SPEED  # Default speed
+    def move(self, direction):
+        self.current_direction = direction
+        dx, dy = self.DIRECTION_VECTORS[direction]
+        self.pos[0] = min(self.MAX_X, max(self.MIN_X, self.pos[0] + dx * self.speed_x))
+        self.pos[1] = min(self.MAX_Y, max(self.MIN_Y, self.pos[1] + dy * self.speed_y))
+        self._render_dirty = True
+        self.update_player_image()
     def move_up(self):
-        self.current_direction = "up"
-        if self.pos[1] > 50:  # Boundary check
-            self.pos[1] -= self.speed_y
-
-        self._render_dirty = True
-        # Update the player image based on the current state
-        self.update_player_image()
+        self.move("up")
     def move_down(self):
-        self.current_direction = "down"
-        if self.pos[1] < SCREEN_HEIGHT-75:
-            self.pos[1] += self.speed_y
-        self._render_dirty = True
-        self.update_player_image()
+        self.move("down")
     def move_left(self):
-        self.current_direction = "left"
-        if self.pos[0] > 32:
-            self.pos[0] -= self.speed_x
-        self._render_dirty = True
-        self.update_player_image()
+        self.move("left")
     def move_right(self):
-        self.current_direction = "right"
-        if self.pos[0] < SCREEN_WIDTH-75:
-            self.pos[0] += self.speed_x
-        self._render_dirty = True
-        self.update_player_image()
+        self.move("right")
     def move_up_left(self):
-        self.current_direction = "up_left"
-
-        # Update position for diagonal movement
-        if self.pos[1] > 50 and self.pos[0] > 32:
-            self.pos[0] -= self.speed_x
-            self.pos[1] -= self.speed_y
-        self._render_dirty = True
-        self.update_player_image()
+        self.move("up_left")
     def move_up_right(self):
-        self.current_direction = "up_right"
-
-        # Update position for diagonal movement
-        if self.pos[1] > 50 and self.pos[0] < SCREEN_WIDTH-75:
-            self.pos[0] += self.speed_x
-            self.pos[1] -= self.speed_y
-        self._render_dirty = True
-        self.update_player_image()
+        self.move("up_right")
     def move_down_left(self):
-        self.current_direction = "down_left"
-
-        # Update position for diagonal movement
-        if self.pos[1] < SCREEN_HEIGHT-75 and self.pos[0] > 32:
-            self.pos[0] -= self.speed_x
-            self.pos[1] += self.speed_y
-        self._render_dirty = True
-        self.update_player_image()
+        self.move("down_left")
     def move_down_right(self):
-        self.current_direction = "down_right"
-
-        # Update position for diagonal movement
-        if self.pos[1] < SCREEN_HEIGHT-75 and self.pos[0] < SCREEN_WIDTH-75:
-            self.pos[0] += self.speed_x
-            self.pos[1] += self.speed_y
-        self._render_dirty = True
-        self.update_player_image()
+        self.move("down_right")
     def collide_with_seahorse(self):
         self.collide_with_prey()
         self.speed_power = self.SPEED_SURGE

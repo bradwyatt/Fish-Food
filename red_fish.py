@@ -1,8 +1,9 @@
 import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py with constants
+from base_enemy import BaseEnemy
 
-class RedFish(pygame.sprite.Sprite):
+class RedFish(BaseEnemy):
     EDGE_PADDING = 100
     CHANGE_DIR_RANGE = (100, 600)
     MOVE_SPEED = 2
@@ -22,37 +23,24 @@ class RedFish(pygame.sprite.Sprite):
         self.change_dir_timer = 0
 
         # Initialize the alpha surface here, before calling reset_position
-        self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
-        self.alpha_surface.blit(self.original_image, (0, 0))
         self.alpha = 0
-        self.alpha_surface.set_alpha(self.alpha)
+        self.rebuild_alpha_surface()
 
-        # Now it's safe to call reset_position
         self.reset_position()
-        self.init_fade_in()
 
     def update(self):
         self.rect.move_ip(*self.direction)
         self.change_dir_timer += 1
         self.update_image_direction()
         self.change_direction_randomly()
-
-        # Fade in logic
-        if self.fading_in:
-            if self.alpha < self.max_alpha:
-                self.alpha += self.fade_rate
-                self.alpha_surface.set_alpha(self.alpha)
-            else:
-                self.fading_in = False
+        self.update_fade_in()
 
         # Use alpha surface as the sprite's image for rendering
         self.image = self.alpha_surface
 
         
     def init_fade_in(self):
-        self.fading_in = True
-        self.max_alpha = 255
-        self.fade_rate = 2
+        self.begin_fade_in()
 
     def update_image_direction(self):
         # Update the original_image based on the current direction
@@ -62,9 +50,7 @@ class RedFish(pygame.sprite.Sprite):
             self.original_image = self.images["spr_red_fish"]
 
         # Update the alpha surface with the new image direction
-        self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
-        self.alpha_surface.blit(self.original_image, (0, 0))
-        self.alpha_surface.set_alpha(self.alpha)
+        self.rebuild_alpha_surface()
 
 
     def change_direction_randomly(self):
@@ -89,17 +75,19 @@ class RedFish(pygame.sprite.Sprite):
         elif self.rect.top < self.WALL_PADDING:  # Top wall
             self.direction = (random.choice(self.SPEED_CHOICES), self.MOVE_SPEED)
 
-    def reset_position(self):
-        # Set the sprite to be fully transparent (invisible)
+    def _prepare_for_reset(self):
         self.alpha = 0
         self.alpha_surface.set_alpha(self.alpha)
+        self.change_dir_timer = 0
 
-        # Reposition the sprite
-        self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
-                             random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING))
+    def _random_spawn_position(self):
+        return (
+            random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
+            random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING),
+        )
 
-        # Initialize the fade-in process
-        self.fading_in = True
+    def _finish_reset(self):
+        self.begin_fade_in()
 
     def collide_with_player(self):
         self.reset_position()

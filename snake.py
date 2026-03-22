@@ -1,8 +1,9 @@
 import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT
+from base_enemy import BaseEnemy
 
-class Snake(pygame.sprite.Sprite):
+class Snake(BaseEnemy):
     OFF_SCREEN_LEFT = -80
     OFF_SCREEN_RIGHT = SCREEN_WIDTH
     RESPAWN_TIMER = 800
@@ -39,13 +40,16 @@ class Snake(pygame.sprite.Sprite):
     def move(self):
         self.rect.x += Snake.SPEED * self.direction
 
-    def reset_position(self):
+    def _random_spawn_position(self):
         self.direction = random.choice([Snake.DIRECTION_LEFT, Snake.DIRECTION_RIGHT])
         if self.direction == Snake.DIRECTION_LEFT:
-            self.rect.x = Snake.OFF_SCREEN_RIGHT
+            x_pos = Snake.OFF_SCREEN_RIGHT
         else:
-            self.rect.x = Snake.OFF_SCREEN_LEFT - self.rect.width
-        self.rect.y = random.randint(*Snake.BOTTOM_POSITION_Y_RANGE)
+            x_pos = Snake.OFF_SCREEN_LEFT - self.rect.width
+        y_pos = random.randint(*Snake.BOTTOM_POSITION_Y_RANGE)
+        return x_pos, y_pos
+
+    def _finish_reset(self):
         self.timer = -Snake.RESPAWN_TIMER
 
     def update_animation(self):

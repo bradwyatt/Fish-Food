@@ -1,9 +1,10 @@
 import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py with constants
+from base_enemy import BaseEnemy
 
 
-class Seahorse(pygame.sprite.Sprite):
+class Seahorse(BaseEnemy):
     MOVE_LEFT = 0
     MOVE_RIGHT = 1
     OFF_SCREEN_LEFT = -70
@@ -47,10 +48,12 @@ class Seahorse(pygame.sprite.Sprite):
             self.reset_position()
             self.set_random_spawn_time()
 
-    def reset_position(self):
-        self.rect.topleft = (random.choice([Seahorse.OFF_SCREEN_LEFT, Seahorse.OFF_SCREEN_RIGHT]),
-                             random.randrange(50, SCREEN_HEIGHT - 200))
-        self.direction = Seahorse.MOVE_RIGHT if self.rect.left == Seahorse.OFF_SCREEN_LEFT else Seahorse.MOVE_LEFT
+    def _random_spawn_position(self):
+        x_pos = random.choice([Seahorse.OFF_SCREEN_LEFT, Seahorse.OFF_SCREEN_RIGHT])
+        self.direction = Seahorse.MOVE_RIGHT if x_pos == Seahorse.OFF_SCREEN_LEFT else Seahorse.MOVE_LEFT
+        return x_pos, random.randrange(50, SCREEN_HEIGHT - 200)
+
+    def _finish_reset(self):
         self.restart_timer = 0  # Reset the timer
 
     def set_random_spawn_time(self):

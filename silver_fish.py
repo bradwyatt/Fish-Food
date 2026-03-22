@@ -1,8 +1,9 @@
 import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT
+from base_enemy import BaseEnemy
 
-class SilverFish(pygame.sprite.Sprite):
+class SilverFish(BaseEnemy):
     OFFSCREEN_LEFT = -50
     OFFSCREEN_RIGHT = SCREEN_WIDTH
     MOVE_SPEED = 3
@@ -48,15 +49,17 @@ class SilverFish(pygame.sprite.Sprite):
             self.restart_timer = 0
 
 
-    def reset_position(self):
+    def _random_spawn_position(self):
         x_position = random.choice([self.OFFSCREEN_LEFT, self.OFFSCREEN_RIGHT])
         y_position = random.randrange(*self.SPAWN_Y_RANGE)
-        self.rect.topleft = (x_position, y_position)
         self.direction = random.choice([0, 1])
+        return x_position, y_position
+
+    def _finish_reset(self):
+        self.restart_timer = 0
 
     def collide_with_player(self):
         self.in_game_world = False
-        self.restart_timer = 0
         self.reset_position()
         
     def get_score_value(self):
@@ -64,7 +67,6 @@ class SilverFish(pygame.sprite.Sprite):
 
     def collide_with_bright_blue_fish(self):
         self.in_game_world = False
-        self.restart_timer = 0
         self.reset_position()
 
     def remove_sprite(self):

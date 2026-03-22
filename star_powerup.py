@@ -1,8 +1,9 @@
 import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py with constants
+from base_enemy import BaseEnemy
 
-class StarPowerup(pygame.sprite.Sprite):
+class StarPowerup(BaseEnemy):
     OFF_SCREEN_RIGHT = SCREEN_WIDTH
     OFF_SCREEN_LEFT = -80  # Assuming the width of the sprite is less than 80
     BOTTOM_POSITION_Y = SCREEN_HEIGHT - 80  # Y-position near the bottom of the screen
@@ -39,13 +40,15 @@ class StarPowerup(pygame.sprite.Sprite):
     def move(self):
         self.rect.x += StarPowerup.SPEED * self.direction
 
-    def reset_position(self):
+    def _random_spawn_position(self):
         self.direction = random.choice([StarPowerup.DIRECTION_LEFT, StarPowerup.DIRECTION_RIGHT])
         if self.direction == StarPowerup.DIRECTION_LEFT:
-            self.rect.x = StarPowerup.OFF_SCREEN_RIGHT
+            x_pos = StarPowerup.OFF_SCREEN_RIGHT
         else:
-            self.rect.x = StarPowerup.OFF_SCREEN_LEFT - self.rect.width  # Adjust for sprite width
-        self.rect.y = StarPowerup.BOTTOM_POSITION_Y
+            x_pos = StarPowerup.OFF_SCREEN_LEFT - self.rect.width  # Adjust for sprite width
+        return x_pos, StarPowerup.BOTTOM_POSITION_Y
+
+    def _finish_reset(self):
         self.timer = -StarPowerup.RESPAWN_TIMER
 
     def update_animation(self):

@@ -1,8 +1,9 @@
 import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT  # Assuming you have a config.py with constants
+from base_enemy import BaseEnemy
 
-class GreenFish(pygame.sprite.Sprite):
+class GreenFish(BaseEnemy):
     EDGE_PADDING = 100
     WALL_PADDING = 32
     BOTTOM_WALL_Y = SCREEN_HEIGHT - 64
@@ -41,11 +42,9 @@ class GreenFish(pygame.sprite.Sprite):
 
         self.visible = False  # Initially invisible
         # Initialize the alpha surface here
-        self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
-        self.alpha_surface.blit(self.original_image, (0, 0))
+        self.alpha = 0
+        self.rebuild_alpha_surface()
 
-        self.reset_position()
-        self.init_fade_in()
         self.reset_position()
 
         self.game_over = False
@@ -67,30 +66,15 @@ class GreenFish(pygame.sprite.Sprite):
         if self.change_dir_timer > random.randrange(*self.CHANGE_DIR_RANGE):
             self.change_direction()
             self.change_dir_timer = 0
-            
-        # Fade in logic
-        if not self.fading_in and current_time >= self.fade_in_start_time:
-            self.fading_in = True
 
-        if self.fading_in:
-            self.visible = True  # Make sprite visible when fade-in starts
-            if self.alpha < self.max_alpha:
-                self.alpha += self.fade_rate
-                self.alpha_surface.set_alpha(self.alpha)
-            else:
-                self.fading_in = False
+        self.update_fade_in(current_time)
 
         if self.visible:
             self.image = self.alpha_surface
             
     def init_fade_in(self):
-        self.alpha = 0
-        self.fading_in = False
-        self.max_alpha = 255
-        self.fade_rate = 2
-        self.alpha_surface = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
-        self.alpha_surface.blit(self.image, (0, 0))
-        self.fade_in_start_time = pygame.time.get_ticks() + self.FADE_IN_DELAY_MS
+        self.rebuild_alpha_surface(self.original_image)
+        self.begin_fade_in(delay_ms=self.FADE_IN_DELAY_MS)
 
 
     def update_image(self):
@@ -165,19 +149,20 @@ class GreenFish(pygame.sprite.Sprite):
             # Update image based on current direction
             self.update_image()
             
-    def reset_position(self):
-        # Set the sprite to be fully transparent (invisible)
+    def _prepare_for_reset(self):
         self.alpha = 0
         self.alpha_surface.set_alpha(self.alpha)
         self.visible = False
+        self.change_dir_timer = 0
 
-        # Reposition the sprite
-        self.rect.topleft = (random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
-                             random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING))
+    def _random_spawn_position(self):
+        return (
+            random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING),
+            random.randrange(self.EDGE_PADDING, SCREEN_HEIGHT - self.EDGE_PADDING),
+        )
 
-        # Initialize the fade-in process after a brief delay
-        self.fading_in = False
-        self.fade_in_start_time = pygame.time.get_ticks() + self.FADE_IN_DELAY_MS
+    def _finish_reset(self):
+        self.init_fade_in()
 
 
     def collide_with_player(self):

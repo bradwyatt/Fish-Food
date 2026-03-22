@@ -1,8 +1,9 @@
 import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT
+from base_enemy import BaseEnemy
 
-class Jellyfish(pygame.sprite.Sprite):
+class Jellyfish(BaseEnemy):
     EDGE_PADDING = 50
     MAX_DOWN_Y = SCREEN_HEIGHT - 80
     OFFSCREEN_Y = -50
@@ -23,7 +24,7 @@ class Jellyfish(pygame.sprite.Sprite):
         self.jellyfish_random_spawn = random.randrange(Jellyfish.MIN_SPAWN_TIME,
                                                        Jellyfish.MAX_SPAWN_TIME)
         self.activate = False
-        self.rect.topleft = self.random_spawn_position()
+        self.reset_position()
 
     def update(self):
         if self.activate:
@@ -45,7 +46,7 @@ class Jellyfish(pygame.sprite.Sprite):
     def move_jellyfish(self):
         if self.rect.top <= self.OFFSCREEN_Y and self.return_back:
             self.return_back = False
-            self.reset_jellyfish()  # Reset for the next cycle
+            self.reset_position()  # Reset for the next cycle
         elif self.rect.top >= self.MAX_DOWN_Y:
             self.return_back = True
     
@@ -57,21 +58,24 @@ class Jellyfish(pygame.sprite.Sprite):
     def update_timer(self):
         self.jellyfish_timer += 1
 
-    def reset_jellyfish(self):
-        self.jellyfish_random_spawn = random.randrange(Jellyfish.MIN_SPAWN_TIME,
-                                                       Jellyfish.MAX_SPAWN_TIME)
-        self.rect.topleft = self.random_spawn_position()
-        self.jellyfish_timer = 0  # Reset timer for the next cycle
-
-    def random_spawn_position(self):
+    def _random_spawn_position(self):
         x_pos = random.randrange(self.EDGE_PADDING, SCREEN_WIDTH - self.EDGE_PADDING)
         return x_pos, self.OFFSCREEN_Y
 
+    def _finish_reset(self):
+        self.jellyfish_random_spawn = random.randrange(Jellyfish.MIN_SPAWN_TIME,
+                                                       Jellyfish.MAX_SPAWN_TIME)
+        self.return_back = False
+        self.jellyfish_timer = 0  # Reset timer for the next cycle
+
+    def reset_jellyfish(self):
+        self.reset_position()
+
     def collide_with_player(self):
-        self.reset_jellyfish()
+        self.reset_position()
 
     def collide_with_bright_blue_fish(self):
-        self.reset_jellyfish()
+        self.reset_position()
 
     def remove_sprite(self):
         self.kill()

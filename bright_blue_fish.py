@@ -1,8 +1,9 @@
 import pygame
 import random
 from utils import SCREEN_WIDTH, SCREEN_HEIGHT
+from base_enemy import BaseEnemy
 
-class BrightBlueFish(pygame.sprite.Sprite):
+class BrightBlueFish(BaseEnemy):
     OFFSCREEN_LEFT = -1000
     OFFSCREEN_RIGHT = SCREEN_WIDTH + 1000
     MOVEMENT_SPEED = 4
@@ -84,15 +85,15 @@ class BrightBlueFish(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         allsprites.add(self)
 
-    def reset_position(self):
+    def _random_spawn_position(self):
         x_position = random.choice([self.OFFSCREEN_LEFT, self.OFFSCREEN_RIGHT])
         y_position = random.randrange(*self.SPAWN_Y_RANGE)
         if x_position == self.OFFSCREEN_LEFT:
             self.direction = self.DIR_RIGHT
-            self.rect.topright = (x_position, y_position)
+            return x_position - self.rect.width, y_position
         else:
             self.direction = self.DIR_LEFT
-            self.rect.topleft = (x_position, y_position)
+            return x_position, y_position
 
 
     def update_mask(self):
