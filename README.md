@@ -43,6 +43,54 @@ In FishFood, you are a small fish navigating the perils of a vast ocean. Your ai
 
 - **Programming Language**: The game is developed in Python.
 
+## Architecture Overview
+
+High-level module relationships after the 2026 refactoring pass:
+
+```mermaid
+flowchart TD
+    main["main.py"] --> app["game_app.py"]
+    main --> utils["utils.py"]
+
+    app --> state["game_state.py"]
+    app --> joystick["joystick.py"]
+    app --> renderer["renderer.py"]
+    app --> highscore["high_score.py"]
+    app --> runtime["runtime.py"]
+
+    state --> factory["game_factory.py"]
+    state --> collisions["collisions.py"]
+    state --> renderer
+    state --> highscore
+    state --> runtime
+
+    factory --> seaweed["seaweed.py"]
+    factory --> warning["arrow_warning.py"]
+    factory --> wall["wall.py"]
+    factory --> entities["player.py, shark.py, fish/powerup modules"]
+
+    renderer --> utils
+    joystick --> utils
+    seaweed --> utils
+    warning --> utils
+```
+
+### File Structure Guide
+
+- `main.py`: The top-level entrypoint. It initializes pygame, loads assets, creates the app, and starts the game loop.
+- `game_app.py`: The app-level coordinator. It runs the main loop, handles screen flow, updates the active game session, and tells the renderer what to draw.
+- `game_state.py`: The core gameplay state. It tracks score, player/enemy state, collisions, powerups, and screen transitions during a run.
+- `game_factory.py`: The setup/composition module. It creates the player, enemies, powerups, environment objects, and helper sprites for a fresh game session.
+- `renderer.py`: The drawing layer. It renders the start screen, info screen, game over screen, play screen, and HUD/UI overlay.
+- `joystick.py`: The mobile/touch input helper. It manages the on-screen directional control logic.
+- `collisions.py`: Shared collision helper functions used by gameplay code.
+- `high_score.py`: High score persistence and loading logic.
+- `runtime.py`: Runtime/environment flags, including behavior differences for browser or itch.io-style builds.
+- `utils.py`: Shared assets, constants, and loading helpers for images, sounds, fonts, and screen sizing.
+- `seaweed.py`: Environment/decorative animation for seaweed in the play area.
+- `arrow_warning.py`: UI warning indicators that point to incoming off-screen threats.
+- `wall.py`: Legacy wall/boundary sprite support used by the current play-area setup.
+- `player.py`, `shark.py`, `red_fish.py`, `green_fish.py`, `silver_fish.py`, `snake.py`, `bright_blue_fish.py`, `rainbow_fish.py`, `seahorse.py`, `jellyfish.py`, `star_powerup.py`: The gameplay entity modules for the player, enemies, hazards, and powerups.
 
 
 ## Installation and Running the Game
@@ -101,3 +149,9 @@ Your ideas, skills, and enthusiasm are all greatly appreciated, and I look forwa
 ---
 
 Get ready to dive into the competitive world of FishFood!
+
+## 2026 Updates: Refactoring and Cleanup
+
+In preparation for publishing FishFood on itch.io, the project received a focused round of cleanup and modernization work. At a very high level, we improved performance, reduced duplicated gameplay code, and refactored the project structure so the main entrypoint is much thinner and easier to maintain.
+
+This update pass was completed with help from OpenAI Codex, which was used to support refactoring, cleanup, and implementation work across the codebase as part of the release-preparation process.
