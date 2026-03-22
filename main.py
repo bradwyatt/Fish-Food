@@ -33,6 +33,10 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 DEBUG = False
 ZOOM_FACTOR = 1.5 # Recommended to be 1.5
+PLAY_AREA_LEFT = 32
+PLAY_AREA_TOP = 32
+PLAY_AREA_RIGHT = SCREEN_WIDTH - 32
+PLAY_AREA_BOTTOM = SCREEN_HEIGHT - 64
 
 def load_all_assets():
     load_image("sprites/coral_reef.png", "spr_wall", True)
@@ -526,7 +530,34 @@ class GameState:
     def predator_eat_player_collision(self, enemy_object):
         self.player.game_over = True
         enemy_object.game_over = True
-        
+
+    def _is_outside_play_area(self, rect):
+        return (
+            rect.left < PLAY_AREA_LEFT
+            or rect.right > PLAY_AREA_RIGHT
+            or rect.top < PLAY_AREA_TOP
+            or rect.bottom > PLAY_AREA_BOTTOM
+        )
+
+    def _handle_red_fish_boundary(self, red_fish):
+        if self._is_outside_play_area(red_fish.rect):
+            red_fish.change_dir_timer = 0
+            red_fish.bounce_off_walls()
+
+    def _handle_green_fish_boundary(self, green_fish):
+        if self._is_outside_play_area(green_fish.rect):
+            green_fish.change_direction()
+            green_fish.move_away_from_wall(None)
+
+    def _handle_shark_boundary(self, shark):
+        if shark.activate and shark.initial_descent_complete and self._is_outside_play_area(shark.rect):
+            shark.update_direction()
+            shark.stop_timer = pygame.time.get_ticks() + Shark.TURN_TIME_MS
+            shark.offset_from_wall()
+
+    def _restart_powerup_timer_sound(self):
+        pygame.mixer.stop()
+        SOUNDS["snd_powerup_timer"].play()
 
     def handle_collisions(self):
         ##################
@@ -546,9 +577,7 @@ class GameState:
                         red_fish.collide_with_green_fish()
             if pygame.sprite.collide_mask(red_fish, self.bright_blue_fish):
                 red_fish.collide_with_bright_blue_fish()
-            for wall in self.walls:
-                if red_fish.rect.colliderect(wall.rect):
-                    red_fish.collision_with_wall(wall.rect)
+            self._handle_red_fish_boundary(red_fish)
         for green_fish in self.green_fishes:
             if(green_fish.is_big == False or 
                self.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH or 
@@ -567,9 +596,7 @@ class GameState:
                         self.predator_eat_player_collision(green_fish)
             if pygame.sprite.collide_mask(green_fish, self.bright_blue_fish):
                 green_fish.reset_position()
-            for wall in self.walls:
-                if green_fish.rect.colliderect(wall.rect):
-                    green_fish.collision_with_wall(wall.rect)
+            self._handle_green_fish_boundary(green_fish)
         if self.player.star_power == self.player.INVINCIBLE_POWERUP:
             if collide_rect_to_mask(self.silver_fish, self.player, "body_mask"):
                 self.player_eat_prey_collision(self.silver_fish)
@@ -601,9 +628,7 @@ class GameState:
             if pygame.sprite.collide_mask(shark, self.bright_blue_fish):
                 shark.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
-            for wall in self.walls:
-                if shark.rect.colliderect(wall.rect):
-                    shark.collision_with_wall(wall.rect)
+            self._handle_shark_boundary(shark)
         if pygame.sprite.collide_mask(self.rainbow_fish, self.bright_blue_fish):
             SOUNDS["snd_eat"].play()
             self.rainbow_fish.collide_with_bright_blue_fish()
@@ -624,12 +649,7 @@ class GameState:
             self.seahorse.collide_with_player()
             SOUNDS["snd_eat"].play()
             self.one_powerup_sound += 1
-            if self.one_powerup_sound > 1:
-                SOUNDS["snd_powerup_timer"].stop()
-            for i in range(0, len(SOUNDS)):
-                sounds_list = list(SOUNDS.keys()) #returns list of keys in sounds
-                SOUNDS[sounds_list[i]].stop() #stops all sounds
-            SOUNDS["snd_powerup_timer"].play()
+            self._restart_powerup_timer_sound()
         for jellyfish in self.jellyfishes:
             if pygame.sprite.collide_mask(jellyfish, self.player):
                 jellyfish.collide_with_player()
@@ -639,12 +659,7 @@ class GameState:
                     self.player.collide_with_jellyfish()
                     SOUNDS["snd_size_down"].play()
                     self.one_powerup_sound += 1
-                    if self.one_powerup_sound > 1:
-                        SOUNDS["snd_powerup_timer"].stop()
-                    for i in range(0, len(SOUNDS)):
-                        sounds_list = list(SOUNDS.keys()) # Returns list of keys in sounds
-                        SOUNDS[sounds_list[i]].stop() # Stops all sounds
-                    SOUNDS["snd_powerup_timer"].play()
+                    self._restart_powerup_timer_sound()
             if pygame.sprite.collide_mask(jellyfish, self.bright_blue_fish):
                 jellyfish.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
@@ -653,12 +668,7 @@ class GameState:
             self.star.collide_with_player()
             SOUNDS["snd_eat"].play()
             self.one_powerup_sound += 1
-            if self.one_powerup_sound > 1:
-                SOUNDS["snd_powerup_timer"].stop()
-            for i in range(0, len(SOUNDS)):
-                sounds_list = list(SOUNDS.keys()) # Returns list of keys in sounds
-                SOUNDS[sounds_list[i]].stop() # Stops all sounds
-            SOUNDS["snd_powerup_timer"].play()
+            self._restart_powerup_timer_sound()
 
                 
     def handle_input(self, pause_button_rect):
@@ -1077,11 +1087,10 @@ async def main():
                         )
 
                 for sprite in game_state_manager.allsprites:
-                    original_position = (sprite.rect.x, sprite.rect.y)
-                    sprite.rect.x -= camera_x
-                    sprite.rect.y -= camera_y
-                    zoomed_surface.blit(sprite.image, sprite.rect)
-                    sprite.rect.x, sprite.rect.y = original_position
+                    zoomed_surface.blit(
+                        sprite.image,
+                        (sprite.rect.x - camera_x, sprite.rect.y - camera_y),
+                    )
 
                 for arrow_sprite in game_state_manager.arrow_warning_sprites:
                     arrow_sprite.update()

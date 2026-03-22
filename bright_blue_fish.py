@@ -17,6 +17,10 @@ class BrightBlueFish(pygame.sprite.Sprite):
         self.images = images
         self.direction = random.choice([self.DIR_LEFT, self.DIR_RIGHT])  # 0: move left, 1: move right
         self.activate = False
+        self._mask_cache = {
+            self.DIR_RIGHT: pygame.mask.from_surface(self.images["spr_bright_blue_fish_right_face"]),
+            self.DIR_LEFT: pygame.mask.from_surface(self.images["spr_bright_blue_fish_left_face"]),
+        }
         self.initialize_sprite(allsprites)
         if self.direction == self.DIR_LEFT:
             x_position = self.OFFSCREEN_RIGHT
@@ -76,6 +80,7 @@ class BrightBlueFish(pygame.sprite.Sprite):
 
     def initialize_sprite(self, allsprites):
         self.image = self.images["spr_bright_blue_fish_right"]
+        self.mask = self._mask_cache[self.DIR_RIGHT]
         self.rect = self.image.get_rect()
         allsprites.add(self)
 
@@ -92,10 +97,7 @@ class BrightBlueFish(pygame.sprite.Sprite):
 
     def update_mask(self):
         # Update the mask based on the current direction of the fish
-        if self.direction == self.DIR_RIGHT:  # Moving right
-            self.mask = pygame.mask.from_surface(self.images["spr_bright_blue_fish_right_face"])
-        elif self.direction == self.DIR_LEFT:  # Moving left
-            self.mask = pygame.mask.from_surface(self.images["spr_bright_blue_fish_left_face"])
+        self.mask = self._mask_cache[self.direction]
 
     def manage_boundaries_for_right_movement(self):
         if self.rect.left > SCREEN_WIDTH:

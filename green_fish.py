@@ -32,10 +32,13 @@ class GreenFish(pygame.sprite.Sprite):
         self.fade_in_start_time = 0
 
         allsprites.add(self)
-        
+
         self.body_mask = None
         self.face_mask = None
-        
+        self._appearance_cache = {}
+        self._appearance_dirty = True
+        self._current_sprite_key = "spr_green_fish_right"
+
         self.visible = False  # Initially invisible
         # Initialize the alpha surface here
         self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)
@@ -91,26 +94,41 @@ class GreenFish(pygame.sprite.Sprite):
 
 
     def update_image(self):
+        sprite_key = self._get_sprite_key()
+        if sprite_key != self._current_sprite_key:
+            self._current_sprite_key = sprite_key
+            self._appearance_dirty = True
+
+        if self._appearance_dirty:
+            cached_appearance = self._appearance_cache.get(sprite_key)
+            if cached_appearance is None:
+                body_image = self.images[sprite_key]
+                face_mask = None
+                if self.is_big:
+                    face_key = f"{sprite_key}_face"
+                    face_mask = pygame.mask.from_surface(self.images[face_key])
+                cached_appearance = {
+                    "image": body_image,
+                    "body_mask": pygame.mask.from_surface(body_image),
+                    "face_mask": face_mask,
+                }
+                self._appearance_cache[sprite_key] = cached_appearance
+
+            self.original_image = cached_appearance["image"]
+            self.body_mask = cached_appearance["body_mask"]
+            self.face_mask = cached_appearance["face_mask"]
+            self.alpha_surface = self.original_image.copy()
+            self.alpha_surface.set_alpha(self.alpha)
+            self._appearance_dirty = False
+
+    def _get_sprite_key(self):
         if self.is_big:
-            if self.direction[0] < 0:  # Moving left
-                self.image = self.images["spr_big_green_fish_left"]
-                self.body_mask = pygame.mask.from_surface(self.images["spr_big_green_fish_left"])
-                self.face_mask = pygame.mask.from_surface(self.images["spr_big_green_fish_left_face"])
-            else:  # Moving right
-                self.image = self.images["spr_big_green_fish_right"]
-                self.body_mask = pygame.mask.from_surface(self.images["spr_big_green_fish_right"])
-                self.face_mask = pygame.mask.from_surface(self.images["spr_big_green_fish_right_face"])
-        else:
-            if self.direction[0] < 0:  # Moving left
-                self.image = self.images["spr_green_fish_left"]
-                self.body_mask = pygame.mask.from_surface(self.images["spr_green_fish_left"])
-            else:  # Moving right
-                self.image = self.images["spr_green_fish_right"]
-                self.body_mask = pygame.mask.from_surface(self.images["spr_green_fish_right"])
-                
-        self.alpha_surface = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
-        self.alpha_surface.blit(self.image, (0, 0))
-        self.alpha_surface.set_alpha(self.alpha)
+            if self.direction[0] < 0:
+                return "spr_big_green_fish_left"
+            return "spr_big_green_fish_right"
+        if self.direction[0] < 0:
+            return "spr_green_fish_left"
+        return "spr_green_fish_right"
 
 
     def change_direction(self):
@@ -118,6 +136,7 @@ class GreenFish(pygame.sprite.Sprite):
                           (self.direction[0], -self.direction[1]),
                           (-self.direction[0], -self.direction[1])]
         self.direction = random.choice(new_directions)
+        self._appearance_dirty = True
 
         if self.is_big:
             self.stop_timer = pygame.time.get_ticks() + self.TURN_TIME_MS
@@ -142,6 +161,7 @@ class GreenFish(pygame.sprite.Sprite):
         self.big_green_fish_score += self.INCREMENTAL_SCORE
         if self.big_green_fish_score >= self.BIG_FISH_SCORE_THRESHOLD and not self.is_big:
             self.is_big = True
+            self._appearance_dirty = True
             # Update image based on current direction
             self.update_image()
             
@@ -175,6 +195,8 @@ class GreenFish(pygame.sprite.Sprite):
         # Set the image to the small green fish and update the alpha surface
         self.original_image = self.images["spr_green_fish_right"]  # Assuming this is the default small fish image
         self.image = self.original_image
+        self._current_sprite_key = "spr_green_fish_right"
+        self._appearance_dirty = True
 
         # Update the alpha surface with the new small fish image
         self.alpha_surface = pygame.Surface(self.original_image.get_size(), pygame.SRCALPHA)

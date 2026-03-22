@@ -36,21 +36,14 @@ class RainbowFish(pygame.sprite.Sprite):
         self.is_turning = False
         self.turning_timer = 0
         self.player_position = (0, 0)  # Initialize player position
-        
-        # Initialize face and body masks
-        self.face_masks = {
-            "left": pygame.mask.from_surface(images["spr_rainbow_fish_left_face"]),
-            "right": pygame.mask.from_surface(images["spr_rainbow_fish_right_face"])
-        }
-        self.body_masks = {
-            "left": pygame.mask.from_surface(images["spr_rainbow_fish_left"]),
-            "right": pygame.mask.from_surface(images["spr_rainbow_fish_right"])
-        }
-        
-        self.face_mask = self.face_masks[self.current_direction]
-        self.body_mask = self.body_masks[self.current_direction]
-        
+        self.face_mask = None
+        self.body_mask = None
+        self._scaled_cache = {}
+        self._appearance_dirty = True
+        self._last_size = tuple(self.size)
+
         self.game_over = False
+        self.update_image_direction()
         
     def update_player_position(self, player_pos):
         """Update the player's position for the Rainbow Fish."""
@@ -60,9 +53,12 @@ class RainbowFish(pygame.sprite.Sprite):
         if self.game_over:
             return
         self.rainbow_timer += 1
-        # Scale the image
-        self.image = pygame.transform.smoothscale(self.image, (self.size[0], self.size[1]))
-        self.update_masks()
+
+        if tuple(self.size) != self._last_size:
+            self._last_size = tuple(self.size)
+            self._appearance_dirty = True
+            if not self.is_turning:
+                self.update_image_direction()
 
         # Handle the descent
         if self.is_active and not self.initial_descent_complete:
@@ -86,32 +82,46 @@ class RainbowFish(pygame.sprite.Sprite):
         
     def animate_turning(self, new_direction):
         if not self.is_turning:
-            self.image = self.images["spr_rainbow_fish_turning"]
+            self.image = self._get_scaled_image("spr_rainbow_fish_turning")
             self.is_turning = True
             self.turning_timer = pygame.time.get_ticks() + RainbowFish.TURN_TIME_MS
         elif pygame.time.get_ticks() > self.turning_timer:
             # After turning animation, change to the new direction
             self.current_direction = new_direction
+            self._appearance_dirty = True
             self.is_turning = False
             self.update_image_direction()
             
     def update_image_direction(self):
-        self.image = self.images[f"spr_rainbow_fish_{self.current_direction}"]
-        self.update_masks()
+        cache_key = (self.current_direction, tuple(self.size))
+        cached_appearance = self._scaled_cache.get(cache_key)
+        if cached_appearance is None:
+            body_key = f"spr_rainbow_fish_{self.current_direction}"
+            face_key = f"{body_key}_face"
+            scaled_body = self._get_scaled_image(body_key)
+            scaled_face = self._get_scaled_image(face_key)
+            cached_appearance = {
+                "image": scaled_body,
+                "body_mask": pygame.mask.from_surface(scaled_body),
+                "face_mask": pygame.mask.from_surface(scaled_face),
+            }
+            self._scaled_cache[cache_key] = cached_appearance
 
-    def update_masks(self):
-        """
-        Update the body and face masks based on the current direction and size.
-        """
-        # Update body mask
-        body_image = self.images[f"spr_rainbow_fish_{self.current_direction}"]
-        scaled_body_image = pygame.transform.smoothscale(body_image, (self.size[0], self.size[1]))
-        self.body_mask = pygame.mask.from_surface(scaled_body_image)
+        self.image = cached_appearance["image"]
+        self.body_mask = cached_appearance["body_mask"]
+        self.face_mask = cached_appearance["face_mask"]
+        self._appearance_dirty = False
 
-        # Update face mask
-        face_image = self.images[f"spr_rainbow_fish_{self.current_direction}_face"]
-        scaled_face_image = pygame.transform.smoothscale(face_image, (self.size[0], self.size[1]))
-        self.face_mask = pygame.mask.from_surface(scaled_face_image)
+    def _get_scaled_image(self, image_key):
+        cache_key = ("image", image_key, tuple(self.size))
+        scaled_image = self._scaled_cache.get(cache_key)
+        if scaled_image is None:
+            scaled_image = pygame.transform.smoothscale(
+                self.images[image_key],
+                (self.size[0], self.size[1]),
+            )
+            self._scaled_cache[cache_key] = scaled_image
+        return scaled_image
 
 
     def decide_chase_or_avoid(self, player_size_score, is_player_invincibile, player_pos):
@@ -161,6 +171,7 @@ class RainbowFish(pygame.sprite.Sprite):
             self.size[0] += 10
             self.size[1] += 10
             self.size_score += self.INCREMENTAL_SIZE_SCORE
+            self._appearance_dirty = True
     
     def avoid_player(self, player_pos):
         #Avoid Player
