@@ -3,10 +3,9 @@ import pygame
 import os
 import random
 import sys
-from pygame.constants import RLEACCEL
 import datetime
 import traceback
-from utils import IMAGES, SOUNDS, FONTS, load_sound, load_image, load_font, resolve_asset_path, SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TOP_UI_LAYER_HEIGHT
+from utils import IMAGES, SOUNDS, FONTS, load_all_assets, SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TOP_UI_LAYER_HEIGHT
 from runtime import ITCH_MODE
 from high_score import HighScoreStore
 from shark import Shark
@@ -20,6 +19,13 @@ from seahorse import Seahorse
 from jellyfish import Jellyfish
 from star_powerup import StarPowerup
 from player import Player
+from renderer import (
+    render_game_over_screen,
+    render_info_screen,
+    render_play_screen,
+    render_start_screen,
+    render_ui_overlay,
+)
 import math
 
 
@@ -38,156 +44,6 @@ PLAY_AREA_TOP = 32
 PLAY_AREA_RIGHT = SCREEN_WIDTH - 32
 PLAY_AREA_BOTTOM = SCREEN_HEIGHT - 64
 
-def load_all_assets():
-    load_image("sprites/coral_reef.png", "spr_wall", True)
-    load_image("sprites/player_left.png", "player_left", True)
-    load_image("sprites/player_down_left.png", "player_down_left", True)
-    load_image("sprites/player_down.png", "player_down", True)
-    load_image("sprites/player_down_right.png", "player_down_right", True)
-    load_image("sprites/player_right.png", "player_right", True)
-    load_image("sprites/player_up_right.png", "player_up_right", True)
-    load_image("sprites/player_up.png", "player_up", True)
-    load_image("sprites/player_up_left.png", "player_up_left", True)
-    
-    load_image("sprites/player_left_munch.png", "player_left_munch", True)
-    load_image("sprites/player_down_left_munch.png", "player_down_left_munch", True)
-    load_image("sprites/player_down_munch.png", "player_down_munch", True)
-    load_image("sprites/player_down_right_munch.png", "player_down_right_munch", True)
-    load_image("sprites/player_right_munch.png", "player_right_munch", True)
-    load_image("sprites/player_up_right_munch.png", "player_up_right_munch", True)
-    load_image("sprites/player_up_munch.png", "player_up_munch", True)
-    load_image("sprites/player_up_left_munch.png", "player_up_left_munch", True)
-    
-    load_image("sprites/player_left_face.png", "player_left_face", True)
-    load_image("sprites/player_down_left_face.png", "player_down_left_face", True)
-    load_image("sprites/player_down_face.png", "player_down_face", True)
-    load_image("sprites/player_down_right_face.png", "player_down_right_face", True)
-    load_image("sprites/player_right_face.png", "player_right_face", True)
-    load_image("sprites/player_up_right_face.png", "player_up_right_face", True)
-    load_image("sprites/player_up_face.png", "player_up_face", True)
-    load_image("sprites/player_up_left_face.png", "player_up_left_face", True)
-    
-    load_image("sprites/player_left_gold.png", "player_left_gold", True)
-    load_image("sprites/player_down_left_gold.png", "player_down_left_gold", True)
-    load_image("sprites/player_down_gold.png", "player_down_gold", True)
-    load_image("sprites/player_down_right_gold.png", "player_down_right_gold", True)
-    load_image("sprites/player_right_gold.png", "player_right_gold", True)
-    load_image("sprites/player_up_right_gold.png", "player_up_right_gold", True)
-    load_image("sprites/player_up_gold.png", "player_up_gold", True)
-    load_image("sprites/player_up_left_gold.png", "player_up_left_gold", True)
-    
-    load_image("sprites/red_fish.png", "spr_red_fish", True)
-    load_image("sprites/green_fish.png", "spr_green_fish_right", True)
-    IMAGES["spr_green_fish_left"] = pygame.transform.flip(IMAGES["spr_green_fish_right"], 1, 0)
-    
-    load_image("sprites/big_green_fish_left.png", "spr_big_green_fish_left", True)
-    load_image("sprites/big_green_fish_left_face.png", "spr_big_green_fish_left_face", True)
-    load_image("sprites/big_green_fish_right.png", "spr_big_green_fish_right", True)
-    load_image("sprites/big_green_fish_right_face.png", "spr_big_green_fish_right_face", True)
-    load_image("sprites/big_green_fish_turning.png", "spr_big_green_fish_turning", True)
-
-    
-    load_image("sprites/silver_fish.png", "spr_silver_fish", True)
-    load_image("sprites/snake_1.png", "spr_snake_1", True)
-    load_image("sprites/snake_2.png", "spr_snake_2", True)
-    load_image("sprites/snake_3.png", "spr_snake_3", True)
-    load_image("sprites/snake_4.png", "spr_snake_4", True)
-    load_image("sprites/seahorse.png", "spr_seahorse", True)
-    load_image("sprites/jellyfish_1.png", "spr_jellyfish_1", True)
-    load_image("sprites/jellyfish_2.png", "spr_jellyfish_2", True)
-    load_image("sprites/jellyfish_3.png", "spr_jellyfish_3", True)
-    load_image("sprites/jellyfish_4.png", "spr_jellyfish_4", True)
-    load_image("sprites/jellyfish_5.png", "spr_jellyfish_5", True)
-    load_image("sprites/jellyfish_6.png", "spr_jellyfish_6", True)
-    load_image("sprites/jellyfish_7.png", "spr_jellyfish_7", True)
-    load_image("sprites/shark_left.png", "spr_shark_left", True)
-    load_image("sprites/shark_face_left.png", "spr_shark_face_left", True)
-    load_image("sprites/shark_face_right.png", "spr_shark_face_right", True)
-    load_image("sprites/shark_right.png", "spr_shark_right", True)
-    load_image("sprites/shark_turning.png", "spr_shark_turning", True)
-    
-    load_image("sprites/bright_blue_fish_right.png", "spr_bright_blue_fish_right", True)
-    IMAGES["spr_bright_blue_fish_right"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right"], (300, 200))
-    load_image("sprites/bright_blue_fish_right_face.png", "spr_bright_blue_fish_right_face", True)
-    IMAGES["spr_bright_blue_fish_right_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_right_face"], (300, 200))
-    load_image("sprites/bright_blue_fish_left.png", "spr_bright_blue_fish_left", True)
-    IMAGES["spr_bright_blue_fish_left"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left"], (300, 200))
-    load_image("sprites/bright_blue_fish_left_face.png", "spr_bright_blue_fish_left_face", True)
-    IMAGES["spr_bright_blue_fish_left_face"] = pygame.transform.smoothscale(IMAGES["spr_bright_blue_fish_left_face"], (300, 200))
-    
-    load_image("sprites/starfish_1.png", "spr_star_1", True)
-    load_image("sprites/starfish_2.png", "spr_star_2", True)
-    load_image("sprites/starfish_3.png", "spr_star_3", True)
-    load_image("sprites/arrow_warning_red.png", "arrow_warning_red_top", True)
-    load_image("sprites/arrow_warning_silver.png", "arrow_warning_silver_top", True)
-    load_image("sprites/arrow_warning_blue_left.png", "arrow_warning_blue_left", True)
-    load_image("sprites/arrow_warning_blue_right.png", "arrow_warning_blue_right", True)
-
-    load_image("sprites/seaweed_middle.png", "spr_seaweed", True)
-    load_image("sprites/seaweed_left.png", "spr_seaweed_left", True)
-    load_image("sprites/seaweed_right.png", "spr_seaweed_right", True)
-    
-    load_image("sprites/rainbow_fish_left.png", "spr_rainbow_fish_left", True)
-    load_image("sprites/rainbow_fish_left_face.png", "spr_rainbow_fish_left_face", True)
-    load_image("sprites/rainbow_fish_turning.png", "spr_rainbow_fish_turning", True)
-    load_image("sprites/rainbow_fish_right.png", "spr_rainbow_fish_right", True)
-    load_image("sprites/rainbow_fish_right_face.png", "spr_rainbow_fish_right_face", True)
-
-    # arrow keys
-    load_image("sprites/unpressed_arrow_up.png", "spr_unpressed_arrow_up", True, 128)
-    load_image("sprites/pressed_arrow_up.png", "spr_pressed_arrow_up", True, 128)
-    load_image("sprites/pressed_arrow_up_right.png", "spr_pressed_arrow_up_right", True, 128)
-    load_image("sprites/pressed_arrow_right.png", "spr_pressed_arrow_right", True, 128)
-    load_image("sprites/pressed_arrow_down_right.png", "spr_pressed_arrow_down_right", True, 128)
-    load_image("sprites/pressed_arrow_down.png", "spr_pressed_arrow_down", True, 128)
-    load_image("sprites/pressed_arrow_down_left.png", "spr_pressed_arrow_down_left", True, 128)
-    load_image("sprites/pressed_arrow_left.png", "spr_pressed_arrow_left", True, 128)
-    load_image("sprites/pressed_arrow_up_left.png", "spr_pressed_arrow_up_left", True, 128)
-    load_image("sprites/unpressed_arrow_up_right.png", "spr_unpressed_arrow_up_right", True, 128)
-    load_image("sprites/unpressed_arrow_right.png", "spr_unpressed_arrow_right", True, 128)
-    load_image("sprites/unpressed_arrow_down_right.png", "spr_unpressed_arrow_down_right", True, 128)
-    load_image("sprites/unpressed_arrow_down.png", "spr_unpressed_arrow_down", True, 128)
-    load_image("sprites/unpressed_arrow_down_left.png", "spr_unpressed_arrow_down_left", True, 128)
-    load_image("sprites/unpressed_arrow_left.png", "spr_unpressed_arrow_left", True, 128)
-    load_image("sprites/unpressed_arrow_up_left.png", "spr_unpressed_arrow_up_left", True, 128)
-    load_image("sprites/neutral_zone.png", "spr_neutral_zone", True, 128)
-    
-    #font and texts
-    load_font("fonts/ocean_font.ttf", 16, False)
-    load_font("fonts/ocean_font.ttf", 22)
-    load_font("fonts/ocean_font.ttf", 48)
-    load_font("fonts/ocean_font.ttf", 76)
-    load_font("Arial", 32, is_system_font=True)
-    #backgrounds
-    load_image("sprites/ground.jpg", "ground", False)
-    load_image("sprites/play_background.jpg", "play_background", False)
-    #bgwater = pygame.transform.scale(bgwater, (SCREEN_WIDTH, SCREEN_HEIGHT))
-    top_ui_layer = load_image("sprites/top_ui_layer.jpg", "top_ui_layer", False)
-    IMAGES['top_ui_layer'] = pygame.transform.scale(top_ui_layer, (SCREEN_WIDTH, TOP_UI_LAYER_HEIGHT))
-    start_menu_bg = load_image("sprites/start_menu.png", "start_menu_bg", False)
-    load_image("sprites/info_screen.jpg", "info_screen_bg", False)
-    pygame.mouse.set_visible(True)
-    load_sound("sounds/snd_eat.ogg", "snd_eat")
-    SOUNDS["snd_eat"].set_volume(.2)
-    load_sound("sounds/eat_shark.ogg", "snd_eat_shark")
-    SOUNDS["snd_eat_shark"].set_volume(.2)
-    load_sound("sounds/size_down.ogg", "snd_size_down")
-    load_sound("sounds/player_die.ogg", "snd_player_die")
-    SOUNDS["snd_player_die"].set_volume(.3)
-    load_sound("sounds/powerup_timer.ogg", "snd_powerup_timer")
-    SOUNDS["snd_powerup_timer"].set_volume(.3)
-    load_sound("sounds/siren.ogg", "snd_siren")
-    SOUNDS["snd_siren"].set_volume(.05)
-    load_sound("sounds/shark_incoming.ogg", "snd_shark_incoming")
-    SOUNDS["snd_shark_incoming"].set_volume(.03)
-    # Music loop
-    try:
-        pygame.mixer.music.load(resolve_asset_path("sounds/game_music.ogg", [".ogg", ".mp3", ".wav"]))
-        pygame.mixer.music.set_volume(.1)
-        pygame.mixer.music.play(-1)
-    except pygame.error as message:
-        print("Cannot load music:", message)
-
 def draw_text_button(screen, text, font, color, rect):
     text_surf = font.render(text, True, color)
     text_rect = text_surf.get_rect(center=rect.center)
@@ -195,41 +51,6 @@ def draw_text_button(screen, text, font, color, rect):
     screen.blit(text_surf, text_rect)
     return rect.collidepoint(pygame.mouse.get_pos())
 
-def draw_hud_button(screen, rect, label, font, hovered=False, active=False, accent="blue"):
-    shadow_rect = rect.move(0, 2)
-    shadow_color = (3, 16, 24)
-    if accent == "coral":
-        base_color = (196, 103, 77) if not hovered else (225, 125, 96)
-        if active:
-            base_color = (206, 137, 60)
-        border_color = (255, 230, 194) if hovered else (255, 206, 166)
-    else:
-        base_color = (24, 95, 122) if not hovered else (36, 126, 157)
-        if active:
-            base_color = (19, 129, 102)
-        border_color = (168, 233, 241) if hovered else (120, 199, 214)
-    highlight_color = (255, 255, 255)
-
-    shadow_surface = pygame.Surface((shadow_rect.width, shadow_rect.height), pygame.SRCALPHA)
-    pygame.draw.rect(shadow_surface, shadow_color, shadow_surface.get_rect(), border_radius=14)
-    screen.blit(shadow_surface, shadow_rect.topleft)
-
-    button_surface = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
-    pygame.draw.rect(button_surface, base_color, button_surface.get_rect(), border_radius=14)
-    pygame.draw.rect(button_surface, border_color, button_surface.get_rect(), width=2, border_radius=14)
-
-    gloss_rect = pygame.Rect(4, 4, rect.width - 8, max(8, rect.height // 4))
-    gloss_surface = pygame.Surface((gloss_rect.width, gloss_rect.height), pygame.SRCALPHA)
-    gloss_surface.fill(base_color)
-    gloss_surface.set_alpha(18)
-    pygame.draw.rect(gloss_surface, highlight_color, gloss_surface.get_rect(), border_radius=10)
-    button_surface.blit(gloss_surface, gloss_rect.topleft)
-
-    text_color = (232, 249, 252)
-    text_surface = font.render(label, True, text_color)
-    text_rect = text_surface.get_rect(center=(rect.width // 2, rect.height // 2 - 1))
-    button_surface.blit(text_surface, text_rect)
-    screen.blit(button_surface, rect.topleft)
 
 def collide_rect_to_mask(sprite1, sprite2, mask_name='mask'):
     """
@@ -568,9 +389,12 @@ class GameState:
             self._restart_powerup_timer_sound()
 
     def handle_collisions(self):
-        ##################
-        # COLLISIONS
-        ##################
+        self._check_prey_collisions()
+        self._check_predator_collisions()
+        self._check_hazard_collisions()
+        self._check_powerup_collisions()
+
+    def _check_prey_collisions(self):
         for red_fish in self.red_fishes:
             if self.player.star_power == self.player.INVINCIBLE_POWERUP:
                 if collide_rect_to_mask(red_fish, self.player, "body_mask"):
@@ -586,6 +410,7 @@ class GameState:
             if pygame.sprite.collide_mask(red_fish, self.bright_blue_fish):
                 red_fish.collide_with_bright_blue_fish()
             self._handle_red_fish_boundary(red_fish)
+
         for green_fish in self.green_fishes:
             if(green_fish.is_big == False or 
                self.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH or 
@@ -605,15 +430,18 @@ class GameState:
             if pygame.sprite.collide_mask(green_fish, self.bright_blue_fish):
                 green_fish.reset_position()
             self._handle_green_fish_boundary(green_fish)
+
         if self.player.star_power == self.player.INVINCIBLE_POWERUP:
             if collide_rect_to_mask(self.silver_fish, self.player, "body_mask"):
                 self.player_eat_prey_collision(self.silver_fish)
         else:
             if collide_rect_to_mask(self.silver_fish, self.player, "face_mask"):
                 self.player_eat_prey_collision(self.silver_fish)
-        if collide_mask_to_mask(self.bright_blue_fish, "mask", self.player, "body_mask"):
-            if self.player.star_power != Player.INVINCIBLE_POWERUP:
-                self.predator_eat_player_collision(self.bright_blue_fish)
+
+        if pygame.sprite.collide_mask(self.silver_fish, self.bright_blue_fish):
+            SOUNDS["snd_eat"].play()
+            self.silver_fish.collide_with_bright_blue_fish()
+
         if pygame.sprite.collide_mask(self.rainbow_fish, self.player):
             # Player eats rainbow_fish only when appears bigger (arbitrary)
             if (self.rainbow_fish.size_score <= self.player.size_score or 
@@ -622,6 +450,16 @@ class GameState:
             else:
                 if self.player.star_power != Player.INVINCIBLE_POWERUP:
                     self.predator_eat_player_collision(self.rainbow_fish)
+
+        if pygame.sprite.collide_mask(self.rainbow_fish, self.bright_blue_fish):
+            SOUNDS["snd_eat"].play()
+            self.rainbow_fish.collide_with_bright_blue_fish()
+
+    def _check_predator_collisions(self):
+        if collide_mask_to_mask(self.bright_blue_fish, "mask", self.player, "body_mask"):
+            if self.player.star_power != Player.INVINCIBLE_POWERUP:
+                self.predator_eat_player_collision(self.bright_blue_fish)
+
         for shark in self.sharks:
             if self.player.star_power == Player.SHARK_SHRINKER_POWERUP:
                 shark.mini_shark = True
@@ -637,9 +475,8 @@ class GameState:
                 shark.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
             self._handle_shark_boundary(shark)
-        if pygame.sprite.collide_mask(self.rainbow_fish, self.bright_blue_fish):
-            SOUNDS["snd_eat"].play()
-            self.rainbow_fish.collide_with_bright_blue_fish()
+
+    def _check_hazard_collisions(self):
         if pygame.sprite.collide_mask(self.snake, self.player):
             self.snake.collide_with_player()
             if self.player.star_power != Player.INVINCIBLE_POWERUP:
@@ -647,13 +484,10 @@ class GameState:
                 SOUNDS["snd_size_down"].play()
             else:
                 SOUNDS["snd_eat"].play()
-        if pygame.sprite.collide_mask(self.silver_fish, self.bright_blue_fish):
-            SOUNDS["snd_eat"].play()
-            self.silver_fish.collide_with_bright_blue_fish()
+
         if pygame.sprite.collide_mask(self.snake, self.bright_blue_fish):
             self.snake.collide_with_bright_blue_fish()
-        if pygame.sprite.collide_mask(self.seahorse, self.player):
-            self._handle_powerup_collision(self.seahorse, "snd_eat", self.player.collide_with_seahorse)
+
         for jellyfish in self.jellyfishes:
             if pygame.sprite.collide_mask(jellyfish, self.player):
                 if self.player.star_power == Player.INVINCIBLE_POWERUP:
@@ -668,6 +502,11 @@ class GameState:
             if pygame.sprite.collide_mask(jellyfish, self.bright_blue_fish):
                 jellyfish.collide_with_bright_blue_fish()
                 SOUNDS["snd_eat"].play()
+
+    def _check_powerup_collisions(self):
+        if pygame.sprite.collide_mask(self.seahorse, self.player):
+            self._handle_powerup_collision(self.seahorse, "snd_eat", self.player.collide_with_seahorse)
+
         if self.player.rect.colliderect(self.star):
             self._handle_powerup_collision(self.star, "snd_eat", self.player.collide_with_star)
 
@@ -741,62 +580,25 @@ class GameState:
 
                     
     def show_start_screen(self, screen):
-        if self.start_screen_bg:
-            # Draw the background image
-            screen.blit(self.start_screen_bg, (0, 0))
-        else:
-            # Fallback to a black screen if no image is provided
-            screen.fill((0, 0, 0))
-
-        mouse_position = pygame.mouse.get_pos()
-        draw_hud_button(
+        render_start_screen(
             screen,
+            self.start_screen_bg,
             self.start_button_rect,
-            "Click to Start",
-            FONTS['ocean_font_22'],
-            hovered=self.start_button_rect.collidepoint(mouse_position),
-            accent="coral"
+            self.high_score_enabled,
+            self.high_score,
         )
-
-        if self.high_score_enabled:
-            high_score_text = FONTS['ocean_font_22'].render(
-                "High Score: " + str(self.high_score), True, (255, 255, 255)
-            )
-            high_score_rect = high_score_text.get_rect(center=((SCREEN_WIDTH // 2) - 14, 250))
-            screen.blit(high_score_text, high_score_rect)
 
     def show_info_screen(self, screen):
-        if self.info_screen_bg:
-            screen.blit(self.info_screen_bg, (0, 0))
-        else:
-            screen.fill((0, 0, 0))
+        render_info_screen(screen, self.info_screen_bg)
 
     def show_game_over_screen(self, screen):
-        screen.fill((0, 0, 0))
-        title_text = FONTS['ocean_font_48'].render("Game Over", True, (255, 255, 255))
-        restart_text = FONTS['ocean_font_22'].render("Click to restart", True, (255, 255, 255))
-        points_on_game_over_screen = FONTS['ocean_font_22'].render("Points: " + str(self.score), True, (255, 255, 255))
-        # Center the text
-        text_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30))
-        restart_text_rect = restart_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
-        points_on_game_over_screen_rect = points_on_game_over_screen.get_rect(
-            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
+        render_game_over_screen(
+            screen,
+            self.score,
+            self.high_score_enabled,
+            self.high_score,
+            self.is_new_high_score,
         )
-        screen.blit(title_text, text_rect)
-        screen.blit(restart_text, restart_text_rect)
-        screen.blit(points_on_game_over_screen, points_on_game_over_screen_rect)
-
-        if self.high_score_enabled:
-            high_score_text = FONTS['ocean_font_22'].render(
-                "High Score: " + str(self.high_score), True, (255, 255, 255)
-            )
-            high_score_rect = high_score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 90))
-            screen.blit(high_score_text, high_score_rect)
-
-            if self.is_new_high_score:
-                new_record_text = FONTS['ocean_font_22'].render("New High Score!", True, (255, 214, 140))
-                new_record_rect = new_record_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 130))
-                screen.blit(new_record_text, new_record_rect)
 
 
     def update(self, zoomed_surface):
@@ -989,12 +791,6 @@ def zoom_in_on_player(screen, player, ZOOM_FACTOR):
 
     return zoomed_surface
 
-def draw_mask(surface, mask, x, y, color=(255, 0, 0)):
-    # Create a surface from the mask
-    if mask:
-        mask_surface = mask.to_surface(setcolor=color, unsetcolor=(0, 0, 0, 0))
-        surface.blit(mask_surface, (x, y))
-
 # Main game loop
 async def main():
     try:
@@ -1063,13 +859,6 @@ async def main():
                     ),
                 )
 
-                zoomed_surface.fill((0, 0, 0))
-                zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_first - camera_y))
-                zoomed_surface.blit(IMAGES['play_background'], (-camera_x, y_second - camera_y))
-
-                if camera_y > world_height - SCREEN_HEIGHT - 100:
-                    zoomed_surface.blit(IMAGES['ground'], (-camera_x, world_height - 100 - camera_y))
-
                 if not game_state_manager.is_paused:
                     game_state_manager.rainbow_fish.player_size_score = game_state_manager.player.size_score
                     game_state_manager.rainbow_fish.player_star_power = (
@@ -1088,141 +877,17 @@ async def main():
                             game_state_manager.player.rect.center,
                         )
 
-                for sprite in game_state_manager.allsprites:
-                    zoomed_surface.blit(
-                        sprite.image,
-                        (sprite.rect.x - camera_x, sprite.rect.y - camera_y),
-                    )
-
-                for arrow_sprite in game_state_manager.arrow_warning_sprites:
-                    arrow_sprite.update()
-                    if arrow_sprite.visible:
-                        zoomed_surface.blit(
-                            arrow_sprite.image,
-                            (arrow_sprite.rect.x - camera_x, arrow_sprite.rect.y - camera_y),
-                        )
-
-                if DEBUG:
-                    draw_mask(
-                        zoomed_surface,
-                        game_state_manager.player.body_mask,
-                        game_state_manager.player.rect.x - camera_x,
-                        game_state_manager.player.rect.y - camera_y,
-                        (63, 26, 186),
-                    )
-                    draw_mask(
-                        zoomed_surface,
-                        game_state_manager.player.face_mask,
-                        game_state_manager.player.rect.x - camera_x,
-                        game_state_manager.player.rect.y - camera_y,
-                    )
-                    draw_mask(
-                        zoomed_surface,
-                        game_state_manager.rainbow_fish.body_mask,
-                        game_state_manager.rainbow_fish.rect.x - camera_x,
-                        game_state_manager.rainbow_fish.rect.y - camera_y,
-                        (0, 128, 0),
-                    )
-                    draw_mask(
-                        zoomed_surface,
-                        game_state_manager.rainbow_fish.face_mask,
-                        game_state_manager.rainbow_fish.rect.x - camera_x,
-                        game_state_manager.rainbow_fish.rect.y - camera_y,
-                    )
-
-                if game_state_manager.score_blit > 0:
-                    relative_x = game_state_manager.dead_fish_position[0] - camera_x
-                    relative_y = game_state_manager.dead_fish_position[1] - camera_y
-                    score_blit_text = FONTS['ocean_font_16'].render(
-                        "+" + str(game_state_manager.score_blit), True, (255, 255, 255)
-                    )
-                    zoomed_surface.blit(score_blit_text, (relative_x, relative_y))
-                    game_state_manager.score_disappear_timer += 1
-
-                    if game_state_manager.score_disappear_timer > GameState.SCORE_BLIT_TICKS_TO_DISAPPEAR:
-                        game_state_manager.score_blit = 0
-                        game_state_manager.score_disappear_timer = 0
-
-                scaled_zoomed_area = pygame.transform.scale(zoomed_surface, (SCREEN_WIDTH, SCREEN_HEIGHT))
-                screen.blit(scaled_zoomed_area, (0, 0))
-
-                if game_state_manager.joystick_visible:
-                    joystick.draw(game_state_manager.key_states, game_state_manager.touch_position)
-                    pygame.draw.circle(screen, (255, 0, 0), game_state_manager.touch_position, 5)
-
-                screen.blit(IMAGES['top_ui_layer'], (0, 0))
-                available_prey_text = FONTS['ocean_font_22'].render("Available Prey:", True, (255, 255, 255))
-                text_rect = available_prey_text.get_rect(topleft=(10, TOP_UI_LAYER_HEIGHT/2-10))
-                screen.blit(available_prey_text, text_rect)
-
-                mouse_position = pygame.mouse.get_pos()
-                pause_or_resume_text = "Resume" if game_state_manager.is_paused else "Pause"
-                draw_hud_button(
+                render_play_screen(
                     screen,
-                    pause_button_rect,
-                    pause_or_resume_text,
-                    FONTS['ocean_font_16'],
-                    hovered=pause_button_rect.collidepoint(mouse_position),
-                    active=game_state_manager.is_paused,
+                    zoomed_surface,
+                    game_state_manager,
+                    camera_x,
+                    camera_y,
+                    y_first,
+                    y_second,
+                    debug=DEBUG,
                 )
-
-                draw_hud_button(
-                    screen,
-                    game_state_manager.info_button_play_rect,
-                    "Info",
-                    FONTS['ocean_font_16'],
-                    hovered=game_state_manager.info_button_play_rect.collidepoint(mouse_position),
-                )
-
-                icon_x = text_rect.right + 10
-                base_icon_y = TOP_UI_LAYER_HEIGHT/2-3
-                icon_buffer = 10
-                standard_icons = ['spr_red_fish', 'spr_green_fish_left', 'spr_silver_fish']
-                max_height_standard = max(IMAGES[key].get_height() for key in standard_icons)
-
-                for icon_key in standard_icons:
-                    icon = IMAGES[icon_key]
-                    icon_y = base_icon_y + (max_height_standard - icon.get_height()) // 2
-                    screen.blit(icon, (icon_x, icon_y))
-                    icon_x += icon.get_width() + icon_buffer
-
-                scaled_icon_size = (24, 15)
-                scaled_icons = []
-
-                if game_state_manager.rainbow_fish.size_score <= game_state_manager.player.size_score:
-                    scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_rainbow_fish_left"], scaled_icon_size))
-                if game_state_manager.player.size_score >= Player.PLAYER_SCORE_BIGGER_THAN_BIG_GREEN_FISH:
-                    scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_big_green_fish_left"], scaled_icon_size))
-                if game_state_manager.player.star_power == Player.SHARK_SHRINKER_POWERUP:
-                    scaled_icons.append(pygame.transform.smoothscale(IMAGES["spr_shark_left"], scaled_icon_size))
-
-                for icon in scaled_icons:
-                    vertical_offset = (max_height_standard - icon.get_height()) // 2
-                    icon_y = base_icon_y + vertical_offset
-                    screen.blit(icon, (icon_x, icon_y))
-                    icon_x += icon.get_width() + icon_buffer
-
-                score_text = FONTS['ocean_font_22'].render("Score: " + str(game_state_manager.score), 1, (255, 255, 255))
-                screen.blit(score_text, ((SCREEN_WIDTH/2)-50, TOP_UI_LAYER_HEIGHT/2-10))
-                game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16'])
-                game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16'])
-                x_position_powerup_timer = SCREEN_WIDTH * 0.68
-                screen.blit(
-                    game_state_manager.player.get_powerup_timer_text(FONTS['ocean_font_16']),
-                    (x_position_powerup_timer, TOP_UI_LAYER_HEIGHT/2-7),
-                )
-                x_position_speed_timer = SCREEN_WIDTH * 0.56
-                screen.blit(
-                    game_state_manager.player.get_speed_timer_text(FONTS['ocean_font_16']),
-                    (x_position_speed_timer, TOP_UI_LAYER_HEIGHT/2-7),
-                )
-
-                if game_state_manager.player.star_power == Player.NO_STAR_POWER:
-                    game_state_manager.one_powerup_sound -= 1
-                    SOUNDS["snd_powerup_timer"].stop()
-                if game_state_manager.player.speed_time_left < 0:
-                    game_state_manager.one_powerup_sound -= 1
-                    SOUNDS["snd_powerup_timer"].stop()
+                render_ui_overlay(screen, game_state_manager, pause_button_rect, joystick)
 
             pygame.display.update()
             await asyncio.sleep(0)
