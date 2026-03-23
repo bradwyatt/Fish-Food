@@ -41,7 +41,9 @@ In FishFood, you are a small fish navigating the perils of a vast ocean. Your ai
 
 ## Technical Details
 
-- **Programming Language**: The game is developed in Python.
+- **Programming Language**: Python 3.11+
+- **Game Framework**: [pygame-ce](https://pyga.me/) (pygame Community Edition) — the actively maintained fork of pygame
+- **Browser Builds**: [pygbag](https://pygame-web.github.io/) — compiles the pygame game to WebAssembly for the itch.io browser build
 
 ## Architecture Overview
 
@@ -90,6 +92,7 @@ flowchart TD
 - `seaweed.py`: Environment/decorative animation for seaweed in the play area.
 - `arrow_warning.py`: UI warning indicators that point to incoming off-screen threats.
 - `wall.py`: Legacy wall/boundary sprite support used by the current play-area setup.
+- `base_enemy.py`: Abstract base class shared by all enemy types — defines common movement, boundary handling, and sprite lifecycle logic.
 - `player.py`, `shark.py`, `red_fish.py`, `green_fish.py`, `silver_fish.py`, `snake.py`, `bright_blue_fish.py`, `rainbow_fish.py`, `seahorse.py`, `jellyfish.py`, `star_powerup.py`: The gameplay entity modules for the player, enemies, hazards, and powerups.
 
 
@@ -111,17 +114,20 @@ Ensure you have Python installed on your PC. FishFood has been tested with Pytho
 
 #### Clone the Repository
 Clone the FishFood repository from GitHub to your local machine:
-```git clone https://github.com/bradwyatt/FishFood.git```
+```
+git clone https://github.com/bradwyatt/Fish-Food.git
+```
 
 #### Install Dependencies
 Navigate to the cloned repository directory, create a virtual environment, and install the required dependencies:
 ```
-cd FishFood
+cd Fish-Food
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate       # macOS / Linux
+# .venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 ```
-This will install all the necessary Python packages listed in `requirements.txt`.
+This installs `pygame-ce` for the game engine and `pygbag` for browser builds.
 
 #### Run the Game
 Finally, run the game using Python:
@@ -146,12 +152,12 @@ For collaboration and more detailed discussions:
 
 Your ideas, skills, and enthusiasm are all greatly appreciated, and I look forward to the potential of working together.
 
+## 2026 Updates: Refactoring and Cleanup
+
+In preparation for publishing FishFood on itch.io, the project received a focused round of cleanup and modernization work. Performance was improved, duplicated gameplay code was reduced, and the project structure was refactored so the main entrypoint is much thinner and easier to maintain.
+
+This update pass was completed with help from OpenAI Codex, which was used to support refactoring, cleanup, and implementation work across the codebase as part of the release-preparation process.
+
 ---
 
 Get ready to dive into the competitive world of FishFood!
-
-## 2026 Updates: Refactoring and Cleanup
-
-In preparation for publishing FishFood on itch.io, the project received a focused round of cleanup and modernization work. At a very high level, we improved performance, reduced duplicated gameplay code, and refactored the project structure so the main entrypoint is much thinner and easier to maintain.
-
-This update pass was completed with help from OpenAI Codex, which was used to support refactoring, cleanup, and implementation work across the codebase as part of the release-preparation process.
